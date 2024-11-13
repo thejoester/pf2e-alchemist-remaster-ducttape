@@ -2,7 +2,7 @@
   "id": "pf2e-powerful-alchemy",
   "title": "PF2e Powerful Alchemy",
   "description": "A module to adjust the save DC of items created with Quick Alchemy to match the actor's class DC if they have the Powerful Alchemy feat.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "compatibility": {
     "minimum": "12",
     "verified": "12"
@@ -11,8 +11,8 @@
     "scripts/powerfulAlchemy.js"
   ],
   "url": "https://github.com/thejoester/pf2e-powerful-alchemy",
-  "manifest": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.0/module.json",
-  "download": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.0/pf2e-powerful-alchemy.zip",
+  "manifest": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.1/module.json",
+  "download": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.1/pf2e-powerful-alchemy.zip",
   "readme": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/README.md",
   "changelog": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master//CHANGELOG.md",
   "license": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/LICENSE.txt",
