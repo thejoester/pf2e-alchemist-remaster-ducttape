@@ -10,13 +10,13 @@
   "esmodules": [
     "scripts/powerfulAlchemy.js"
   ],
-  "url": "https://github.com/your-username/pf2e-powerful-alchemy",
-  "manifest": "https://github.com/your-username/pf2e-powerful-alchemy/raw/main/module.json",
-  "download": "https://github.com/your-username/pf2e-powerful-alchemy/archive/main.zip",
-  "readme": "https://github.com/your-username/pf2e-powerful-alchemy/blob/main/README.md",
-  "changelog": "https://github.com/your-username/pf2e-powerful-alchemy/blob/main/CHANGELOG.md",
-  "license": "https://github.com/your-username/pf2e-powerful-alchemy/blob/main/LICENSE.txt",
-  "bugs": "https://github.com/your-username/pf2e-powerful-alchemy/issues",
+  "url": "https://github.com/thejoester/pf2e-powerful-alchemy",
+  "manifest": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.0/module.json",
+  "download": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.0/pf2e-powerful-alchemy.zip",
+  "readme": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/README.md",
+  "changelog": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master//CHANGELOG.md",
+  "license": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/LICENSE.txt",
+  "bugs": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/",
   "relationships": {
     "systems": [
       {
