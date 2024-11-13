@@ -15,7 +15,16 @@ Hooks.on("ready", () => {
 	  const updatedDescription = description.replace(regexPattern, replacementFn);
 	  
 	  if (updatedDescription !== description) {
+		// Output to log
 		console.log("%cpf2e-powerful-alchemy: Description was updated to Class DC!","color: cyan; font-weight: bold;");
+		
+		// Send Message to Chat
+		const itemName = item.name;
+		ChatMessage.create({
+			author: game.user?.id,    // User ID to send the message as the system
+			content: `${itemName} created with Quick Alchemy using Class DC ${classDC}!`,
+			speaker: { alias: "PF2e Powerful Alchemy" }  // Optional: sets the speaker to "System"
+		});
 	  }
 	  
 	  return updatedDescription;
@@ -86,12 +95,5 @@ Hooks.on("ready", () => {
 	await item.update({"system.description.value": updatedDescription});
 	console.log("%cpf2e-powerful-alchemy: Item description updated successfully.", "color: aqua ; font-weight: bold;");
 
-	// Send Message to Chat
-	const itemName = item.name;
-	ChatMessage.create({
-		author: game.user?.id,    // User ID to send the message as the system
-		content: `${itemName} created with Quick Alchemy using Class DC ${classDC}!`,
-		speaker: { alias: "PF2e Powerful Alchemy" }  // Optional: sets the speaker to "System"
-	});
   });
 });
