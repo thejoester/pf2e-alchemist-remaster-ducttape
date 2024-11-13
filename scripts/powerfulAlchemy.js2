@@ -1,0 +1,55 @@
+Hooks.on("createEmbeddedDocuments", async (parent, documents, data, options, userId) => {
+  console.log("createEmbeddedDocuments hook triggered");
+
+  // Check if the parent is an Actor and the document has the "alchemical" trait
+  if (parent instanceof Actor && documents[0].hasTrait("alchemical")) {
+    const actor = parent;
+    const item = documents[0];
+
+    console.log("Actor:", actor);
+    console.log("Item:", item);
+
+    // Check if the actor has Quick Alchemy
+    const quickAlchemy = actor.items.find(i => i.name === "Quick Alchemy");
+    if (!quickAlchemy) {
+      console.warn("Warning: Actor does not have Quick Alchemy.");
+      return;
+    }
+
+    // Check if the actor has Powerful Alchemy
+    const powerfulAlchemy = actor.items.find(i => i.name === "Powerful Alchemy");
+    if (!powerfulAlchemy) {
+      console.warn("Warning: Actor does not have Powerful Alchemy.");
+      return;
+    }
+
+    // Get the actor's class DC
+    const classDC = actor.system.attributes.classDC?.value;
+    if (!classDC) {
+      console.warn("Warning: Class DC not found for the actor.");
+      return;
+    }
+
+    // Replace any save DC in the item's description
+    let description = item.system.description.value;
+    console.log("Original Item Description:", description);
+
+    const dcRegex = /@Check\[\w+\|dc:(\d+)\]/g;
+    let descriptionUpdated = description.replace(dcRegex, (match, p1) => {
+      console.log(`Found DC in description: ${p1}, replacing with actor's Class DC: ${classDC}`);
+      return match.replace(`dc:${p1}`, `dc:${classDC}`);
+    });
+
+    if (description !== descriptionUpdated) {
+      console.log("Updated Item Description:", descriptionUpdated);
+    } else {
+      console.log("No DCs found to replace in the description.");
+    }
+
+    // Update the item with the new description
+    await item.update({"system.description.value": descriptionUpdated});
+    console.log("Item description updated successfully.");
+  } else {
+    console.warn("Warning: Item does not have the 'alchemical' trait or is not embedded in an actor.");
+  }
+});

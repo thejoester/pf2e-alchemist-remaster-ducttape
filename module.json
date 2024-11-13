@@ -1,0 +1,46 @@
+{
+  "id": "pf2e-powerful-alchemy",
+  "title": "PF2e Powerful Alchemy",
+  "description": "A module to adjust the save DC of items created with Quick Alchemy to match the actor's class DC if they have the Powerful Alchemy feat.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+  "esmodules": [
+    "scripts/powerfulAlchemy.js"
+  ],
+  "url": "https://github.com/your-username/pf2e-powerful-alchemy",
+  "manifest": "https://github.com/your-username/pf2e-powerful-alchemy/raw/main/module.json",
+  "download": "https://github.com/your-username/pf2e-powerful-alchemy/archive/main.zip",
+  "readme": "https://github.com/your-username/pf2e-powerful-alchemy/blob/main/README.md",
+  "changelog": "https://github.com/your-username/pf2e-powerful-alchemy/blob/main/CHANGELOG.md",
+  "license": "https://github.com/your-username/pf2e-powerful-alchemy/blob/main/LICENSE.txt",
+  "bugs": "https://github.com/your-username/pf2e-powerful-alchemy/issues",
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.6.0",
+          "verified": "6.6.2"
+        }
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "The Joester",
+      "discord": "thejoester",
+      "flags": {}
+    }
+  ],
+  "media": [
+    {
+      "type": "icon",
+      "url": "https://raw.githubusercontent.com/your-username/pf2e-powerful-alchemy/main/assets/icon.png",
+      "caption": "PF2e Powerful Alchemy Icon"
+    }
+  ]
+}

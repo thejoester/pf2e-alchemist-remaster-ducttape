@@ -1,0 +1,8 @@
+pm2 start "node /home/joe/12_foundryvtt/resources/app/main.js --dataPath=/home/joe/12_foundrydata" --name foundry12
+
+dungeons and dragons,pathfinder2e,pf2e,dnd,dnd5e,abomination vaults,actual play,ttrpg,table top role playing game,foundryvtt,D&D Gameplay,D&D Campaign,D&D Storytelling,Live Play,Fantasy Role-playing,Tabletop RPG
+
+
+Get-ChildItem -Path "C:\Windows\","c:\","$env:USERPROFILE" -Force | Where-Object { $_.LinkType -ne $null -or $_.Attributes -match "ReparsePoint" } | ft FullName,Length,Attributes,Linktype,Target
+
+mklink /D "C:\Users\joe\iCloudPhotos" "G:\iphone-files"
