@@ -1,5 +1,4 @@
-# pf2e-alchemist-remaster-ducttape
-PF2e Alchemist Remaster Duct Tape
+# PF2e Alchemist Remaster Duct Tape
 
 A module to slap together some functionality until the PF2e system is updated to support the Alchmist remaster.
 
