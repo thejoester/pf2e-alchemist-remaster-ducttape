@@ -11,13 +11,13 @@
 	"scripts/main.js",
     "scripts/powerfulAlchemy.js"
   ],
-  "url": "https://github.com/thejoester/pf2e-powerful-alchemy",
-  "manifest": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/2.0.0/module.json",
-  "download": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/2.0.0/pf2e-powerful-alchemy.zip",
-  "readme": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/README.md",
-  "changelog": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/CHANGELOG.md",
-  "license": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/LICENSE.txt",
-  "bugs": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/",
+  "url": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape",
+  "manifest": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/download/2.0.0/module.json",
+  "download": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/download/2.0.0/pf2e-alchemist-remaster-ducttape.zip",
+  "readme": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/README.md",
+  "changelog": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/CHANGELOG.md",
+  "license": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/LICENSE.txt",
+  "bugs": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/",
   "relationships": {
     "systems": [
       {
