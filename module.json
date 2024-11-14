@@ -1,20 +1,21 @@
 {
-  "id": "pf2e-powerful-alchemy",
-  "title": "PF2e Powerful Alchemy",
-  "description": "A module to adjust the save DC of items created with Quick Alchemy to match the actor's class DC if they have the Powerful Alchemy feat.",
-  "version": "1.0.1",
+  "id": "pf2e-alchemist-remaster-ducttape",
+  "title": "PF2e Alchemist Remaster Duct Tape",
+  "description": "A module to slap together some functionality until the PF2e system is updated to support the Alchmist remaster.",
+  "version": "2.0.0",
   "compatibility": {
     "minimum": "12",
     "verified": "12"
   },
   "esmodules": [
+	"scripts/main.js",
     "scripts/powerfulAlchemy.js"
   ],
   "url": "https://github.com/thejoester/pf2e-powerful-alchemy",
-  "manifest": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.1/module.json",
-  "download": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/1.0.1/pf2e-powerful-alchemy.zip",
+  "manifest": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/2.0.0/module.json",
+  "download": "https://github.com/thejoester/pf2e-powerful-alchemy/releases/download/2.0.0/pf2e-powerful-alchemy.zip",
   "readme": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/README.md",
-  "changelog": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master//CHANGELOG.md",
+  "changelog": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/CHANGELOG.md",
   "license": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/LICENSE.txt",
   "bugs": "https://github.com/thejoester/pf2e-powerful-alchemy/blob/master/",
   "relationships": {
@@ -36,11 +37,17 @@
       "flags": {}
     }
   ],
-  "media": [
+  "packs": [
     {
-      "type": "icon",
-      "url": "https://raw.githubusercontent.com/your-username/pf2e-powerful-alchemy/main/assets/icon.png",
-      "caption": "PF2e Powerful Alchemy Icon"
+      "name": "alchemist-duct-tape-macros",
+      "label": "Alchemist Duct Tape Macros",
+      "path": "packs/alchemist-duct-tape-macros",
+      "type": "Macro",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "pf2e"
     }
   ]
 }

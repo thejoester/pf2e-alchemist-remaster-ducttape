@@ -1,5 +1,5 @@
 Hooks.on("ready", () => {
-  console.log("%cPF2e Powerful Alchemy module loaded","color: aqua; font-weight: bold;");
+  console.log("%cPF2e Alchemist Remaster Duct Tape (powerfulAlchemy.js) loaded","color: aqua; font-weight: bold;");
 
   Hooks.on("createItem", async (item) => {
 	console.log("%cpf2e-powerful-alchemy: Item Created!","color: aqua; font-weight: bold;");
