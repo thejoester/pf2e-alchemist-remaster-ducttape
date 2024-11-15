@@ -12,11 +12,7 @@ A module to slap together some functionality until the PF2e system is updated to
 **Quick Alchemy:** funcion that will consume 1 Versatile Vile, and craft an item from your formulas. A dialog box will appear with two drop downs. The first will list formulas for items of type weapon (bombs), and will have a "Craft and Attack" button which will craft the item then open the dialog box for the attack actions. You must have a target selected first. The second dropdown will list consumable items that you have the formula for and have a "Craft" button. All items created with this will have the "Infused" trait. 
 A macro will be included in the compendium. 
 
-<picture>
-  <source srcset="https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif">
-</picture>
-
-[Quick Alchemy macro example](https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif)
+![Quick Alchemy macro example](https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif)
 
 **Powerful Alchemy:** Will detect when an infused item is created, and if the actor has Powerful Alchemy feat, will update the descrtiption to reflect the Actor's Class DC. 
 
