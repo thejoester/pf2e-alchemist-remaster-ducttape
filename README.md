@@ -16,7 +16,7 @@ A macro will be included in the compendium.
   <source srcset="https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif">
 </picture>
 
-[Quick Alchemy macro example]([https://imgur.com/vHP1Txk.gif](https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif))
+[Quick Alchemy macro example](https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif)
 
 **Powerful Alchemy:** Will detect when an infused item is created, and if the actor has Powerful Alchemy feat, will update the descrtiption to reflect the Actor's Class DC. 
 
