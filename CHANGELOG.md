@@ -1,3 +1,6 @@
+## 2.0.2
+- Updated to support pf2e v6.7.0
+
 ## 2.0.1
 New Features
 - Option to only craft weapon items.
