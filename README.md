@@ -6,6 +6,10 @@ A module to slap together some functionality until the PF2e system is updated to
 
 - The first time you use the Quick Alchemy macro (qaCraftAttack();) it will take a minute to load the screen.
 
+## How to use
+**Quick Alchemy:** Either import the Quick Alchemy macro from the compendium "Alchemist Duct Tape Macros", or create your own macro with the following code: `qaCraftAttack();`
+
+**Powerful Alchemy:** This will work automatically on infused item creation, any exiting infused items will need to be re-crafted.
 
 ## Features
 
