@@ -14,6 +14,8 @@ A macro will be included in the compendium.
 
 ![Quick Alchemy macro example](https://i.ibb.co/db2vs2W/quick-alchemy-macro.gif)
 
+(update) I added the option to just craft an item, in that case it will add to inventory, consume a versatile vial (unless crafting a versitile vial), and then add a chat card with a link to use that item. 
+
 **Powerful Alchemy:** Will detect when an infused item is created, and if the actor has Powerful Alchemy feat, will update the descrtiption to reflect the Actor's Class DC. 
 
 ## Requests
