@@ -5,41 +5,42 @@ Hooks.on("ready", () => {
 	function debugLog(logMsg, logType = "c", logLevel = "1") {
 		const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
 		if (!debugEnabled) return;
-		
-		switch (logType) {
-			case "c": //console
-				switch (logLevel) {
-					case "1": // info/log
-						console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`,"color: aqua; font-weight: bold;");
-						break;
-					case "2": // warn
-						console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-						break;
-					case "3": // error
-						console.error(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-						break;
-					default:
-						console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`,"color: aqua; font-weight: bold;");
-				}
-				break;
-			case "u": // ui
-				switch (logLevel) {
-					case "1": // info/log
-						ui.notifications.info(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-						break;
-					case "2": // warn
-						ui.notifications.warn(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-						break;
-					case "3": // error
-						ui.notifications.error(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-						break;
-					default:
-						ui.notifications.info(logMsg);
-				}
-				break;
-			default:
-				console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): Invalid log event.`);
-		}
+		switch (debugEnabled) {
+			
+			switch (logType) {
+				case "c": //console
+					switch (logLevel) {
+						case "1": // info/log
+							console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`,"color: aqua; font-weight: bold;");
+							break;
+						case "2": // warn
+							console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
+							break;
+						case "3": // error
+							console.error(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
+							break;
+						default:
+							console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`,"color: aqua; font-weight: bold;");
+					}
+					break;
+				case "u": // ui
+					switch (logLevel) {
+						case "1": // info/log
+							ui.notifications.info(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
+							break;
+						case "2": // warn
+							ui.notifications.warn(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
+							break;
+						case "3": // error
+							ui.notifications.error(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
+							break;
+						default:
+							ui.notifications.info(logMsg);
+					}
+					break;
+				default:
+					console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): Invalid log event.`);
+			}
 	}
 	
 	// Function to determine size of the actor
@@ -56,7 +57,7 @@ Hooks.on("ready", () => {
 	  // Get the item from the provided UUID
 	  const item = await fromUuid(itemUuid);
 	  if (!item) {
-		debugLog("Item not found.", "u", 3);
+		ui.notifications.warn("Item not found.");
 		return;
 	  }
 
@@ -82,13 +83,13 @@ Hooks.on("ready", () => {
 		  const actor = item?.actor;
 
 		  if (!actor) {
-			debugLog("Actor not found.", "u", 3);
+			ui.notifications.error("Actor not found.");
 			return;
 		  }
 
 		  // Reduce item quantity by 1
 		  await item.update({ "system.quantity": item.system.quantity - 1 });
-		  debugLog(`${item.name} has been used.`, "u", 1);
+		  ui.notifications.error(`${item.name} has been used.`);
 
 		  // Optionally, trigger any additional effects or healing logic here
 		});
@@ -110,14 +111,14 @@ Hooks.on("ready", () => {
 
 		// Ensure the item is a weapon
 		if (item.type !== "weapon") {
-			debugLog("The item is not a weapon.", "u", 3);
+			ui.notifications.error("The item is not a weapon.", "u", 3);
 			return;
 		}
 
 		// Fetch the actor associated with the item
 		const actor = item.actor;
 		if (!actor) {
-			debugLog("No actor associated with this item.", "u", 3);
+			ui.notifications.error("No actor associated with this item.");
 			return;
 		}
 
@@ -158,7 +159,7 @@ Hooks.on("ready", () => {
 					// Ensure a target is selected
 					const target = game.user.targets.first();
 					if (!target) {
-						debugLog("Please target a token for the attack.", "u", 3);
+						ui.notifications.error("Please target a token for the attack.");
 						return;
 					} else {
 						// Roll the attack with the appropriate MAP modifier
@@ -342,17 +343,7 @@ Hooks.on("ready", () => {
 		const vialCount = versatileVials.reduce((count, vial) => count + vial.quantity, 0);
 		let content = "";
 		if (vialCount < 1) { // no versatile vials
-			/*
-			new Dialog({
-				title: "No Versatile Vials",
-				content: "<p>You do not have any Versatile Vials available for crafting.</p>",
-				buttons: { ok: { label: "OK", callback: () => {} } },
-				default: "ok",
-			}).render(true);
-			return;
-			*/
-			
-			// HTML content
+			// HTML content to prompt to create vial
 			content = `
 				<form>
 					<div>
@@ -367,7 +358,7 @@ Hooks.on("ready", () => {
 			`;
 		} else {
 	
-			// HTML content
+			// HTML content to prompt which formula to create
 			content = `
 				<form>
 					<p>Versatile Vials: ${vialCount}</p>
@@ -413,7 +404,7 @@ Hooks.on("ready", () => {
 							qaDialog.close();
 						
 						} else {
-							debugLog("Selected item is invalid.", "u", 3);
+							ui.notifications.error("Selected item is invalid.");
 						}
 					});
 
@@ -426,7 +417,7 @@ Hooks.on("ready", () => {
 						// Ensure a target is selected
 						const target = game.user.targets.first();
 						if (!target) {
-							debugLog("Please target a token for the attack.", "u", 3);
+							ui.notifications.error("Please target a token for the attack.");
 							return;
 						}
 						
@@ -439,14 +430,14 @@ Hooks.on("ready", () => {
 							// Equip Item
 							const newUuid = await equipItemBySlug(selectedItem.slug);
 							if (!newUuid) {
-								debugLog("Failed to equip item.", "u", 3);
+								ui.notifications.error("Failed to equip item.");
 								return;
 							} 
 							const target = canvas.tokens.controlled[0]?.target;
 							
 							// Make sure we have a target
 							if (!target) {
-								debugLog("Please target a token for the attack.", "u", 3);
+								ui.notifications.error("Please target a token for the attack.");
 								return;
 							} else {
 								// Initate rollActionMacro 

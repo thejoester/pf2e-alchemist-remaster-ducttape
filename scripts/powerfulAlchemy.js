@@ -88,7 +88,7 @@ Hooks.on("ready", () => {
 			// Get the actor from the item's parent (the actor who owns the item)
 			const sa = item.parent;
 			if (!sa) {
-			  debugLog("Actor not found.","c", 2);
+			  debugLog("Actor for item not found.","c", 3);
 			  return;
 			}
 			
