@@ -1,3 +1,6 @@
+## 2.1.2
+- fix QuickAlchemy.js errant line of code preventing file to loaf. Thanks to tpendragon!
+
 ## 2.1.1
 - fixed debug setting that would prevent important notifications being displayed.
 
