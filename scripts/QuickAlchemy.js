@@ -5,8 +5,6 @@ Hooks.on("ready", () => {
 	function debugLog(logMsg, logType = "c", logLevel = "1") {
 		const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
 		if (!debugEnabled) return;
-		switch (debugEnabled) {
-			
 			switch (logType) {
 				case "c": //console
 					switch (logLevel) {
