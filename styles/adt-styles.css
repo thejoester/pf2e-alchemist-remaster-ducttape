@@ -1,0 +1,28 @@
+.search-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Adjust space between elements */
+    margin-bottom: 5px; /* Space below the search bar */
+}
+
+.search-label {
+    margin-right: 2px; /* Space between the label and the input */
+    font-weight: bold;
+}
+
+.clear-btn {
+	width: 50px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 1px 1px;
+	font-size: 10px; /* Smaller text size */
+    cursor: pointer;
+}
+
+.clear-btn:hover {
+    background-color: #e0e0e0;
+}
+
+#formula-search {
+    width: 400px; /* Set the desired width */
+}

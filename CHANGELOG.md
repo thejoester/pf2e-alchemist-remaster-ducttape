@@ -1,5 +1,9 @@
+# 2.2.0
+- Added formula search feature.
+- added support for Bug Reporter (https://github.com/League-of-Foundry-Developers/bug-reporter)
+
 # 2.1.2
-- fix QuickAlchemy.js errant line of code preventing file to loaf. Thanks to tpendragon!
+- fix QuickAlchemy.js errant line of code preventing file to load. Thanks to tpendragon!
 
 # 2.1.1
 - fixed debug setting that would prevent important notifications being displayed.
