@@ -1,45 +1,7 @@
+import { debugLog } from './settings.js';
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape (QuickAlchemy.js) loaded", "color: aqua; font-weight: bold;");
 
-	// Function for debugging
-	function debugLog(logMsg, logType = "c", logLevel = "1") {
-		const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
-		if (!debugEnabled) return;
-			switch (logType) {
-				case "c": //console
-					switch (logLevel) {
-						case "1": // info/log
-							console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`,"color: aqua; font-weight: bold;");
-							break;
-						case "2": // warn
-							console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-							break;
-						case "3": // error
-							console.error(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-							break;
-						default:
-							console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`,"color: aqua; font-weight: bold;");
-					}
-					break;
-				case "u": // ui
-					switch (logLevel) {
-						case "1": // info/log
-							ui.notifications.info(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-							break;
-						case "2": // warn
-							ui.notifications.warn(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-							break;
-						case "3": // error
-							ui.notifications.error(`Alchemist Duct Tape (QuickAlchemy.js): ${logMsg}`);
-							break;
-						default:
-							ui.notifications.info(logMsg);
-					}
-					break;
-				default:
-					console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js): Invalid log event.`);
-			}
-	}
 	
 	// Function to determine size of the actor
 	async function getActorSize(actor){
@@ -275,6 +237,7 @@ Hooks.on("ready", () => {
 		}
 	}
 
+	// Function to consume a versatile vial when crafting with quick alchemy
 	async function consumeVersatileVial(itemCreated, versatileVials){
 		if (itemCreated === "versatile-vial" || !itemCreated ) {
 			debugLog("Creating Versatile Vial, Skipping decrement of Versatile Vial.");
@@ -284,9 +247,82 @@ Hooks.on("ready", () => {
 			const vialToRemove = versatileVials[0];
 			await vialToRemove.update({ "system.quantity": vialToRemove.system.quantity - 1 });
 		}
-	}		
+	}
 
-	// Main crafting function
+	/*
+	 Function to process formulas with a progress bar
+	*/
+	async function processFormulasWithProgress(actor) {
+		// Get known formulas
+		const formulas = actor?.system.crafting?.formulas || [];
+		const formulaCount = formulas.length;
+		
+		// Prepare progress bar dialog
+		let progress = 0;
+		const total = formulas.length;
+
+		const progressDialog = new Dialog({
+		title: "Quick Alchemy",
+		content: `
+		<div>
+		<p>Processing ${formulaCount} formulas, may take a while the first time run...</p>
+		<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
+		</div>
+		`,
+		buttons: {},
+		close: () => {},
+		});
+		progressDialog.render(true);
+
+		// Arrays to store entry objects
+		const weaponEntries = [];
+		const consumableEntries = [];
+		const vialEntries = [];
+		const otherEntries = [];
+
+		// Gather entries in respective arrays
+		for (let [index, formula] of formulas.entries()) {
+			debugLog(`Formula UUID: ${formula.uuid}`);
+			const entry = await fromUuid(formula.uuid);
+
+			// Update progress
+			progress++;
+			const progressBar = document.getElementById("progress-bar");
+			if (progressBar) progressBar.value = progress;
+
+			// Check if entry is null
+			if (entry != null) {
+				debugLog(`slug: ${entry.slug}, name: ${entry.name}, uuid: ${entry.uuid}`);
+
+				if (entry.slug === "versatile-vial") {
+					vialEntries.push(entry);
+					debugLog("added to vialEntries");
+				}
+				if (entry.type === "weapon") {
+					weaponEntries.push(entry);
+					debugLog("added to weaponEntries");
+				} else if (entry.type === "consumable") {
+					consumableEntries.push(entry);
+					debugLog("added to consumableEntries");
+				} else {
+					otherEntries.push(entry);
+					debugLog("added to otherEntries");
+				}
+			} else { // entry is null
+				debugLog(`entry ${formula.uuid} is null`, "c", 3);
+			}
+		}
+
+		// Close progress dialog
+		progressDialog.close();
+
+		// Return categorized entries
+		return { weaponEntries, consumableEntries, vialEntries, otherEntries };
+	}
+	
+	/*
+	 Main crafting function
+	*/
 	async function qaCraftAttack() {
 		const token = canvas.tokens.controlled[0];
 		if (!token) {
@@ -299,44 +335,30 @@ Hooks.on("ready", () => {
 		await clearInfused(actor);
 		
 		// Get known formulas
-		const formulas = actor?.system.crafting?.formulas || [];
-		
-		// Arrays to store entry objects
-		const weaponEntries = [];
-		const consumableEntries = [];
-		const vialEntries = [];
-
-		// Gather entries in respective arrays
-		for (let formula of formulas) {
-			const entry = await fromUuid(formula.uuid);
-			debugLog(`slug: ${entry.slug}, name: ${entry.name}, uuid: ${entry.uuid}`);
-			
-			if (entry.slug === "versatile-vial") {
-				vialEntries.push(entry);
-				debugLog("added to vialEntries");
-			}
-			if (entry.type === "weapon") {
-				weaponEntries.push(entry);
-				debugLog("added to weaponEntries");
-			}
-			if (entry.type === "consumable") {
-				consumableEntries.push(entry);
-				debugLog("added to consumableEntries");
-			}
-
-		}
+		const { weaponEntries, consumableEntries, vialEntries, otherEntries } = await processFormulasWithProgress(actor);
 	
 		// Sort entries by name
 		vialEntries.sort((a, b) => a.name.localeCompare(b.name));
 		weaponEntries.sort((a, b) => a.name.localeCompare(b.name));
 		consumableEntries.sort((a, b) => a.name.localeCompare(b.name));
-
+		
 		// Generate sorted options
 		const vialOptions = vialEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		const weaponOptions = weaponEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		const consumableOptions = consumableEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		
+		// Count the number of options in each
+		// Initialize counts
+		let weaponCount = "";
+		let consumableCount = "";
+		const showQACounts = game.settings.get("pf2e-alchemist-remaster-ducttape", "showQACounts");
+		if (showQACounts){
+			weaponCount = "(" + (weaponOptions.match(/<option/g) || []).length + ")";
+			consumableCount = "(" + (consumableOptions.match(/<option/g) || []).length + ")";
+			debugLog(`Showing Counts | weaponCount = ${weaponCount} | consumableCount = ${consumableCount}`);
+		}
 		
+		// Check Versatile Vial counts
 		const versatileVials = actor.items.filter((item) => item.slug === "versatile-vial");
 		const vialCount = versatileVials.reduce((count, vial) => count + vial.quantity, 0);
 		let content = "";
@@ -361,14 +383,14 @@ Hooks.on("ready", () => {
 				<form>
 					<p>Versatile Vials: ${vialCount}</p>
 					<div>
-						<label for="weapon-formula">Select a Weapon Formula</label>
+						<label for="weapon-formula">Select a Weapon Formula ${weaponCount}</label>
 						<select id="weapon-formula">${weaponOptions}</select>
 						<button id="craft-weapon-btn" type="button" style="display: inline-block; width: 150px; margin-right: 0%;">Craft and Attack</button>
 						<button id="craft-weapon-only-btn" type="button" style="display: inline-block; width: 100px; margin-top: 5px;">Craft Only</button>
 					</div>
 					<br/>
 					<div>
-						<label for="consumable-formula">Select a Consumable Formula</label>
+						<label for="consumable-formula">Select a Consumable Formula ${consumableCount}</label>
 						<select id="consumable-formula">${consumableOptions}</select>
 						<button id="craft-consumable-btn" type="button" style="margin-top: 5px; width: 225px;">Craft</button>
 					</div>

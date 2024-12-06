@@ -1,3 +1,4 @@
+import { debugLog } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","color: aqua; font-weight: bold;");
 
 /*
@@ -47,47 +48,6 @@ function addFormulaSearch(html) {
 		});
     });
 }
-
-// Function for debugging
-	function debugLog(logMsg, logType = "c", logLevel = "1") {
-		const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
-		if (!debugEnabled) return;
-		
-		switch (logType) {
-			case "c": //console
-				switch (logLevel) {
-					case "1": // info/log
-						console.log(`%cP2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`,"color: aqua; font-weight: bold;");
-						break;
-					case "2": // warn
-						console.warn(`P2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`);
-						break;
-					case "3": // error
-						console.error(`P2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`);
-						break;
-					default:
-						console.log(`%cP2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`,"color: aqua; font-weight: bold;");
-				}
-				break;
-			case "u": // ui
-				switch (logLevel) {
-					case "1": // info/log
-						ui.notifications.info(`Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`);
-						break;
-					case "2": // warn
-						ui.notifications.warn(`Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`);
-						break;
-					case "3": // error
-						ui.notifications.error(`Alchemist Duct Tape (PowerfulAlchemy.js)| ${logMsg}`);
-						break;
-					default:
-						ui.notifications.info(logMsg);
-				}
-				break;
-			default:
-				console.warn(`P2Fe Alchemist Duct Tape (PowerfulAlchemy.js): Invalid log event.`);
-		}
-	}
 
 Hooks.on("ready", () => {
     

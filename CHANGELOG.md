@@ -1,3 +1,11 @@
+# 2.2.1
+### New Features
+- Quick Alchemy macro will now show "loading" window with progress.
+- Setting option to show counts of formulas on Quick Alchemy screen. 
+
+### Bug fixes
+- (Bug #5) Error catching on possible corruption or errors in actor's formulas. 
+
 # 2.2.0
 - Added formula search feature.
 - added support for Bug Reporter (https://github.com/League-of-Foundry-Developers/bug-reporter)
