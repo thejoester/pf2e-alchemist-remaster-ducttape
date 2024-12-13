@@ -26,6 +26,8 @@ A macro will be included in the compendium.
 
 ![Search function](https://i.ibb.co/dJ3c68q/search.gif)
 
+**Add higher level version of known versions:** Will add a higher level version of known formulas. For example if character has the formula for "Alchemist's Fire (Lesser)", when they reach level 3 it will add "Alchemist's Fire (Moderate)". Can set to prompt first (default), or automatically add, or disable in settings. 
+
 ## Requests
 
 This is still sort of a work in progress, and by no means a full release. I have made changes that affect my players the most at the moment. I expect when the Alchemist Player Core 2 changes are implemented in the PF2e system this module will be obsolete. 

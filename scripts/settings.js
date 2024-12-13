@@ -3,39 +3,53 @@ console.log("%cPF2e Alchemist Remaster Duct Tape: settings.js loaded","color: aq
 export function debugLog(logMsg, logType = "c", logLevel = "1") {
 	const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
 	if (!debugEnabled && logLevel != 3) return;
+		
+		// Capture stack trace to get file and line number
+		const stack = new Error().stack.split("\n")[2].trim(); // Get the 2nd line where this function is called
+		const fileInfoMatch = stack.match(/(\/[^)]+):(\d+):(\d+)/); // Match file path and line number
+		let fileInfo = "Unknown Source";
+		if (fileInfoMatch) {
+			const [, filePath, lineNumber] = fileInfoMatch;
+			const fileName = filePath.split("/").pop(); // Extract just the file name
+			fileInfo = `${fileName}:${lineNumber}`;
+		}
+
+		// Prepend the file and line info to the log message
+		const formattedLogMsg = `[${fileInfo}] ${logMsg}`;
+
 		switch (logType) {
 			case "c": //console
 				switch (logLevel) {
 					case "1": // info/log
-						console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`,"color: aqua; font-weight: bold;");
+						console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`,"color: aqua; font-weight: bold;");
 						break;
 					case "2": // warn
-						console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`);
+						console.warn(`P2Fe Alchemist Duct Tape | ${formattedLogMsg}`);
 						break;
 					case "3": // error
-						console.error(`P2Fe Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`);
+						console.error(`P2Fe Alchemist Duct Tape | ${formattedLogMsg}`);
 						break;
 					default:
-						console.log(`%cP2Fe Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`,"color: aqua; font-weight: bold;");
+						console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`,"color: aqua; font-weight: bold;");
 				}
 				break;
 			case "u": // ui
 				switch (logLevel) {
 					case "1": // info/log
-						ui.notifications.info(`Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`);
+						ui.notifications.info(`Alchemist Duct Tape | ${logMsg}`);
 						break;
 					case "2": // warn
-						ui.notifications.warn(`Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`);
+						ui.notifications.warn(`Alchemist Duct Tape | ${logMsg}`);
 						break;
 					case "3": // error
-						ui.notifications.error(`Alchemist Duct Tape (QuickAlchemy.js) | ${logMsg}`);
+						ui.notifications.error(`Alchemist Duct Tape | ${logMsg}`);
 						break;
 					default:
 						ui.notifications.info(logMsg);
 				}
 				break;
 			default:
-				console.warn(`P2Fe Alchemist Duct Tape (QuickAlchemy.js) | Invalid log event.`);
+				console.warn(`P2Fe Alchemist Duct Tape | ${fileInfo} Invalid log event.`);
 		}
 }
 
@@ -98,6 +112,9 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
+	/*
+		Show Quick Alchemy counts
+	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQACounts", {
 		name: "Quick Alchemy: Show forumla counts",
 		hint: "If enabled, will show the number of available formulas.",
@@ -105,6 +122,24 @@ Hooks.once("init", () => {
 		config: true,    // Whether to show this in the module settings UI
 		default: false,  // The default value of the setting
 		type: Boolean,   // The type of setting (true/false)
+		requiresReload: true,
+	});
+	
+	/*
+		LevelUp - auto add formulas
+	*/
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
+		name: "Add higher level version of known formulas upon levelup.",
+		hint: "If enabled, when leveled up will add higher level version of known formulas. Ask = will prompt for each formula; Auto = will automatically add formula.",
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		type: String, // Dropdown uses a string type
+		choices: {
+			disabled: "Disabled",
+			ask: "Ask",
+			auto: "Auto"
+		},
+		default: "ask",  // The default value of the setting
 		requiresReload: true,
 	});
 	

@@ -5,7 +5,7 @@ console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","colo
 	function to inject the search input into the Formulas tab.
 */
 function addFormulaSearch(html) {
-	console.log(`%cP2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| addFormulaSearch() called`,"color: aqua; font-weight: bold;");
+	debugLog(`addFormulaSearch() called`);
     const formulasTab = html.find(".known-formulas.item-container[data-container-type='knownFormulas']"); // Locate the Formulas tab by its data-tab attribute
     //if (!formulasTab.length) return;
 
@@ -55,20 +55,19 @@ Hooks.on("ready", () => {
 	const sfEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "searchableFormulas");
 	if (sfEnabled) {	
 		Hooks.on("renderActorSheet", (app, html, data) => {
-			console.log(`%cP2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| Actor Sheet Rendered`,"color: aqua; font-weight: bold;");
+			debugLog(`Actor Sheet Rendered`);
 			const actor = app.actor;
             if (!actor) {
-                console.log(`%cP2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| No actor found: `,"color: aqua; font-weight: bold;", app);
+                debugLog(`No actor found: ${app}`);
                 return;
             }
 			
 			
 			//if (actor.type === "character" && actor.crafting?.formulas?.length > 0) {
 			if (actor.type === "character") {
-				console.log(`%cP2Fe Alchemist Duct Tape (PowerfulAlchemy.js)| actor.type = "character"`,"color: aqua; font-weight: bold;");
+				debugLog(`actor.type = "character"`);
 				addFormulaSearch(html);
 			}
 		});
 	}
 });
-
