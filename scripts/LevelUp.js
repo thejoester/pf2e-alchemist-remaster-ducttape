@@ -70,8 +70,9 @@ async function grantAlchemistFormulas(actor, newLevel) {
         })
     );
 
+	// Filters out any duplicates and false values from the knownBaseFormulas array.
     const deduplicatedBaseFormulas = [...new Set(knownBaseFormulas.filter(Boolean))];
-    debugLog(`Known base formulas for ${actor.name} (deduplicated): ${deduplicatedBaseFormulas.join(', ')}`, "c", 1);
+    debugLog(`Known base formulas for ${actor.name} (deduplicated): ${deduplicatedBaseFormulas.join(', ')}`);
 
     // Get the index from the compendium
     const index = await compendium.getIndex();
@@ -84,8 +85,10 @@ async function grantAlchemistFormulas(actor, newLevel) {
         relevantEntries.map(entry => compendium.getDocument(entry._id))
     );
 
+	// Filter items to only items that match new level, have common trait, have alchemical trait
     const filteredItems = relevantItems.filter(item => 
-        item.system.level.value === newLevel &&
+        // item.system.level.value === newLevel &&
+		item.system.level.value <= newLevel &&
         item.system.traits?.value?.includes('alchemical') && 
         item.system.traits?.rarity === 'common'
     );
@@ -100,12 +103,13 @@ async function grantAlchemistFormulas(actor, newLevel) {
 
     debugLog(`Adding the following new formula UUIDs to ${actor.name}: ${newFormulaUUIDs.join(', ')}`, "c", 1);
     
+	// check setting to see if we ask or autoadd
     if (addFormulasSetting === "ask") {
         for (const uuid of newFormulaUUIDs) {
             const item = await fromUuid(uuid);
             if (!item) continue;
 
-            const confirmed = await showFormulaDialog(actor, item, newLevel);
+            const confirmed = await showFormulaDialog(actor, item, item.system.level.value);
             if (confirmed) {
                 const newFormulaObject = { uuid };
                 const updatedFormulaObjects = [...actor.system.crafting.formulas, newFormulaObject];
@@ -138,11 +142,11 @@ async function grantAlchemistFormulas(actor, newLevel) {
  * @param {number} newLevel - The actor's new level.
  * @returns {Promise<boolean>} - Resolves to true if user clicks "Yes", false otherwise.
  */
-function showFormulaDialog(actor, item, newLevel) {
+function showFormulaDialog(actor, item, itemLevel) {
     return new Promise((resolve) => {
         new Dialog({
             title: "New Formula Discovered",
-            content: `<p>${actor.name} has unlocked the formula for <strong>${item.name}</strong> at level ${newLevel}. Would you like to add it?</p>`,
+            content: `<p>${actor.name} has unlocked the formula for <strong>${item.name}</strong> at level ${itemLevel}. Would you like to add it?</p>`,
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-check"></i>',
