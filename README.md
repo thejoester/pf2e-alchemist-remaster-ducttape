@@ -11,8 +11,7 @@ A module to slap together some functionality until the PF2e system is updated to
 **Quick Alchemy:** (This function is to manage crafting using Versatile Vials rather than reagents. This tool will consume 1 Versatile Vile, and craft an item from your formulas. A dialog box will appear with two drop downs. The first will list formulas for items of type weapon (bombs), and will have a "Craft and Attack" button which will craft the item then open the dialog box for the attack actions (must have target first), and a Craft button that will just craft the item. The second dropdown will list consumable items that you have the formula for and have a "Craft" button. All items created with this will have the "Infused" trait. 
 A macro will be included in the compendium. 
 
-[Quick Alchemy example](https://github.com/user-attachments/assets/a2bbca8f-5126-4e80-b67f-d11c5c4de416)
-
+![Quick Alchemy example](https://github-production-user-asset-6210df.s3.amazonaws.com/7744795/395860170-a2bbca8f-5126-4e80-b67f-d11c5c4de416.webm)
 
 (update) I added the option to just craft an item, in that case it will add to inventory, consume a versatile vial (unless crafting a versitile vial), and then add a chat card with a link to use that item. 
 
