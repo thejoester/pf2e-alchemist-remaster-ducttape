@@ -16,7 +16,8 @@ A module to slap together some functionality until the PF2e system is updated to
 **Quick Alchemy:** funcion that will consume 1 Versatile Vile, and craft an item from your formulas. A dialog box will appear with two drop downs. The first will list formulas for items of type weapon (bombs), and will have a "Craft and Attack" button which will craft the item then open the dialog box for the attack actions. You must have a target selected first. The second dropdown will list consumable items that you have the formula for and have a "Craft" button. All items created with this will have the "Infused" trait. 
 A macro will be included in the compendium. 
 
-![Quick Alchemy macro example](https://i.ibb.co/D4nvgz4/QA-Example.gif)
+[Quick Alchemy example](https://github.com/user-attachments/assets/a2bbca8f-5126-4e80-b67f-d11c5c4de416)
+
 
 (update) I added the option to just craft an item, in that case it will add to inventory, consume a versatile vial (unless crafting a versitile vial), and then add a chat card with a link to use that item. 
 
@@ -24,7 +25,8 @@ A macro will be included in the compendium.
 
 **Search Formulas:** Added search bar for known formulas.
 
-![Search function](https://i.ibb.co/dJ3c68q/search.gif)
+![search](https://github.com/user-attachments/assets/7323ddf2-a013-4f41-b9e8-93abfb63f92e)
+
 
 **Add higher level version of known versions:** Will add a higher level version of known formulas. For example if character has the formula for "Alchemist's Fire (Lesser)", when they reach level 3 it will add "Alchemist's Fire (Moderate)". Can set to prompt first (default), or automatically add, or disable in settings. 
 
