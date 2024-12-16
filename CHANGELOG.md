@@ -1,3 +1,7 @@
+## 2.3.0
+### Features
+- Monitors game time, after 10 minutes of exploration (non combat) will prompt alchemist characters to add vials if needed. 
+
 ## 2.3.1
 ### Bug Fixes
 - When leveling up and skipping levels (example level 1 to level 5) it will search for formulas for all levels that you know to add higher level version if enabled in settings. 
