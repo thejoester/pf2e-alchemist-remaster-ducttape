@@ -1,19 +1,26 @@
 import { debugLog } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
-// Store the addFormulasOnLevelUp setting globally
+// Get Game Settings
 let addFormulasSetting = "disabled";
+let addNewFormulasToChat = false;
+let addFormulasPermission = "gm_only"; 
 
 Hooks.once('init', () => {
     // Check if the addFormulasOnLevelUp setting is disabled globally
     addFormulasSetting = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
+	addNewFormulasToChat = game.settings.get("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat");
+	addFormulasPermission = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasPermission");
 
     if (addFormulasSetting !== "disabled") {
         // Hook into updateActor to detect level-ups and grant Alchemist formulas
         Hooks.on('updateActor', async (actor, updateData, options, userId) => {
             // Ensure this only runs for GMs
-            if (!game.user.isGM) return;
-
+            //if (!game.user.isGM) return;
+			if (addFormulasPermission === "gm_only" && !game.user.isGM) return;
+			if (addFormulasPermission === "actor_owner" && !actor.isOwner) return;	
+			if (addFormulasPermission === "actor_owner" && game.user.isGM) return; // Prevent GM from being asked
+			
             // Check if the actor's class is "Alchemist"
             const className = actor.class?.name?.toLowerCase() || '';
             if (className !== "alchemist") {
@@ -53,11 +60,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
         return;
     }
 
-    // Extract the UUIDs from the actor's known formulas
     const knownFormulaUUIDs = actor.system.crafting.formulas.map(f => (typeof f.uuid === 'string' ? f.uuid : null)).filter(Boolean);
-    debugLog(`Known formula UUIDs for ${actor.name}: ${knownFormulaUUIDs.join(', ')}`, "c", 1);
-
-    // Extract base formula names from the known UUIDs
     const knownBaseFormulas = await Promise.all(
         knownFormulaUUIDs.map(async (uuid) => {
             try {
@@ -70,29 +73,19 @@ async function grantAlchemistFormulas(actor, newLevel) {
         })
     );
 
-	// Filters out any duplicates and false values from the knownBaseFormulas array.
     const deduplicatedBaseFormulas = [...new Set(knownBaseFormulas.filter(Boolean))];
-    debugLog(`Known base formulas for ${actor.name} (deduplicated): ${deduplicatedBaseFormulas.join(', ')}`);
-
-    // Get the index from the compendium
     const index = await compendium.getIndex();
     const relevantEntries = index.filter(entry => 
         deduplicatedBaseFormulas.some(baseFormula => entry.name.startsWith(baseFormula))
     );
-
-    // Load the relevant item documents
     const relevantItems = await Promise.all(
         relevantEntries.map(entry => compendium.getDocument(entry._id))
     );
-
-	// Filter items to only items that match new level, have common trait, have alchemical trait
     const filteredItems = relevantItems.filter(item => 
-        // item.system.level.value === newLevel &&
-		item.system.level.value <= newLevel &&
+        item.system.level.value <= newLevel &&
         item.system.traits?.value?.includes('alchemical') && 
         item.system.traits?.rarity === 'common'
     );
-
     const relevantUUIDs = filteredItems.map(item => `Compendium.${compendiumName}.Item.${item.id}`);
     const newFormulaUUIDs = relevantUUIDs.filter(uuid => !knownFormulaUUIDs.includes(uuid));
 
@@ -101,9 +94,9 @@ async function grantAlchemistFormulas(actor, newLevel) {
         return;
     }
 
-    debugLog(`Adding the following new formula UUIDs to ${actor.name}: ${newFormulaUUIDs.join(', ')}`, "c", 1);
-    
-	// check setting to see if we ask or autoadd
+    // Collect added formulas for the chat message
+    const addedFormulas = [];
+
     if (addFormulasSetting === "ask") {
         for (const uuid of newFormulaUUIDs) {
             const item = await fromUuid(uuid);
@@ -114,6 +107,10 @@ async function grantAlchemistFormulas(actor, newLevel) {
                 const newFormulaObject = { uuid };
                 const updatedFormulaObjects = [...actor.system.crafting.formulas, newFormulaObject];
                 await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+
+                // Add the formula name to the list
+                addedFormulas.push(item.name);
+
                 ui.notifications.info(`${actor.name} has learned the formula for ${item.name}.`);
             } else {
                 debugLog(`User declined to add formula ${item.name} to ${actor.name}.`, "c", 2);
@@ -126,13 +123,28 @@ async function grantAlchemistFormulas(actor, newLevel) {
 
         try {
             await actor.update({ 'system.crafting.formulas': validUUIDs });
+
+            // Get the names of the added formulas
+            const formulaNames = await Promise.all(newFormulaUUIDs.map(async (uuid) => {
+                const item = await fromUuid(uuid);
+                return item?.name ?? 'Unknown Formula';
+            }));
+
+            // Add the formula names to the list
+            addedFormulas.push(...formulaNames);
+
             ui.notifications.info(`${actor.name} has learned ${newFormulaUUIDs.length} new formulas.`);
         } catch (error) {
             debugLog(`Error updating formulas for ${actor.name}: ${error.message}`, "c", 3);
         }
     }
+	
+    if (addNewFormulasToChat && addedFormulas.length > 0) { // if option enabled and there was formulas added, display in chat
+        ChatMessage.create({ 
+            content: `<strong>${actor.name}</strong> has learned the following new formulas:<br><br> ${addedFormulas.join('<br>')}`
+        });
+    }
 }
-
 
 /**
  * Show a dialog to ask if the user wants to add a formula.

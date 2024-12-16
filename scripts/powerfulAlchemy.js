@@ -1,4 +1,6 @@
 import { debugLog } from './settings.js';
+import { hasFeat } from './settings.js';
+
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape: PowerfulAlchemy.js loaded","color: aqua; font-weight: bold;");
 	
@@ -40,10 +42,11 @@ Hooks.on("ready", () => {
 			 @param {actor} actor object.
 			 @param {slug} sug of feat.
 			 @returns {true/false}
-			*/
+			
 			function hasFeat(actor, slug) {
 				return actor.itemTypes.feat.some((feat) => feat.slug === slug);
 			}
+			*/
 			
 			// Get the actor from the item's parent (the actor who owns the item)
 			const sa = item.parent;
@@ -71,7 +74,8 @@ Hooks.on("ready", () => {
 			}
 
 			// Log infused item was created
-			debugLog(`Infused item created!: ${item}`);
+			debugLog(`Infused item created!`);
+			console.log(item);
 
 			// Get the actor's class DC
 			const classDC = sa.system.attributes.classDC?.value;

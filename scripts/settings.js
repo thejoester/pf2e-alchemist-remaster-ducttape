@@ -1,6 +1,6 @@
 console.log("%cPF2e Alchemist Remaster Duct Tape: settings.js loaded","color: aqua; font-weight: bold;");
 // Function for debugging
-export function debugLog(logMsg, logType = "c", logLevel = "1") {
+export function debugLog(logMsg, logType = "c", logLevel = "1", ...additionalData) {
 	const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
 	if (!debugEnabled && logLevel != 3) return;
 		
@@ -21,16 +21,16 @@ export function debugLog(logMsg, logType = "c", logLevel = "1") {
 			case "c": //console
 				switch (logLevel) {
 					case "1": // info/log
-						console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`,"color: aqua; font-weight: bold;");
+						console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`,"color: aqua; font-weight: bold;", ...additionalData);
 						break;
 					case "2": // warn
-						console.warn(`P2Fe Alchemist Duct Tape | ${formattedLogMsg}`);
+						console.warn(`P2Fe Alchemist Duct Tape | ${formattedLogMsg}`, ...additionalData);
 						break;
 					case "3": // error
-						console.error(`P2Fe Alchemist Duct Tape | ${formattedLogMsg}`);
+						console.error(`P2Fe Alchemist Duct Tape | ${formattedLogMsg}`, ...additionalData);
 						break;
 					default:
-						console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`,"color: aqua; font-weight: bold;");
+						console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`,"color: aqua; font-weight: bold;", ...additionalData);
 				}
 				break;
 			case "u": // ui
@@ -53,13 +53,15 @@ export function debugLog(logMsg, logType = "c", logLevel = "1") {
 		}
 }
 
-// Dummy form for settings headers
-class DummyForm extends FormApplication {
-    /** @override */
-    render() {
-        return;
-    }
-}
+/**
+			 Check if actor has a feat by searching for the slug, example "powerful-alchemy"
+			 @param {actor} actor object.
+			 @param {slug} sug of feat.
+			 @returns {true/false}
+			*/
+			export function hasFeat(actor, slug) {
+				return actor.itemTypes.feat.some((feat) => feat.slug === slug);
+			}
 
 
 Hooks.once("init", () => {
@@ -123,7 +125,6 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-	
 	/* 
 		Powerful Alchemy Settings
 	*/
@@ -159,6 +160,64 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
+		name: "Specify who is asked to add forumulas to actor:",
+		hint: "",
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		type: String, // Dropdown uses a string type
+		choices: {
+			gm_only: "GM",
+			actor_owner: "Owner"
+		},
+		default: "ask",  // The default value of the setting
+		requiresReload: true,
+	});
+	
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
+		name: "Add the list of new formulas added upon levelup to chat.",
+		hint: "",
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		type: Boolean, // Dropdown uses a string type
+		default: true,  // The default value of the setting
+		requiresReload: true,
+	});
+	
+	// Disable addNewFormulasToChat if addFormulasOnLevelUp is set to 'disabled'
+	Hooks.on("renderSettingsConfig", (app, html, data) => {
+		const controllerSetting = "pf2e-alchemist-remaster-ducttape.addFormulasOnLevelUp";
+		const dependentSettings = [
+			"pf2e-alchemist-remaster-ducttape.addNewFormulasToChat",
+			"pf2e-alchemist-remaster-ducttape.addFormulasPermission" // Both Boolean and String types
+		];
+		
+		// Get the current value of the controller setting
+		const enableAdvancedOptions = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
+		
+		// Disable both dependent settings on initial render
+		dependentSettings.forEach(setting => {
+			const dependentInput = html.find(`input[name="${setting}"], select[name="${setting}"]`);
+			if (dependentInput.length) {
+				dependentInput.prop('disabled', enableAdvancedOptions === 'disabled');
+			}
+		});
+		
+		// Watch for changes to the controller setting
+		html.find(`select[name="${controllerSetting}"]`).change((event) => {
+			const selectedValue = event.target.value;
+			
+			// Update both dependent settings
+			dependentSettings.forEach(setting => {
+				const dependentInput = html.find(`input[name="${setting}"], select[name="${setting}"]`);
+				if (dependentInput.length) {
+					dependentInput.prop('disabled', selectedValue === 'disabled');
+				}
+			});
+		});
+	});
+
+	
 	/*
 		Vial Search Reminders
 	*/
@@ -172,6 +231,15 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "versatileVialName", {
+		name: "Versatile Vial Name",
+		hint: `For languages other than english, enter the name of "versatile vial".`,
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		type: String,   // The type of setting (true/false)
+		default: "versatile vial",  // The default value of the setting
+		requiresReload: true,
+	});
 
 	/* 
 		Searchable Formulas

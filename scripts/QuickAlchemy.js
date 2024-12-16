@@ -1,4 +1,5 @@
 import { debugLog } from './settings.js';
+import { hasFeat } from './settings.js';
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape (QuickAlchemy.js) loaded", "color: aqua; font-weight: bold;");
 
@@ -135,12 +136,6 @@ Hooks.on("ready", () => {
 		});
 	}
 
-   
-	// Helper function to check if an actor has a specific feat by slug
-	function hasFeat(actor, slug) {
-		return actor.itemTypes.feat.some((feat) => feat.slug === slug);
-	}
-	
 	// Function to equip an item by slug
 	async function equipItemBySlug(slug) {
 		const actor = canvas.tokens.controlled[0]?.actor;

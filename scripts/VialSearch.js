@@ -1,12 +1,28 @@
 import { debugLog } from './settings.js';
+import { hasFeat } from './settings.js';
 
 // See if VialSearch option enabled, default to false
 let vialSearchReminder = false;
+let versatileVialName = "versatile vial";
+// Cache the versatile vial entry once the world is ready
+/*
+let versatileVialEntry; 
+Hooks.once('ready', async () => {
+    
+	const compendium = game.packs.get('pf2e.equipment-srd');
+    const index = await compendium.getIndex();
+    versatileVialEntry = index.find(e => e.slug === 'versatile-vial');
+    debugLog(`Cached versatile vial entry: ${versatileVialEntry?._id}`);
+	
 
+});
+*/
 Hooks.once('init', () => {
     // Check if the vialSearchReminder setting is enabled globally
     vialSearchReminder = game.settings.get("pf2e-alchemist-remaster-ducttape", "vialSearchReminder");
-
+	// Get name from settings of Versatile Vial
+	versatileVialName = game.settings.get("pf2e-alchemist-remaster-ducttape", "versatileVialName");
+	
     if (vialSearchReminder) {
 		
 		//debug
@@ -20,7 +36,7 @@ Hooks.once('init', () => {
 			const TEN_MINUTES_IN_SECONDS = 600; // 10 minutes in seconds
 
 			// Retrieve or initialize the last processed time and the previous time
-			let lastProcessedTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime') || 0;
+			let lastProcessedTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime') ?? 0;
 			let previousTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'previousTime');
 
 			// If previousTime is not set (still 0), initialize it to the current world time
@@ -81,30 +97,41 @@ Hooks.once('init', () => {
 
 			// Loop through all actors and find Alchemists
 			for (const actor of game.actors) {
-				if (!actor || actor.type !== 'character') continue;
+				if (!actor || actor.type !== 'character') continue; // Actor is character
 
-				const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist';
-				if (!isAlchemist) continue;
+				const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
+				if (!isAlchemist) continue; // actor is not alchemist, stop
 
 				// Avoid processing the same actor multiple times
 				if (processedActorIds.has(actor.id)) continue;
 				processedActorIds.add(actor.id);
-
-				const maxVials = 2 + actor.system.abilities.int.mod; // Calculate max vials
-				let currentVials = getCurrentVials(actor); // Custom function to get current vial count
+				
+				// Get maxVials count
+				const maxVials = getMaxVials(actor);
+				
+				// Get number of vials that can be found
+				const foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
+				
+				// get current vial count
+				let currentVials = getCurrentVials(actor); 
 
 				if (currentVials < maxVials) {
 					const messageContent = `
-						<p>${actor.name} has spent 10 minutes in exploration mode. Would you like to add up to 2 versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
-						<button class="add-vials-button" data-actor-id="${actor.id}">Add Vials</button>
-					`;
+                        <p>${actor.name} has spent 10 minutes in exploration mode. Would you like to add up to ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
+                        <button class="add-vials-button" data-actor-id="${actor.id}">Add Vials</button>
+                    `;
 
+                    // Get user permission
 					const playerIds = game.users.filter(u => actor.testUserPermission(u, 'OWNER')).map(u => u.id);
-					ChatMessage.create({
-						content: messageContent,
-						speaker: ChatMessage.getSpeaker({ actor: actor }),
-						whisper: playerIds
-					});
+					
+                    const message = await ChatMessage.create({
+                        content: `
+                            <p>${actor.name} has spent 10 minutes in exploration mode. Would you like to add up to ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
+                            <button class="add-vials-button" data-actor-id="${actor.id}">Add Vials</button>
+                        `,
+                        speaker: ChatMessage.getSpeaker({ actor: actor }),
+                        whisper: playerIds
+                    });
 				}
 			}
 
@@ -120,26 +147,28 @@ $(document).on('click', '.add-vials-button', async (event) => {
     const button = event.currentTarget;
     const actorId = button.dataset.actorId;
     const actor = game.actors.get(actorId);
-    if (!actor) return;
-
+    if (!actor) { // Check for Actor, if none stop
+		debugLog(`No actor found on .add-vials-button`);
+		return; 
+	}
+	
     // Check if the player has owner permission on the actor
     if (!actor.testUserPermission(game.user, 'OWNER')) {
         ui.notifications.warn('You do not have permission to modify this actor.');
         return;
     }
 
-    const maxVials = 2 + actor.system.abilities.int.mod; // Calculate max vials
-    let currentVials = getCurrentVials(actor); // Custom function to get current vial count
-
-    const vialsToAdd = Math.min(2, maxVials - currentVials);
-    if (vialsToAdd > 0) {
-        await addVialsToActor(actor, vialsToAdd); // Custom function to add vials to the actor
-        ui.notifications.info(`${actor.name} found ${vialsToAdd} versatile vials!`);
-        
-        // Disable the button
-        button.disabled = true;
-        button.textContent = "Vials Added";
-
+    // Get maxVials count
+	const maxVials = getMaxVials(actor); // get max vials
+    let currentVials = getCurrentVials(actor); // get current vial count
+	const foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2; // Number of vials actor found
+    const vialsToAdd = Math.min(foundVials, maxVials - currentVials); // Number of vials to add
+  
+    if (vialsToAdd > 0) { // Make sure we are adding vials
+        // add vials to the actor
+        await addVialsToActor(actor, vialsToAdd); // Add vials
+        ui.notifications.info(`${actor.name} found ${vialsToAdd} versatile vials!`); 
+ 
         // Send chat message visible to all players
         ChatMessage.create({
             content: `${actor.name} found ${vialsToAdd} versatile vial(s).`,
@@ -156,9 +185,21 @@ $(document).on('click', '.add-vials-button', async (event) => {
  * @returns {number} Current count of versatile vials
  */
 function getCurrentVials(actor) {
-    const versatileVials = actor.items.filter((item) => item.slug === "versatile-vial");
+    const versatileVials = actor.items.filter((item) => item.slug?.toLowerCase() === "versatile-vial");
     const vialCount = versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
     return vialCount;
+}
+
+/**
+ * Custom function to get the max number of versatile vials actor should have in inventory
+ * @param {Actor} actor 
+ * @returns {number} maximum count of versatile vials
+ */
+function getMaxVials(actor){
+  const extraVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
+  const maxVials = extraVials + actor.system.abilities.int.mod;
+  debugLog(`Actor ${actor.name} max vials calculated as: ${maxVials}`);
+  return maxVials;
 }
 
 /**
@@ -167,7 +208,7 @@ function getCurrentVials(actor) {
  * @param {number} count - Number of vials to add
  */
 async function addVialsToActor(actor, count) {
-    let vialItem = actor.items.find(item => item.name.toLowerCase() === 'versatile vial');
+    let vialItem = actor.items.find(item => item.name.toLowerCase() === versatileVialName);
     
     if (!vialItem) { 
       const compendium = game.packs.get('pf2e.equipment-srd');
@@ -184,4 +225,4 @@ async function addVialsToActor(actor, count) {
         const newQuantity = vialItem.system.quantity + count;
         await vialItem.update({ 'system.quantity': newQuantity });
     }
-}  
+} 

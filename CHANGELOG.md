@@ -1,3 +1,10 @@
+## 2.4.1
+### Features
+- Vial Search: Added option to output new formulas to chat
+- Vial Search: Added "Alchemical Expertise" feat support
+### Bug Fixes
+- Vial Search: Added ablity to change name of versatile vial for non english users in settings
+
 ## 2.4.0
 ### Features
 - Monitors game time, after 10 minutes of exploration (non combat) will prompt alchemist characters to add vials if needed. 
