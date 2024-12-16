@@ -402,85 +402,85 @@ Hooks.on("ready", () => {
 			title: "Quick Alchemy",
 			content: content,
 			buttons: {},
-				render: (html) => {
+			render: (html) => {
 
-					// Craft Vial Button Weapon
-					html.find("#craft-vial-btn").click(async () => {
-						const selectedUuid = html.find("#vial-formula").val();
-						const selectedItem = await fromUuid(selectedUuid);
+				// Craft Vial Button Weapon
+				html.find("#craft-vial-btn").click(async () => {
+					const selectedUuid = html.find("#vial-formula").val();
+					const selectedItem = await fromUuid(selectedUuid);
 
-						if (selectedItem) {
-							
-							// Create/Add item
-							await craftItem(selectedItem, actor);
-							
-							// Equip item
-							const newUuid = await equipItemBySlug(selectedItem.slug);
-							
-							// Send Message to Chat
-							await sendWeaponAttackMessage(`${actor.uuid}.Item.${newUuid}`);
-							
-							// Close the dialog window
-							qaDialog.close();
+					if (selectedItem) {
 						
-						} else {
-							ui.notifications.error("Selected item is invalid.");
-						}
-					});
-
-					// Craft And Attack button
-					html.find("#craft-weapon-btn").click(async () => {
-						// Get selected item
-						const selectedUuid = html.find("#weapon-formula").val();
-						const selectedItem = await fromUuid(selectedUuid); 
+						// Create/Add item
+						await craftItem(selectedItem, actor);
 						
-						// Ensure a target is selected
-						const target = game.user.targets.first();
+						// Equip item
+						const newUuid = await equipItemBySlug(selectedItem.slug);
+						
+						// Send Message to Chat
+						await sendWeaponAttackMessage(`${actor.uuid}.Item.${newUuid}`);
+						
+						// Close the dialog window
+						qaDialog.close();
+					
+					} else {
+						ui.notifications.error("Selected item is invalid.");
+					}
+				});
+
+				// Craft And Attack button
+				html.find("#craft-weapon-btn").click(async () => {
+					// Get selected item
+					const selectedUuid = html.find("#weapon-formula").val();
+					const selectedItem = await fromUuid(selectedUuid); 
+					
+					// Ensure a target is selected
+					const target = game.user.targets.first();
+					if (!target) {
+						ui.notifications.error("Please target a token for the attack.");
+						return;
+					}
+					
+					// Create or increase item qty
+					if (selectedItem) {
+						
+						// Create/Add item
+						await craftItem(selectedItem, actor);
+						
+						// Equip Item
+						const newUuid = await equipItemBySlug(selectedItem.slug);
+						if (!newUuid) {
+							ui.notifications.error("Failed to equip item.");
+							return;
+						} 
+						const target = canvas.tokens.controlled[0]?.target;
+						
+						// Make sure we have a target
 						if (!target) {
 							ui.notifications.error("Please target a token for the attack.");
 							return;
-						}
-						
-						// Create or increase item qty
-						if (selectedItem) {
-							
-							// Create/Add item
-							await craftItem(selectedItem, actor);
-							
-							// Equip Item
-							const newUuid = await equipItemBySlug(selectedItem.slug);
-							if (!newUuid) {
-								ui.notifications.error("Failed to equip item.");
-								return;
-							} 
-							const target = canvas.tokens.controlled[0]?.target;
-							
-							// Make sure we have a target
-							if (!target) {
-								ui.notifications.error("Please target a token for the attack.");
-								return;
-							} else {
-								// Initate rollActionMacro 
-								const actorUuid = actor.uuid;
-								game.pf2e.rollActionMacro({
-									actorUUID: actorUuid,
-									type: "strike",
-									itemId: newUuid,
-									slug: selectedItem.slug,
-								});
-							}
-
-							// Reduce Versatile Vial count
-							consumeVersatileVial(selectedItem.slug,versatileVials);
-							
-							// Close the dialog window
-							qaDialog.close();	
-
 						} else {
-							debugLog("Selected item is invalid.", "u", 3);
+							// Initate rollActionMacro 
+							const actorUuid = actor.uuid;
+							game.pf2e.rollActionMacro({
+								actorUUID: actorUuid,
+								type: "strike",
+								itemId: newUuid,
+								slug: selectedItem.slug,
+							});
 						}
+
+						// Reduce Versatile Vial count
+						consumeVersatileVial(selectedItem.slug,versatileVials);
+						
+						// Close the dialog window
+						qaDialog.close();	
+
+					} else {
+						debugLog("Selected item is invalid.", "u", 3);
+					}
 				});
-				
+			
 				// Weapon Craft Button Weapon
 				html.find("#craft-weapon-only-btn").click(async () => {
 					const selectedUuid = html.find("#weapon-formula").val();

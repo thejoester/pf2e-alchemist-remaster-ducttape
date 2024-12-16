@@ -53,7 +53,53 @@ export function debugLog(logMsg, logType = "c", logLevel = "1") {
 		}
 }
 
+// Dummy form for settings headers
+class DummyForm extends FormApplication {
+    /** @override */
+    render() {
+        return;
+    }
+}
+
+
 Hooks.once("init", () => {
+	
+	
+	/*
+	
+		Saved Data Settings
+	
+	*/
+	game.settings.register('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime', {
+        name: 'Last Processed Time',
+        hint: 'Tracks the last processed time for exploration mode.',
+        scope: 'world',
+        config: false,
+        type: Number,
+        default: 0
+    });
+	game.settings.register('pf2e-alchemist-remaster-ducttape', 'previousTime', {
+		name: 'Previous World Time',
+		hint: 'Tracks the last recorded world time to calculate elapsed time.',
+		scope: 'world',
+		config: false,
+		type: Number,
+		default: 0
+	});
+	
+	
+	/*
+		Show Quick Alchemy counts
+	*/
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQACounts", {
+		name: "Quick Alchemy: Show forumla counts",
+		hint: "If enabled, will show the number of available formulas.",
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		default: false,  // The default value of the setting
+		type: Boolean,   // The type of setting (true/false)
+		requiresReload: true,
+	});
 	
 	/* 
 		Sized Based Alchemy Settings
@@ -95,36 +141,6 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-	/* 
-		Searchable Formulas
-	*/
-	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Formula Search settings...","color: aqua; font-weight: bold;");
-	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
-		name: "Enable Formula Search",
-		hint: "Enables the search/filter for formulas on character sheet.",
-		scope: "client", // "world" makes it available to all players; use "client" for a single user
-		config: true, // Show this setting in the configuration UI
-		type: Boolean, // Checkbox input type
-        default: true, // Default value is unchecked
-        onChange: (value) => {
-            console.log(`PF2E Alchemist Remaster Duct Tape | FormulaSearch enabled: ${value}`);
-        },
-		requiresReload: true
-	});
-	
-	/*
-		Show Quick Alchemy counts
-	*/
-	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQACounts", {
-		name: "Quick Alchemy: Show forumla counts",
-		hint: "If enabled, will show the number of available formulas.",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		default: false,  // The default value of the setting
-		type: Boolean,   // The type of setting (true/false)
-		requiresReload: true,
-	});
-	
 	/*
 		LevelUp - auto add formulas
 	*/
@@ -143,6 +159,36 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
+	/*
+		Vial Search Reminders
+	*/
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
+		name: "Vial search reminder",
+		hint: "When 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		type: Boolean,   // The type of setting (true/false)
+		default: true,  // The default value of the setting
+		requiresReload: true,
+	});
+	
+
+	/* 
+		Searchable Formulas
+	*/
+	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Formula Search settings...","color: aqua; font-weight: bold;");
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
+		name: "Enable Formula Search",
+		hint: "Enables the search/filter for formulas on character sheet.",
+		scope: "client", // "world" makes it available to all players; use "client" for a single user
+		config: true, // Show this setting in the configuration UI
+		type: Boolean, // Checkbox input type
+        default: true, // Default value is unchecked
+        onChange: (value) => {
+            console.log(`PF2E Alchemist Remaster Duct Tape | FormulaSearch enabled: ${value}`);
+        },
+		requiresReload: true
+	});
 	
 	/*
 		Debugging

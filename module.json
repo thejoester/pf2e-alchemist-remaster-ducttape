@@ -2,7 +2,7 @@
   "id": "pf2e-alchemist-remaster-ducttape",
   "title": "PF2e Alchemist Remaster Duct Tape",
   "description": "A module to slap together some functionality until the PF2e system is updated to support the Alchmist remaster.",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "compatibility": {
     "minimum": "12",
     "verified": "12"
@@ -15,11 +15,12 @@
 	"scripts/QuickAlchemy.js",
     "scripts/PowerfulAlchemy.js",
 	"scripts/FormulaSearch.js",
-	"scripts/LevelUp.js"
+	"scripts/LevelUp.js",
+	"scripts/VialSearch.js"
   ],
   "url": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape",
   "manifest": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/latest/download/module.json",
-  "download": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/download/2.3.1/pf2e-alchemist-remaster-ducttape.zip",
+  "download": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/download/2.4.0/pf2e-alchemist-remaster-ducttape.zip",
   "readme": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/README.md",
   "changelog": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/CHANGELOG.md",
   "license": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/LICENSE.txt",
