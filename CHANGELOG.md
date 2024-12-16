@@ -1,4 +1,4 @@
-## 2.3.0
+## 2.4.0
 ### Features
 - Monitors game time, after 10 minutes of exploration (non combat) will prompt alchemist characters to add vials if needed. 
 
