@@ -54,14 +54,14 @@ export function debugLog(logMsg, logType = "c", logLevel = "1", ...additionalDat
 }
 
 /**
-			 Check if actor has a feat by searching for the slug, example "powerful-alchemy"
-			 @param {actor} actor object.
-			 @param {slug} sug of feat.
-			 @returns {true/false}
-			*/
-			export function hasFeat(actor, slug) {
-				return actor.itemTypes.feat.some((feat) => feat.slug === slug);
-			}
+	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
+	@param {actor} actor object.
+	@param {slug} sug of feat.
+	@returns {true/false}
+*/
+export function hasFeat(actor, slug) {
+	return actor.itemTypes.feat.some((feat) => feat.slug === slug);
+}
 
 
 Hooks.once("init", () => {
@@ -94,7 +94,7 @@ Hooks.once("init", () => {
 		Show Quick Alchemy counts
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQACounts", {
-		name: "Quick Alchemy: Show forumla counts",
+		name: "Quick Alchemy: Show formula counts",
 		hint: "If enabled, will show the number of available formulas.",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
@@ -147,21 +147,22 @@ Hooks.once("init", () => {
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
 		name: "Add higher level version of known formulas upon levelup.",
-		hint: "If enabled, when leveled up will add higher level version of known formulas. Ask = will prompt for each formula; Auto = will automatically add formula.",
+		hint: "If enabled, when leveled up will add higher level version of known formulas. Ask for each = will prompt for each formula; Ask for all = will prompt for all formulas at once; Auto = will automatically add formulas.",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
 		type: String, // Dropdown uses a string type
 		choices: {
 			disabled: "Disabled",
-			ask: "Ask",
+			ask_all: "Ask for all",
+			ask_each: "Ask for each",
 			auto: "Auto"
 		},
-		default: "ask",  // The default value of the setting
+		default: "ask_all",  // The default value of the setting
 		requiresReload: true,
 	});
 	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
-		name: "Specify who is asked to add forumulas to actor:",
+		name: "Specify who is asked to add formulas to actor:",
 		hint: "",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
@@ -228,16 +229,6 @@ Hooks.once("init", () => {
 		config: true,    // Whether to show this in the module settings UI
 		type: Boolean,   // The type of setting (true/false)
 		default: true,  // The default value of the setting
-		requiresReload: true,
-	});
-	
-	game.settings.register("pf2e-alchemist-remaster-ducttape", "versatileVialName", {
-		name: "Versatile Vial Name",
-		hint: `For languages other than english, enter the name of "versatile vial".`,
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		type: String,   // The type of setting (true/false)
-		default: "versatile vial",  // The default value of the setting
 		requiresReload: true,
 	});
 

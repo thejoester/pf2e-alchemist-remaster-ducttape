@@ -30,7 +30,7 @@ Hooks.on("ready", () => {
 					const itemName = item.name;
 					ChatMessage.create({
 						author: game.user?.id,    // User ID to send the message as the system
-						content: `${itemName} created with Quick Alchemy using Class DC ${classDC}!`,
+						content: `<p>${itemName} created with Quick Alchemy using Class DC ${classDC}!</p><p>${item.system.description.value || "No description available."}</p>`,
 						speaker: { alias: "PF2e Powerful Alchemy" }  // Optional: sets the speaker to "System"
 					});
 				}

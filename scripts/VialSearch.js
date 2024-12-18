@@ -20,8 +20,6 @@ Hooks.once('ready', async () => {
 Hooks.once('init', () => {
     // Check if the vialSearchReminder setting is enabled globally
     vialSearchReminder = game.settings.get("pf2e-alchemist-remaster-ducttape", "vialSearchReminder");
-	// Get name from settings of Versatile Vial
-	versatileVialName = game.settings.get("pf2e-alchemist-remaster-ducttape", "versatileVialName");
 	
     if (vialSearchReminder) {
 		
@@ -109,7 +107,7 @@ Hooks.once('init', () => {
 				// Get maxVials count
 				const maxVials = getMaxVials(actor);
 				
-				// Get number of vials that can be found
+				// Get number of vials that can be found = 2 unless actor has alchemical expertise feat
 				const foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
 				
 				// get current vial count
@@ -132,6 +130,12 @@ Hooks.once('init', () => {
                         speaker: ChatMessage.getSpeaker({ actor: actor }),
                         whisper: playerIds
                     });
+					// Update the message to add the data-message-id to the button
+					const updatedContent = message.content.replace(
+						'<button class="add-vials-button"',
+						`<button class="add-vials-button" data-message-id="${message.id}"`
+					);
+					await message.update({ content: updatedContent });
 				}
 			}
 
@@ -177,6 +181,26 @@ $(document).on('click', '.add-vials-button', async (event) => {
     } else {
         ui.notifications.warn(`${actor.name} already has the maximum number of versatile vials.`);
     }
+	
+	// Once clicked - delete button from chat mesasage
+	const messageId = button.closest('.message').dataset.messageId; // Get the chat message ID
+    const message = game.messages.get(messageId); // Get the chat message object
+	debugLog(`MessageId: ${messageId} | message: ${message}`);
+    
+	if (!messageId) {
+        console.error('Message ID not found on button. Ensure data-message-id is set correctly.');
+        return;
+    }
+	if (!message) {
+        console.error(`Message not found for ID: ${messageId}`);
+        return;
+    }
+	
+    // Disable the button and remove it from the chat message
+    button.disabled = true;
+    const updatedContent = message.content.replace(button.outerHTML, '');
+    await message.update({ content: updatedContent });
+	
 });
 
 /**
@@ -196,8 +220,7 @@ function getCurrentVials(actor) {
  * @returns {number} maximum count of versatile vials
  */
 function getMaxVials(actor){
-  const extraVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
-  const maxVials = extraVials + actor.system.abilities.int.mod;
+  const maxVials = 2 + actor.system.abilities.int.mod; // 2 + INT modifier
   debugLog(`Actor ${actor.name} max vials calculated as: ${maxVials}`);
   return maxVials;
 }
@@ -208,21 +231,45 @@ function getMaxVials(actor){
  * @param {number} count - Number of vials to add
  */
 async function addVialsToActor(actor, count) {
-    let vialItem = actor.items.find(item => item.name.toLowerCase() === versatileVialName);
-    
-    if (!vialItem) { 
-      const compendium = game.packs.get('pf2e.equipment-srd');
-      const entry = await compendium.getIndex().then(index => index.find(e => e.name.toLowerCase() === 'versatile vial'));
-      if (entry) { 
-          const item = await compendium.getDocument(entry._id);
-          if (item) {
-              const itemData = item.toObject();
-              itemData.system.quantity = count;
-              await actor.createEmbeddedDocuments('Item', [itemData]);
-          }
-      }
-    } else {
-        const newQuantity = vialItem.system.quantity + count;
-        await vialItem.update({ 'system.quantity': newQuantity });
-    }
-} 
+	
+	/**
+		To avoid language issues, and more issues by accepting unchecked input, 
+		we will just add by direct uuid which should not change unless the item 
+		is replaced in the PF2e system. 
+	
+	*/
+	
+	// Check if actor has versatile vial item and add to quantity
+	let vialItem = actor.items.find(item => item.system.slug === 'versatile-vial');
+	if (vialItem) {
+		const currentQuantity = vialItem.system.quantity ?? 0;
+		const newQuantity = currentQuantity + count;
+		await vialItem.update({ 'system.quantity': newQuantity });
+	} else { // actor has no versatile vials
+		try {
+			// Use UUID to get the versatile vial item
+			const uuid = "Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus";
+			const item = await fromUuid(uuid);
+
+			if (!item) {
+				debugLog(`No item found for versatile vial using UUID: ${uuid}`,"c",3);
+				return;
+			}
+
+			// Convert item into a format that can be embedded in the actor's inventory
+			const itemData = item.toObject();
+			itemData.system.quantity = count; // Set the desired quantity for the new item
+
+			// Add the item to the actor's inventory
+			const createdItems = await actor.createEmbeddedDocuments('Item', [itemData]);
+			
+			if (!createdItems || createdItems.length === 0) {
+				debugLog(`Failed to create versatile vial for actor: ${actor.name}`,"c",3);
+			} else {
+				debugLog(`Successfully created versatile vial for actor: ${actor.name}`);
+			}
+		} catch (error) {
+			console.error(`Error adding versatile vial for actor ${actor.name}:`, error);
+		}
+	}
+}
