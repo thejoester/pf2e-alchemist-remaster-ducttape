@@ -72,7 +72,7 @@ Hooks.once("init", () => {
 		Saved Data Settings
 	
 	*/
-	game.settings.register('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime', {
+	game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
         name: 'Last Processed Time',
         hint: 'Tracks the last processed time for exploration mode.',
         scope: 'world',
@@ -146,7 +146,7 @@ Hooks.once("init", () => {
 		LevelUp - auto add formulas
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
-		name: "Add higher level version of known formulas upon levelup.",
+		name: "Add higher level version of known formulas upon level up.",
 		hint: "If enabled, when leveled up will add higher level version of known formulas. Ask for each = will prompt for each formula; Ask for all = will prompt for all formulas at once; Auto = will automatically add formulas.",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
@@ -176,7 +176,7 @@ Hooks.once("init", () => {
 	});
 	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
-		name: "Add the list of new formulas added upon levelup to chat.",
+		name: "Add the list of new formulas added upon level up to chat.",
 		hint: "",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
@@ -224,7 +224,7 @@ Hooks.once("init", () => {
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
 		name: "Vial search reminder",
-		hint: "When 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
+		hint: "When at least 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
 		type: Boolean,   // The type of setting (true/false)

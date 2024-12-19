@@ -1,3 +1,8 @@
+## 2.4.3
+### Bug Fixes
+- Vial Search: If multiple increments of 10 minutes of game time pass, will prompt to add appropriate number of vials. 
+- Vial Search: limite to only party characters for better performance. 
+
 ## 2.4.2
 ### New Features
 - Quick Alchemy: Added support for Double Brew feat.

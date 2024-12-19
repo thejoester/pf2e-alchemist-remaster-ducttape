@@ -4,19 +4,7 @@ import { hasFeat } from './settings.js';
 // See if VialSearch option enabled, default to false
 let vialSearchReminder = false;
 let versatileVialName = "versatile vial";
-// Cache the versatile vial entry once the world is ready
-/*
-let versatileVialEntry; 
-Hooks.once('ready', async () => {
-    
-	const compendium = game.packs.get('pf2e.equipment-srd');
-    const index = await compendium.getIndex();
-    versatileVialEntry = index.find(e => e.slug === 'versatile-vial');
-    debugLog(`Cached versatile vial entry: ${versatileVialEntry?._id}`);
-	
 
-});
-*/
 Hooks.once('init', () => {
     // Check if the vialSearchReminder setting is enabled globally
     vialSearchReminder = game.settings.get("pf2e-alchemist-remaster-ducttape", "vialSearchReminder");
@@ -30,71 +18,79 @@ Hooks.once('init', () => {
 
 			// Ensure this hook only runs for GMs
 			if (!game.user.isGM) return;
-		  
-			const TEN_MINUTES_IN_SECONDS = 600; // 10 minutes in seconds
-
-			// Retrieve or initialize the last processed time and the previous time
-			let lastProcessedTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime') ?? 0;
+			
+			/*
+				explorationTime = total time in exploration mode
+				currentTime = game world current time
+				previousTime = game world time before change
+			*/			
+			
+			// Initialize explorationBlocks and get explorationTime and previousTime from game settings
+			let explorationBlocks = 0;
+			let explorationTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'explorationTime') ?? 0;
 			let previousTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'previousTime');
+			const currentTime = game.time.worldTime;
 
-			// If previousTime is not set (still 0), initialize it to the current world time
+			// If previousTime is not set, initialize it to current world time
 			if (!previousTime) {
-				previousTime = game.time.worldTime;
+				previousTime = currentTime;
 				await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', previousTime);
 				debugLog(`Initializing previousTime to current world time: ${previousTime}`);
 			}
-			
-			// Get the current world time
-			const currentTime = game.time.worldTime;
 
-			// Check if the game is in combat
+			// If in combat, stop tracking
 			if (game.combat) {
-				debugLog(`Still in combat`);
-				// await game.settings.set('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime', lastProcessedTime);
+				debugLog(`In Combat - Not incrementing explorationTime`);
 				await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', currentTime);
-				debugLog(`Current Time: ${currentTime}, Previous Time: ${previousTime}, Last Processed Time: ${lastProcessedTime}`);
 				return;
 			}
 
-			// Calculate time difference
+			// Calculate the difference in time
 			let diff = currentTime - previousTime;
 
-			// Handle large jumps in time (like advancing 1 day) by capping the diff to a reasonable range
+			debugLog(`Current Time: ${currentTime}, Previous Time: ${previousTime}, Diff: ${diff}, Exploration Time: ${explorationTime}`);
+
+			// Cap the maximum possible time difference to 90 minutes (5400 seconds) but **only for forward time**
+			if (diff > 5400) {
+				debugLog(`Large time jump detected. Limiting diff to 90 minutes.`);
+				diff = 5400; // Cap diff to 90 minutes
+			}
+
+			// Handle negative diff by subtracting it from explorationTime
 			if (diff < 0) {
-				debugLog(`Negative time difference detected. Correcting. Previous: ${previousTime}, Current: ${currentTime}`);
-				lastProcessedTime += diff; // Subtract the backward movement from elapsed time
-				lastProcessedTime = Math.max(lastProcessedTime, 0); // Ensure it doesn't go negative
-				diff = Math.max(diff, 0); // Ensure diff does not go negative
-			} else if (diff > 3600) { // If diff is greater than 1 hour (in seconds)
-				debugLog(`Large time jump detected. Limiting diff to 1 hour. Previous: ${previousTime}, Current: ${currentTime}`);
-				diff = 3600; // Cap to 1 hour (3600 seconds)
+				explorationTime += diff; // Subtract the diff from explorationTime
+				debugLog(`Negative time detected. Reducing explorationTime by ${Math.abs(diff)} seconds.`);
+			} else {
+				// Accumulate total exploration time for positive diffs
+				explorationTime += diff;
 			}
 
-			diff = Math.floor(diff);
-
-			// Accumulate the elapsed time
-			lastProcessedTime = Math.floor(lastProcessedTime + diff);
-			debugLog(`Current Time: ${currentTime}, Previous Time: ${previousTime}, Diff: ${diff}, Last Processed Time: ${lastProcessedTime}`);
-
-			// If it has not been 10 minutes, return
-			if (lastProcessedTime < TEN_MINUTES_IN_SECONDS) {
-				await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', currentTime);
-				await game.settings.set('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime', lastProcessedTime);
-				return;
+			// Calculate how many 10-minute blocks occurred
+			if (explorationTime >= 600) {
+				explorationBlocks = Math.floor(explorationTime / 600);
+				explorationTime %= 600; // Store only the leftover time
 			}
 
-			// If it HAS been 10 minutes... 
-			debugLog(`10 minutes have passed. Resetting lastProcessedTime.`);
-			lastProcessedTime -= TEN_MINUTES_IN_SECONDS;
+			// Ensure explorationTime does not go negative
+			explorationTime = Math.max(0, explorationTime); 
 
-			// Update the last processed time in game settings
-			await game.settings.set('pf2e-alchemist-remaster-ducttape', 'lastProcessedTime', lastProcessedTime);
+			debugLog(`Exploration time updated | explorationTime: ${explorationTime} | explorationBlocks: ${explorationBlocks}`);
+
+			// Save explorationTime and previousTime back into the game settings
+			await game.settings.set('pf2e-alchemist-remaster-ducttape', 'explorationTime', explorationTime);
+			await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', currentTime);
+
+			// If no blocks were found, do nothing
+			if (explorationBlocks <= 0) return;
+
+			// Reset diff
+			diff = 0;
 
 			// Avoid sending multiple messages for the same actor
 			const processedActorIds = new Set();
 
-			// Loop through all actors and find Alchemists
-			for (const actor of game.actors) {
+			// Loop through all party actors and find Alchemists
+			for (const actor of game.actors.party.members) {
 				if (!actor || actor.type !== 'character') continue; // Actor is character
 
 				const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
@@ -104,52 +100,73 @@ Hooks.once('init', () => {
 				if (processedActorIds.has(actor.id)) continue;
 				processedActorIds.add(actor.id);
 				
-				// Get maxVials count
+				// Get maximum vials character can have
 				const maxVials = getMaxVials(actor);
 				
-				// Get number of vials that can be found = 2 unless actor has alchemical expertise feat
-				const foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
+				/* 
+				Get number of vials that can be found per block
+				= 2 unless actor has alchemical expertise feat
+				*/
+				let foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
+				// multiply by how many 10 minute blocks have passed
+				foundVials *= explorationBlocks;
 				
 				// get current vial count
 				let currentVials = getCurrentVials(actor); 
+				debugLog(`${actor.name} has ${currentVials} and found a max of ${foundVials} versatile vials.`);
 
-				if (currentVials < maxVials) {
+				if (currentVials < maxVials) { // if actor is not maxed out on vials already
+					
+					// Make sure we do not exceed maxVials count
+					const maxVialsToAdd = maxVials - currentVials;
+					foundVials = foundVials < maxVialsToAdd ? foundVials : maxVialsToAdd;
+					
+					
 					const messageContent = `
-                        <p>${actor.name} has spent 10 minutes in exploration mode. Would you like to add up to ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
-                        <button class="add-vials-button" data-actor-id="${actor.id}">Add Vials</button>
+                        <p>${actor.name} has spent ${explorationBlocks * 10} minutes in exploration mode. Would you like to add ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
+                        <button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">Add Vials</button>
                     `;
 
-                    // Get user permission
+                    // Make sure to only send to owner of actor
 					const playerIds = game.users.filter(u => actor.testUserPermission(u, 'OWNER')).map(u => u.id);
 					
+					// Compose chat message
                     const message = await ChatMessage.create({
                         content: `
-                            <p>${actor.name} has spent 10 minutes in exploration mode. Would you like to add up to ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
-                            <button class="add-vials-button" data-actor-id="${actor.id}">Add Vials</button>
+                            <p>${actor.name} has spent ${explorationBlocks * 10} minutes in exploration mode. Would you like to add ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
+                            <button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">Add Vials</button>
                         `,
-                        speaker: ChatMessage.getSpeaker({ actor: actor }),
+                        speaker: { alias: "Game Master" },
                         whisper: playerIds
                     });
+					
 					// Update the message to add the data-message-id to the button
 					const updatedContent = message.content.replace(
 						'<button class="add-vials-button"',
 						`<button class="add-vials-button" data-message-id="${message.id}"`
 					);
 					await message.update({ content: updatedContent });
-				}
+				} else {
+					// Send chat message visible to all players
+					ChatMessage.create({
+						content: `${actor.name} already has the maximum number of versatile vials.`,
+						speaker: { alias: "Game Master" }
+					});
+				}	
 			}
-
-			// Update the previous time to the current time at the end of the function
-			await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', currentTime);
 		});
 	}
 });
-
 
 // Event listener for button click
 $(document).on('click', '.add-vials-button', async (event) => {
     const button = event.currentTarget;
     const actorId = button.dataset.actorId;
+	const vialsToAdd = parseInt(button.dataset.foundVials, 10);
+	if (isNaN(vialsToAdd)) {
+		console.error('Error: foundVials is not a valid number');
+		return;
+	}
     const actor = game.actors.get(actorId);
     if (!actor) { // Check for Actor, if none stop
 		debugLog(`No actor found on .add-vials-button`);
@@ -162,21 +179,16 @@ $(document).on('click', '.add-vials-button', async (event) => {
         return;
     }
 
-    // Get maxVials count
-	const maxVials = getMaxVials(actor); // get max vials
-    let currentVials = getCurrentVials(actor); // get current vial count
-	const foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2; // Number of vials actor found
-    const vialsToAdd = Math.min(foundVials, maxVials - currentVials); // Number of vials to add
-  
     if (vialsToAdd > 0) { // Make sure we are adding vials
         // add vials to the actor
         await addVialsToActor(actor, vialsToAdd); // Add vials
         ui.notifications.info(`${actor.name} found ${vialsToAdd} versatile vials!`); 
- 
+		debugLog(`Added ${vialsToAdd} to ${actor.name}`);
+		
         // Send chat message visible to all players
         ChatMessage.create({
             content: `${actor.name} found ${vialsToAdd} versatile vial(s).`,
-            speaker: ChatMessage.getSpeaker({ actor: actor })
+            speaker: { alias: "Game Master" }
         });
     } else {
         ui.notifications.warn(`${actor.name} already has the maximum number of versatile vials.`);
@@ -204,17 +216,6 @@ $(document).on('click', '.add-vials-button', async (event) => {
 });
 
 /**
- * Custom function to get the current count of versatile vials in an actor's inventory
- * @param {Actor} actor 
- * @returns {number} Current count of versatile vials
- */
-function getCurrentVials(actor) {
-    const versatileVials = actor.items.filter((item) => item.slug?.toLowerCase() === "versatile-vial");
-    const vialCount = versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
-    return vialCount;
-}
-
-/**
  * Custom function to get the max number of versatile vials actor should have in inventory
  * @param {Actor} actor 
  * @returns {number} maximum count of versatile vials
@@ -223,6 +224,17 @@ function getMaxVials(actor){
   const maxVials = 2 + actor.system.abilities.int.mod; // 2 + INT modifier
   debugLog(`Actor ${actor.name} max vials calculated as: ${maxVials}`);
   return maxVials;
+}
+
+/**
+ * Custom function to get the current count of versatile vials in an actor's inventory
+ * @param {Actor} actor 
+ * @returns {number} Current count of versatile vials
+ */
+function getCurrentVials(actor) {
+    const versatileVials = actor.items.filter((item) => item.slug?.toLowerCase() === "versatile-vial");
+    const vialCount = versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
+    return vialCount;
 }
 
 /**
