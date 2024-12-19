@@ -1,7 +1,7 @@
 ## 2.4.3
-### Bug Fixes
-- Vial Search: If multiple increments of 10 minutes of game time pass, will prompt to add appropriate number of vials. 
-- Vial Search: limite to only party characters for better performance. 
+### Bug fixes
+- Vial Search: Limiting to party characters to improve performance
+- Vial Search: Will now calculate multiple increments of 10 minutes and add appropriate number of vials. 
 
 ## 2.4.2
 ### New Features
