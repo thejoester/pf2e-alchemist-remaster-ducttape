@@ -6,14 +6,14 @@
 ## 2.4.2
 ### New Features
 - Quick Alchemy: Added support for Double Brew feat.
--- Will be prompted if you want to use feat, then for second item to create before main Quick Alchemy window is shown. 
+  - Will be prompted if you want to use feat, then for second item to create before main Quick Alchemy window is shown. 
 - Settings: New option for adding new formulas on level up, "Ask for all" will ask once for all formulas being added. 
 - Vial Search: Will disable "add vial" button for user when clicked. (known issue: will not disable for GM or if actor is owned by multiple users all users will be able to click once.)
 ### Bug Fixes
 - Corrected spelling errors in settings
 - Vial Search: Fixed bug so Alchemists with Alchemical Expertise feat to not increase max vial only found vials. 
 - Vial Search: Fixed issue where non-english foundry versions cannot find vials. 
--- Removed setting as it is no longer needed
+  - Removed setting as it is no longer needed
 
 ## 2.4.1
 ### Features
