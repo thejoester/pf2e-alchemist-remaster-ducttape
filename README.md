@@ -1,5 +1,8 @@
 # PF2e Alchemist Remaster Duct Tape
 
+> [!IMPORTANT]
+> PF2e system 6.8.0 has been released with the Player Core 2 Alchemist features. So far in my testing nothing in this module causes any issues with the new alchemist features and still seems to work. I will continue updating my module and keep the Quick Alchemy Macro as some may still find it useful, or for those who are not updating the p2Fe system yet. 
+
 A module to slap together some functionality until the PF2e system is updated to support the Alchmist remaster.
 
 ## Known issues
