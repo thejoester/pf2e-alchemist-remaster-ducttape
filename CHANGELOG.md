@@ -2,12 +2,11 @@
 ### New features / improvements
 - Quick Alchemy Macro: Improved flow for more intuitive use. 
 - Quick Alchemy Macro: Items crafted with Double Brew feat will display message in chat with button to use it. 
-- Quick Alchemy Macro: Items created with Quick Alchemy macro will now be labeled with "(Temporary)" and modified slug with added "-temp" to seperate them from more permanent items. 
+- Quick Alchemy Macro: Items created with Quick Alchemy macro will now be labeled with "(Temporary)" and modified slug with added "-temp" to separate them from more permanent items. 
 - Quick Alchemy Macro: Items created with Quick Alchemy macro will now be removed at end of combat turn. 
 - Quick Alchemy Macro: Will only function if selected token is an Alchemist.
 - Level Up: If no Actor Owner is logged in when character levels up, will prompt GM to add upgraded formulas. 
-- Debuging: improved debugging. 
-
+- Debugging: improved debugging. 
 
 ## 2.4.3
 ### Bug fixes
