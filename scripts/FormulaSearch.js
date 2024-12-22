@@ -55,17 +55,14 @@ Hooks.on("ready", () => {
 	const sfEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "searchableFormulas");
 	if (sfEnabled) {	
 		Hooks.on("renderActorSheet", (app, html, data) => {
-			debugLog(`Actor Sheet Rendered`);
 			const actor = app.actor;
             if (!actor) {
-                debugLog(`No actor found: ${app}`);
+                debugLog(3,`No actor found: `,app);
                 return;
             }
-			
-			
+		
 			//if (actor.type === "character" && actor.crafting?.formulas?.length > 0) {
 			if (actor.type === "character") {
-				debugLog(`actor.type = "character"`);
 				addFormulaSearch(html);
 			}
 		});

@@ -26,3 +26,21 @@
 #formula-search {
     width: 400px; /* Set the desired width */
 }
+
+.custom-craft-button {
+    width: 200px;
+    height: 30px;
+    font-size: 12px;
+}
+
+.custom-craft-attack-button {
+    width: 100px;
+    height: 30px;
+    font-size: 12px;
+}
+
+.custom-back-button {
+    width: 100px;
+    height: 30px;
+    font-size: 12px;
+}

@@ -1,6 +1,30 @@
 import { debugLog } from './settings.js';
 import { hasFeat } from './settings.js';
 
+/**
+	Update item description based on regex pattern and replacement logic.
+	@param {string} description - The original item description.
+	@param {RegExp} regexPattern - The regex pattern to match.
+	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
+	@returns {string} - The updated item description.
+*/
+function updateDescription(description, regexPattern, replacementFn) {
+	const updatedDescription = description.replace(regexPattern, replacementFn);
+	if (updatedDescription !== description) {
+		// Output to log
+		debugLog("Description was updated to Class DC!");
+
+		// Send Mesactorge to Chat
+		const itemName = item.name;
+		ChatMesactorge.create({
+			author: game.user?.id,    // User ID to send the mesactorge as the system
+			content: `<p>${itemName} created with Quick Alchemy using Class DC ${classDC}!</p><p>${item.system.description.value || "No description available."}</p>`,
+			speaker: { alias: "PF2e Powerful Alchemy" }  // Optional: sets the speaker to "System"
+		});
+	}
+	return updatedDescription;
+}
+
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape: PowerfulAlchemy.js loaded","color: aqua; font-weight: bold;");
 	
@@ -12,51 +36,22 @@ Hooks.on("ready", () => {
 		Hooks.on("createItem", async (item) => {
 			debugLog("Item Created!");
 			
-			/**
-			 Update item description based on regex pattern and replacement logic.
-			 @param {string} description - The original item description.
-			 @param {RegExp} regexPattern - The regex pattern to match.
-			 @param {Function} replacementFn - A function that takes a match and returns a replacement string.
-			 @returns {string} - The updated item description.
-			*/
-			function updateDescription(description, regexPattern, replacementFn) {
-				const updatedDescription = description.replace(regexPattern, replacementFn);
-
-				if (updatedDescription !== description) {
-					// Output to log
-					debugLog("Description was updated to Class DC!");
-
-					// Send Message to Chat
-					const itemName = item.name;
-					ChatMessage.create({
-						author: game.user?.id,    // User ID to send the message as the system
-						content: `<p>${itemName} created with Quick Alchemy using Class DC ${classDC}!</p><p>${item.system.description.value || "No description available."}</p>`,
-						speaker: { alias: "PF2e Powerful Alchemy" }  // Optional: sets the speaker to "System"
-					});
-				}
-				return updatedDescription;
-			}
-			
-			/**
-			 Check if actor has a feat by searching for the slug, example "powerful-alchemy"
-			 @param {actor} actor object.
-			 @param {slug} sug of feat.
-			 @returns {true/false}
-			
-			function hasFeat(actor, slug) {
-				return actor.itemTypes.feat.some((feat) => feat.slug === slug);
-			}
-			*/
-			
 			// Get the actor from the item's parent (the actor who owns the item)
-			const sa = item.parent;
-			if (!sa) {
-			  debugLog("Actor for item not found.","c", 3);
+			const actor = item.parent;
+			if (!actor) {
+			  debugLog(3,"Actor for item not found.",);
 			  return;
 			}
 			
-			// First check if the actor has Powerful Alchemy - if not return with message in log	
-			if (!hasFeat(sa, "powerful-alchemy")) {
+			// Make sure selected token is an alchemist
+			const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
+			if (!isAlchemist) {
+				ui.notifications.info("Selected Character is not an Alchemist!");
+				return;
+			}
+			
+			// First check if the actor has Powerful Alchemy - if not return with mesactorge in log	
+			if (!hasFeat(actor, "powerful-alchemy")) {
 				debugLog("Actor does not have Powerful alchemy, ignoring!");
 				return;	
 			}
@@ -78,10 +73,10 @@ Hooks.on("ready", () => {
 			console.log(item);
 
 			// Get the actor's class DC
-			const classDC = sa.system.attributes.classDC?.value;
+			const classDC = actor.system.attributes.classDC?.value;
 			console.log("Actor's Class DC:", classDC);
 			if (!classDC) {
-			  debugLog("Warning: Class DC not found for the actor.","c", 2);
+			  debugLog(2, "Warning: Class DC not found for the actor:", actor);
 			  return;
 			}
 

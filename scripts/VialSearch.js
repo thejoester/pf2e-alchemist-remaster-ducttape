@@ -181,8 +181,7 @@ $(document).on('click', '.add-vials-button', async (event) => {
 
     if (vialsToAdd > 0) { // Make sure we are adding vials
         // add vials to the actor
-        await addVialsToActor(actor, vialsToAdd); // Add vials
-        ui.notifications.info(`${actor.name} found ${vialsToAdd} versatile vials!`); 
+        await addVialsToActor(actor, vialsToAdd); // Add vials 
 		debugLog(`Added ${vialsToAdd} to ${actor.name}`);
 		
         // Send chat message visible to all players
@@ -242,7 +241,7 @@ function getCurrentVials(actor) {
  * @param {Actor} actor 
  * @param {number} count - Number of vials to add
  */
-async function addVialsToActor(actor, count) {
+export async function addVialsToActor(actor, count) {
 	
 	/**
 		To avoid language issues, and more issues by accepting unchecked input, 
@@ -264,7 +263,7 @@ async function addVialsToActor(actor, count) {
 			const item = await fromUuid(uuid);
 
 			if (!item) {
-				debugLog(`No item found for versatile vial using UUID: ${uuid}`,"c",3);
+				debugLog(3, `No item found for versatile vial using UUID: ${uuid}`);
 				return;
 			}
 
@@ -276,12 +275,12 @@ async function addVialsToActor(actor, count) {
 			const createdItems = await actor.createEmbeddedDocuments('Item', [itemData]);
 			
 			if (!createdItems || createdItems.length === 0) {
-				debugLog(`Failed to create versatile vial for actor: ${actor.name}`,"c",3);
+				debugLog(3, `Failed to create versatile vial for actor: ${actor.name}`);
 			} else {
 				debugLog(`Successfully created versatile vial for actor: ${actor.name}`);
 			}
 		} catch (error) {
-			console.error(`Error adding versatile vial for actor ${actor.name}:`, error);
+			debugLog(3,`Error adding versatile vial for actor ${actor.name}:`, error);
 		}
 	}
 }

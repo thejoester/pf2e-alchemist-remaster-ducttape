@@ -1,8 +1,76 @@
-import { debugLog } from './settings.js';
-import { hasFeat } from './settings.js';
+import { debugLog, hasFeat  } from './settings.js';
+
+Hooks.on("combatTurnChange", async (combat, prior, current) => {
+    // Get the combatant whose turn just ended
+    const priorCombatant = combat.combatants.get(prior.combatantId);
+    if (!priorCombatant) {
+        debugLog("No valid prior combatant found during combatTurnChange.");
+        return;
+    }
+	const priorActor = priorCombatant.actor;
+	if (!priorActor || priorActor.type !== 'character'){
+		debugLog("No valid prior combatant found during combatTurnChange.");
+	}
+	debugLog(`End of ${priorActor.name}'s turn.`);
+	await deleteTempItems(priorActor);
+    
+});
+
+Hooks.on("deleteCombat", async (combat) => {
+    if (!combat) {
+        debugLog("No combat found during deleteCombat hook.");
+        return;
+    }
+
+    debugLog(`Combat ended. Cleaning up items for combatants in Combat ID: ${combat.id}`);
+
+    // Iterate through all combatants in the combat encounter
+    for (const combatant of combat.combatants) {
+        const actor = combatant.actor;
+        if (!actor || actor.type !== 'character') {
+            debugLog(`Actor associated with combatant ${combatant.name} not valid`);
+            continue;
+        }
+		
+        // Perform cleanup of Quick Alchemy items created during combat
+        await deleteTempItems(actor);
+    }
+});
+
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape (QuickAlchemy.js) loaded", "color: aqua; font-weight: bold;");
+  // Attach function to the global window object
+  window.qaCraftAttack = qaCraftAttack;
+});
+	/*
+		Function to clear temporary items from inventory
+		
+	*/
+	async function deleteTempItems(actor){
+		debugLog(`deleteTempItems(${actor.name}) called`);
+		// Perform cleanup of Quick Alchemy items created during the turn
+		const quickAlchemyItems = actor.items.filter(item => 
+			item.name.endsWith("(*Temporary)"));
+		const removedItems = []; // to collect list of items removed
+		for (const item of quickAlchemyItems) {
+			removedItems.push(item.name);
+			await item.delete();
+			debugLog(`Removed ${item.name} from ${actor.name}.`);
+		}
 
+		// Send a single chat message summarizing removed items
+		if (removedItems.length > 0) {
+			const messageContent = `
+				<p>The following items created with Quick Alchemy were removed from ${actor.name}'s inventory:</p>
+				<ul>${removedItems.map(name => `<li>${name}</li>`).join('')}</ul>
+			`;
+			ChatMessage.create({
+				user: game.user.id,
+				speaker: { alias: "Quick Alchemy" },
+				content: messageContent
+			});
+		}
+	}
 	
 	// Function to determine size of the actor
 	async function getActorSize(actor){
@@ -15,46 +83,21 @@ Hooks.on("ready", () => {
 	
 	// Function to send a message with a link to use a consumable item
 	async function sendConsumableUseMessage(itemUuid) {
-	  // Get the item from the provided UUID
-	  const item = await fromUuid(itemUuid);
-	  if (!item) {
-		ui.notifications.warn("Item not found.");
-		return;
-	  }
-
-	  // Construct the chat message content
-	  const content = `
-		<p><strong>New Item created by Quick Alchemy: ${item.name}</strong></p>
-		<p>${item.system.description.value}</p>
-		<button class="use-consumable" data-uuid="${itemUuid}" style="margin-top: 5px;">Use ${item.name}</button>
-	  `;
-
-	  // Send the message to chat
-	  ChatMessage.create({
-		user: game.user.id,
-		speaker: ChatMessage.getSpeaker(),
-		content: content,
-	  });
-
-	  // Add an event listener to handle the button click
-	  Hooks.once("renderChatMessage", (app, html) => {
-		html.find(".use-consumable").click(async (event) => {
-		  const itemUuid = event.currentTarget.dataset.uuid;
-		  const item = await fromUuid(itemUuid);
-		  const actor = item?.actor;
-
-		  if (!actor) {
-			ui.notifications.error("Actor not found.");
+		// Get the item from the provided UUID
+		const item = await fromUuid(itemUuid);
+		if (!item) {
+			ui.notifications.warn("Item not found.");
 			return;
-		  }
+		}
 
-		  // Reduce item quantity by 1
-		  await item.update({ "system.quantity": item.system.quantity - 1 });
-		  ui.notifications.error(`${item.name} has been used.`);
-
-		  // Optionally, trigger any additional effects or healing logic here
-		});
-	  });
+		// Use the item programmatically
+		try {
+			await item.toChat(); // Display item in chat
+			//await item.use({ configureDialog: false }); // Trigger item use (e.g., apply effects)
+		} catch (error) {
+			debugLog(3,`Error using item: ${error.message}`,error);
+			ui.notifications.error("Failed to use the item.");
+		}
 	}
 
 	/*
@@ -91,8 +134,8 @@ Hooks.on("ready", () => {
 		// Fetch the item (weapon) from the provided full UUID
 		const item = await fromUuid(itemUuid);
 		if (!item) {
-			debugLog("Item not found. Please check the UUID.", "u", 3);
-			debugLog(`Debug: Failed to fetch item with UUID ${itemUuid}`, "c", 3);
+			ui.notifications.error("Item not found.");
+			debugLog(3`Debug: Failed to fetch item with UUID ${itemUuid}`);
 			return;
 		}
 
@@ -140,7 +183,7 @@ Hooks.on("ready", () => {
 
 					if (!actor || !item) {
 						sendAlreadyConsumedChat();
-						debugLog("Actor or Item not found, item already used or UUIDs might be invalid.", "c", 3);
+						debugLog(3, "Actor or Item not found, item already used or UUIDs might be invalid.");
 						return;
 					}
 
@@ -160,6 +203,7 @@ Hooks.on("ready", () => {
 					}
 				});
 			}
+
 			/*
 				 Craft Button
 			*/
@@ -177,7 +221,7 @@ Hooks.on("ready", () => {
 
 					if (!actor) {
 						sendAlreadyConsumedChat();
-						debugLog("Actor or Item not found, item already used or UUIDs might be invalid.", "c", 3);
+						debugLog(3, "Actor or Item not found, item already used or UUIDs might be invalid.");
 						return;
 					}
 
@@ -196,14 +240,14 @@ Hooks.on("ready", () => {
 		// Fetch the item (weapon) from the provided full UUID
 		const item = await fromUuid(itemUuid);
 		if (!item) {
-			debugLog("Item not found. Please check the UUID.", "u", 3);
-			debugLog(`Debug: Failed to fetch item with UUID ${itemUuid}`, "c", 3);
+			ui.notifications.error("Item not found.");
+			debugLog(3,`Failed to fetch item with UUID ${itemUuid}`);
 			return;
 		}
 
 		// Ensure the item is a weapon
 		if (item.type !== "weapon") {
-			ui.notifications.error("The item is not a weapon.", "u", 3);
+			ui.notifications.error("The item is not a weapon.");
 			return;
 		}
 
@@ -211,6 +255,7 @@ Hooks.on("ready", () => {
 		const actor = item.actor;
 		if (!actor) {
 			ui.notifications.error("No actor associated with this item.");
+			debugLog(3,`No actor associated with this item: `,item);
 			return;
 		}
 
@@ -249,7 +294,7 @@ Hooks.on("ready", () => {
 
 					if (!actor || !item) { 
 						sendAlreadyConsumedChat();
-						debugLog("Actor or Item not found, item already used or UUIDs might be invalid.", "c", 3);
+						debugLog(2, "Actor or Item not found, item already used or UUIDs might be invalid.");
 						return;
 					}
 
@@ -273,16 +318,20 @@ Hooks.on("ready", () => {
 	}
 
 	// Function to equip an item by slug
-	async function equipItemBySlug(slug) {
-		const actor = canvas.tokens.controlled[0]?.actor;
+	async function equipItemBySlug(slug,actor) {
+		debugLog(`equipItemBySlug(${slug}, ${actor})`);
+		
 		if (!actor) {
-		  debugLog("No actor selected.", "u", 3);
-		  return;
+			const actor = canvas.tokens.controlled[0]?.actor;
+			if (!actor) {
+				debugLog(3,"No actor selected.");
+				return;
+			}
 		}
 
-		const item = actor.items.find((i) => i.slug === slug);
+		const item = await actor.items.find((i) => i.slug === slug);
 		if (!item) {
-			debugLog("Item not found.", "u", 3);
+			debugLog("Item not found.");
 			return;
 		}
 
@@ -291,7 +340,7 @@ Hooks.on("ready", () => {
 			"system.equipped.handsHeld": "1",
 		});
 
-		debugLog(`${item.name} is now equipped.`, "u", 1);
+		ui.notifications.info(`${item.name} is now equipped.`);
 		return item._id;
 	}
 
@@ -319,7 +368,7 @@ Hooks.on("ready", () => {
 	// Set Item created as Infused
 	async function makeInfused(itemToInfuse){
 		if (!itemToInfuse || !itemToInfuse.system || !itemToInfuse.system.traits || !Array.isArray(itemToInfuse.system.traits.value)) {
-			debugLog("Invalid item structure", "c", 3);
+			debugLog(3, "Invalid item structure");
 			return;
 		}
 		
@@ -328,7 +377,14 @@ Hooks.on("ready", () => {
         }	
 	}
 	
-	// Function to craft item
+	/* 	
+		Function to craft item using Quick Alchemy and add  
+		"(*Temporary)" to the end of the name and "-temp" to
+		the end of the slug of any item created with this 
+		Quick Alchmy macro so that it can be removed at the 
+		end of the turn and ensured that when attacking it is 
+		using the same item.
+	*/
 	async function craftItem(selectedItem, selectedActor, count = 1) {
 		debugLog(`Selected Item: ${selectedItem?.name || "No Name"}`);
 		debugLog(`Selected Actor: ${selectedActor?.name || "No Name"}`);
@@ -336,66 +392,108 @@ Hooks.on("ready", () => {
 		const alchemyMode = game.settings.get("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy");
 		
 		if (!selectedItem || !selectedActor) {
-			debugLog("Invalid item or actor provided.", "u", 3);
+			debugLog(3, "Invalid item or actor provided.");
 			return;
 		}
 
 		// Get actor size to use for new item size
-		const actorSize = await getActorSize(selectedActor); // get actor size
+		const actorSize = await getActorSize(selectedActor);
 
-		// Check if the item exists in inventory
-		const itemExists = selectedActor.items.find((item) => item.slug === selectedItem?.slug);
-		if (itemExists?.system.traits?.value?.includes("infused")) { // make sure item exists and is infused
-			// Item exists, Increase quantity of existing infused item
-			const newQty = itemExists.system.quantity + count;
-			await itemExists.update({ "system.quantity": newQty });
-			
-		} else {
-			// Duplicate and create a new item, with infused trait added
-			const modifiedItem = foundry.utils.duplicate(selectedItem);
-			modifiedItem.system.traits.value.push("infused"); // Make infused before creation
-			if (alchemyMode !== "disabled") { // Adjust size if enabled
-				if (alchemyMode === "tinyOnly" && actorSize !== "tiny") { // Actor is not Tiny, do not adjust
-					debugLog("tinyOnly enabled | Actor is not tiny.");
-				} else { 
-					//modifiedItem.system.bulk.heldOrStowed = 0;
-					//modifiedItem.system.bulk.value = 0;
-					modifiedItem.system.size = actorSize;
-					debugLog(modifiedItem);
+		for (let i = 0; i < count; i++) {
+			// Check if the item exists in inventory, has an asterisk, and is infused
+				const itemExists = selectedActor.items.find((item) => 
+					item.slug === `${selectedItem?.slug}-temp` && 
+					item.name.endsWith("(*Temporary)") && 
+					item.system.traits?.value?.includes("infused")
+				);
+		  
+			if (itemExists) {
+				// Item exists, increase quantity of existing infused item
+				const newQty = itemExists.system.quantity + 1;
+				await itemExists.update({ "system.quantity": newQty });
+			} else {
+				// Duplicate and modify the item, adding custom flags
+				const modifiedItem = foundry.utils.duplicate(selectedItem);
+				modifiedItem.system.traits.value.push("infused"); // Add infused trait
+				// Append "-temp" to slug for easy identification
+				modifiedItem.system.slug = `${selectedItem.slug}-temp`;
+				// Append "(*Temporary)" to the name for visual identification
+				if (!modifiedItem.name.endsWith("(*Temporary)")) {
+					modifiedItem.name += " (*Temporary)";
 				}
-			}	
-			// Create multiple copies if count > 1
-			const newItems = Array(count).fill(modifiedItem); // Create multiple versions of the item
-			await selectedActor.createEmbeddedDocuments("Item", newItems);
+
+				// If we are using size based quick alchemy, modify size
+				if (alchemyMode !== "disabled") { 
+					if (alchemyMode === "tinyOnly" && actorSize !== "tiny") { 
+						debugLog("tinyOnly enabled | Actor is not tiny.");
+					} else { 
+						modifiedItem.system.size = actorSize; // Adjust size if necessary
+					}
+				}
+				
+				// Create the items for the actor
+				const createdItem = await await selectedActor.createEmbeddedDocuments("Item", [modifiedItem]);
+				debugLog(`Created item with Quick Alchemy: `, createdItem);
+			}
 		}
 	}
-
+	
 	/*
-		Function to get count of versatile vials in actors inventory
+		Function to get count of versatile vials in actor's inventory
 	*/
-	function getVersatileVialCount(actor){
-		//verify valid actor passed
-		if (!actor){
-			debugLog(`Error: no valid actor passed to getVersatileVialCount()`,"c",3);
-			return;
+	function getVersatileVialCount(actor) {
+		// Verify valid actor passed
+		if (!actor || !actor.items) {
+			debugLog(3, `Error: no valid actor passed to getVersatileVialCount()`);
+			return 0; // Return 0 instead of undefined for better consistency
 		}
-		const versatileVials = actor.items.filter((item) => item.slug === "versatile-vial");
-		return versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
+
+		// Filter and count versatile vials
+		const versatileVials = actor.items.filter(item => item.slug === "versatile-vial");
+		const tempVersatileVials = actor.items.filter(item => item.slug === "versatile-vial-temp");
+
+		// Combine counts using reduce
+		const totalVialCount = versatileVials.reduce((count, vial) => count + (vial.system.quantity || 0), 0) + tempVersatileVials.reduce((count, vial) => count + (vial.system.quantity || 0), 0);
+
+		return totalVialCount;
 	}
 
 
 	/*
 		Function to consume a versatile vial when crafting with quick alchemy
 	*/
-	async function consumeVersatileVial(itemCreated, versatileVials, count = 1){
-		if (itemCreated === "versatile-vial" || !itemCreated ) {
-			debugLog("Creating Versatile Vial, Skipping decrement of Versatile Vial.");
-			return;
-		} else {
-			// Reduce Versatile Vial count
-			const vialToRemove = versatileVials[0];
-			await vialToRemove.update({ "system.quantity": vialToRemove.system.quantity - count });
+	async function consumeVersatileVial(actor, slug, count = 1){
+		if (!actor) {
+			debugLog(3,"Actor is not defined.");
+			return false;
 		}
+		// If we are crafting a veratile vial, do not consume, return true
+		if (slug === "versatile-vial" || slug === "versatile-vial-temp"){
+			return true;
+		}
+		
+		// Find versatile-vial-temp and versatile-vial in inventory
+		const tempVial = actor.items.find(item => item.slug === "versatile-vial-temp");
+		const regularVial = actor.items.find(item => item.slug === "versatile-vial");
+
+		// Prioritize consuming temp vial
+		if (tempVial && tempVial.system.quantity >= count) {
+			await tempVial.update({ "system.quantity": tempVial.system.quantity - count });
+			debugLog(`Consumed ${count} temporary versatile vial(s): ${tempVial.name}`);
+			return true;
+		}
+
+		// Fall back to consuming regular vial
+		if (regularVial && regularVial.system.quantity >= count) {
+			await regularVial.update({ "system.quantity": regularVial.system.quantity - count });
+			debugLog(`Consumed ${count} regular versatile vial(s): ${regularVial.name}`);
+			return true;
+		}
+
+		// No vial available to consume
+		debugLog("No versatile vials available to consume.");
+		ui.notifications.warn("No versatile vials available to consume.");
+		return false;
 	}
 
 	/*
@@ -431,8 +529,6 @@ Hooks.on("ready", () => {
 		// Arrays to store entry objects
 		const weaponEntries = [];
 		const consumableEntries = [];
-		const vialEntries = [];
-		const otherEntries = [];
 
 		// Gather entries in respective arrays
 		for (let [index, formula] of formulas.entries()) {
@@ -448,10 +544,6 @@ Hooks.on("ready", () => {
 			if (entry != null) {
 				debugLog(`slug: ${entry.slug}, name: ${entry.name}, uuid: ${entry.uuid}`);
 
-				if (entry.slug === "versatile-vial") {
-					vialEntries.push(entry);
-					debugLog("added to vialEntries");
-				}
 				if (entry.type === "weapon") {
 					weaponEntries.push(entry);
 					debugLog("added to weaponEntries");
@@ -459,22 +551,49 @@ Hooks.on("ready", () => {
 					consumableEntries.push(entry);
 					debugLog("added to consumableEntries");
 				} else {
-					otherEntries.push(entry);
-					debugLog("added to otherEntries");
+					//otherEntries.push(entry);
+					debugLog("Not Weapon or consumable, ignoring");
 				}
 			} else { // entry is null
-				debugLog(`entry ${formula.uuid} is null`, "c", 3);
+				debugLog(3, `entry ${formula.uuid} is null`);
 			}
 		}
 
 		// Close progress dialog
 		progressDialog.close();
-
-		// Return categorized entries
-		return { weaponEntries, consumableEntries, vialEntries, otherEntries };
+		
+		// Sort entries by name
+		const sortEntries = async (entriesToSort) => {
+			entriesToSort.sort((a, b) => {
+				const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim(); // Remove text in parentheses
+				const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
+				const nameComparison = nameA.localeCompare(nameB);
+				if (nameComparison !== 0) return nameComparison; // Sort by name if names differ
+				const levelA = a.system.level?.value || 0; // Default to 0 if undefined
+				const levelB = b.system.level?.value || 0;
+				return levelB - levelA; // Otherwise, sort by item level descending
+			});
+		return { entriesToSort };
+		}
+		
+		sortEntries(weaponEntries);
+		sortEntries(consumableEntries);
+		
+		/*
+		weaponEntries.sort((a, b) => a.name.localeCompare(b.name));
+		consumableEntries.sort((a, b) => a.name.localeCompare(b.name));
+		*/
+		// Generate sorted options
+		const weaponOptions = weaponEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
+		const consumableOptions = consumableEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		
 		// Close progress dialog - just in case
 		progressDialog.close();
+		
+		// Return categorized entries
+		return { weaponOptions, consumableOptions };
+		
+		
 	}
 	
 	/*
@@ -483,7 +602,7 @@ Hooks.on("ready", () => {
 	async function processFilteredFormulasWithProgress(actor, type) {
 		
 		if (!type){
-			debugLog(`No type passed to processFilteredFormulasWithProgress()`,"c",3);
+			debugLog(3, `No type passed to processFilteredFormulasWithProgress()`);
 			return { filteredEntries: [] };
 		}
 		debugLog(`Filtering by type: ${type}`);
@@ -536,7 +655,7 @@ Hooks.on("ready", () => {
 					debugLog("added to filteredEntries");
 				} 
 			} else { // entry is null
-				debugLog(`entry ${formula.uuid} is null`, "c", 3);
+				debugLog(3, `entry ${formula.uuid} is null`);
 			}
 		}
 
@@ -544,56 +663,462 @@ Hooks.on("ready", () => {
 		progressDialog.close();
 
 		// Return categorized entries
-		debugLog(`Returning filteredEntries: <pre>${JSON.stringify(filteredEntries, null, 2)}</pre>`);
+		debugLog(`Returning filteredEntries: `, filteredEntries);
+		// Sort entries by name then level ignoring text in parenthesis 
+		filteredEntries.sort((a, b) => {
+			const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim(); // Remove text in parentheses
+			const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
+			const nameComparison = nameA.localeCompare(nameB);
+			if (nameComparison !== 0) return nameComparison; // Sort by name if names differ
+			const levelA = a.system.level?.value || 0; // Default to 0 if undefined
+			const levelB = b.system.level?.value || 0;
+			return levelB - levelA; // Otherwise, sort by item level descending
+		});
 		return { filteredEntries };
 		
 		// Close progress dialog - just in case
 		progressDialog.close();
 	}
+	
+	/*
+		Helper function for craftButton() and craftAttackButton()
+		
+	*/
+	async function handleCrafting(uuid, actor, doubleBrew = false, attack = false){
+	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${doubleBrew}, ${attack}) called.`);
+		if (uuid === "none") {
+			debugLog("No item selected for crafting.");
+			return;
+		}
+		const selectedItem = await fromUuid(uuid);
+		if (!selectedItem) return;
+		
+		await craftItem(selectedItem, actor);
+		
+		const temporaryItem = actor.items.find(item =>
+			item.slug === `${selectedItem.slug}-temp` &&
+			item.name.endsWith("(*Temporary)")
+		);
+
+		if (!temporaryItem) {
+			debugLog("Failed to find temporary item created by Quick Alchemy.");
+			return;
+		}
+
+		const vialConsumed = await consumeVersatileVial(actor, temporaryItem.slug, 1);
+		if (!vialConsumed) {
+			debugLog("No vials available to craft the item.");
+			ui.notifications.error("No versatile vials available.");
+			return;
+		}
+		debugLog(`equipItemBySlug(${temporaryItem.slug}, ${actor.name}`);
+		const newUuid = await equipItemBySlug(temporaryItem.slug, actor);
+		if (!newUuid) {
+			debugLog(3, `Failed to equip item with slug: ${temporaryItem.slug}`);
+			ui.notifications.error("Failed to equip item.");
+			return;
+		}
+		
+		const sendMsg = async (itemType, uuid, actor) => {
+			debugLog(`sendMsg => itemType: ${itemType} | newUuid: ${newUuid} | actor: ${actor.name}`);
+			
+			
+			switch (itemType) {
+				case 'weapon':
+					sendWeaponAttackMessage(uuid);
+					break;
+				case 'vial':
+					sendVialAttackMessage(uuid, actor);
+					break;
+				case 'consumable':
+					sendConsumableUseMessage(uuid);
+					break;
+				default:
+					debugLog("Unknown item type for crafting.");
+			}
+		}
+		
+		const formattedUuid = `Actor.${actor.id}.Item.${newUuid}`;
+		debugLog(`formattedUuid: ${formattedUuid}`);
+		
+		// Determine behavior based on parameters
+		if (doubleBrew) {
+			// Send message to chat based on item type
+			debugLog(`Double Brew enabled, sending item to chat only | newUuid: ${formattedUuid} | actor: `, actor);
+			await sendMsg(temporaryItem.type, formattedUuid, actor);
+		} else if (attack) {
+			game.pf2e.rollActionMacro({
+				actorUUID: actor.uuid,
+				type: "strike",
+				itemId: temporaryItem.id,
+				slug: temporaryItem.slug,
+			});
+		} else {
+			// Send message to chat based on item type
+			await sendMsg(temporaryItem.type, formattedUuid, actor);
+		}
+	};
 
 	/*
-		Function to display Double Brew Dialog
+		Function to process craft button
 	*/
-	async function displayDoubleBrewDialog(actor) {
-		const firstDialog = new Dialog({
-			title: "Double Brew Feat",
-			content: `<p>Would you like to use your Double Brew Feat?</p>`,
-			buttons: {
-				yes: {
-					icon: "<i class='fas fa-check'></i>",
-					label: "Yes",
-					callback: () => displayItemTypeDialog(actor)
-				},
-				no: {
-					icon: "<i class='fas fa-times'></i>",
-					label: "No",
-					callback: () => displayQuickAlchemyDialog(actor)
-				}
-			},
-			default: "no"
-		});
-		firstDialog.render(true);
+	async function craftButton(actor, itemUuid, dbItemUuid, itemType){
+		const selectedUuid = itemUuid;
+		const dbSelectedUuid = dbItemUuid;
+		debugLog(`Item Selection: ${selectedUuid} | Double Brew Selection: ${dbSelectedUuid}`);
+		
+		debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: `, actor);
+		await handleCrafting(selectedUuid, actor, false, false);
+		debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: `, actor);
+		await handleCrafting(dbSelectedUuid, actor, true, false);
+		
+	}
+
+	/*
+		Function to process craft and attack button
+	*/
+	async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType){
+		// let temporaryItem = {};
+		const selectedUuid = itemUuid;
+		const dbSelectedUuid = dbItemUuid;
+		debugLog(`actor name: ${actor.name} | Item Selection: ${selectedUuid} | Double Brew Selection: ${dbSelectedUuid}`);
+		debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: `, actor);
+		await handleCrafting(selectedUuid, actor, false, true);
+		debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: `, actor);
+		await handleCrafting(dbSelectedUuid, actor, true, false);
 	}
 	
 	/*
-		Function to display item type dialog
-		for displayDoubleBrewDialog(actor)
+		Function to display crafting dialog
 	*/
-	async function displayItemTypeDialog(actor) {
+	async function displayCraftingDialog(actor, itemType) {
+		debugLog(`displayCraftingDialog() actor: ${actor.name} | itemType: ${itemType}`);
+		// Check if actor has double brew feat
+		const doubleBrewFeat = hasFeat(actor,"double-brew");
+		debugLog(`doubleBrewFeat: ${doubleBrewFeat}`);
+		let content = ``;
+		let selectedUuid = "";
+		let dbSelectedUuid = "";
+		let craftItemButtons = {};
+		
+		
+		/*
+			If we are creating a vial, we will add one to inventory
+			Then check if we have Double Brew Feat 
+			
+			otherwise ask display list of item type selected
+		*/
+		if (itemType === 'vial') {
+			
+			// Use UUID to get the versatile vial item
+			const uuid = "Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus";
+			
+			const item = await fromUuid(uuid);
+
+			if (!item) {
+				debugLog(3, `No item found for versatile vial using UUID: ${uuid}`);
+				return;
+			}
+			
+			debugLog(`actor: ${actor.name} |itemType: ${itemType} | uuid: ${uuid} | item name: ${item.name}`);
+			content = `<form>
+				<div>
+					<select id="item-selection" style="display: none;">
+					<option value="${uuid}">Versatile Vial</option>
+					</select>
+					</div>
+					</form>
+					`;
+			
+			//if actor has double brew feat, fisrt ask if we are using it
+			if (doubleBrewFeat) {
+				
+				const vialCount = getVersatileVialCount(actor);
+				
+				if (vialCount >= 1) { // Make sure we have Versatile Vials - it should be we just created one! 
+					
+					// Get known formulas
+					const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
+					
+					// HTML content to prompt which formula to create
+					content = `${content}
+						<form>
+							<h3>Double Brew Feat</h3>
+							<p>Crafting Versatile Vial, do you also want to use Double Brew to craft another item?</p>
+							<div>
+								<label for="db-item-selection">Choose Item or leave "-None-":</label>
+								<select id="db-item-selection">
+								<option value="none">-None-</option>
+								${weaponOptions}
+								${consumableOptions}
+								</select>
+								</div>
+								</form>
+								<br/>
+								`;
+
+				}
+			}
+			craftItemButtons['craftvial'] = {
+				icon: "<i class='fas fa-vial'></i>",
+				label: "Craft Vial",
+				callback: async (html) => {
+					if (!actor) {
+						ui.notifications.error("Actor not found.");
+						return;
+					}
+
+					// Perform actions with the actor
+					selectedUuid = html.find("#item-selection").val();
+					dbSelectedUuid = html.find("#db-item-selection").val();
+					debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+					if (!selectedUuid){
+						selectedUuid = "none";
+					}
+					if (!dbSelectedUuid){
+						dbSelectedUuid = "none";
+					}
+					craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+				},
+				render: (html) => {
+					html.find("button").css({
+						"width": "50px",
+						"height": "30px",
+						"font-size": "16px"
+					});
+				}
+			};
+			
+			craftItemButtons['back'] = {
+				icon: "<i class='fas fa-arrow-left'></i>",
+				label: " Back",
+				callback: () => displayQuickAlchemyDialog(actor),
+				render: (html) => {
+					html.find("button").css({
+						"width": "50px",
+						"height": "30px",
+						"font-size": "16px"
+					});
+				}
+			};
+		
+			const craftingDialog = new Dialog({
+				title: "Quick Alchemy",
+				content: content,
+				buttons: craftItemButtons,
+				default: "craftvial",
+				render: (html) => {
+					// Apply styles to specific buttons
+					html.find('button:contains("Craft Vial")').css({
+						width: "100px",
+						height: "40px",
+						fontSize: "14px"
+					});
+					html.find('button:contains("Back")').css({
+						width: "80px",
+						height: "40px",
+						fontSize: "14px"
+					});
+				}
+			});
+			craftingDialog.render(true);
+			
+		} else { // We are crafting Weapon or Consumable
+				
+			let options = "";
+			const { filteredEntries } = await processFilteredFormulasWithProgress(actor,itemType);
+			options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
+			
+			content = `
+				<form>
+				<div>
+				<h3>Select a ${itemType} to craft:</h3>
+				<select id="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
+				<br/><br/>
+				</div>
+				</form>
+				`;
+				
+			// If actor has double brew feat	
+			if (doubleBrewFeat) {
+				// Check that actor has versatile vials
+				const vialCount = getVersatileVialCount(actor);
+				if (vialCount > 1) { // Make sure we have enough versatile vials
+				const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
+					content = `${content} 
+						<form>
+							<h3>Double Brew Feat</h3>
+							<p>Crafting Versatile Vial, do you also want to use Double Brew to craft another item?</p>
+							<div>
+								<label for="db-item-selection">Choose Item or leave "-None-":</label>
+								<select id="db-item-selection">
+								<option value="none">-None-</option>
+								${weaponOptions}
+								${consumableOptions}
+								</select>
+								</div>
+								</form>
+								<br/>
+								`;
+				} else { // we will only prompt to make another vial
+					content = `${content} 
+						<form>
+						<div>
+							<h3>Double Brew Feat</h3>
+							<p>You only have ${vialCount}, use Double Brew to craft another?</p>
+								<label for="db-item-selection">Double Brew:</label>
+								<select id="db-item-selection">
+								<option value="none">-None-</option>
+								<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
+								</select>
+							</div>
+						</form>
+						<br/>`;
+				
+				}
+			}
+		
+			// Build Buttons
+			if (itemType === 'weapon'){
+				craftItemButtons['craftAttack'] = {
+					icon: "<i class='fas fa-bomb'></i>",
+					label: "Craft and Attack",
+					callback: async (html) => {
+						if (!actor) {
+							ui.notifications.error("Actor not found.");
+							return;
+						}
+						
+						// Ensure user has target
+						const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
+						if (!target) {
+							ui.notifications.error("Please target a token for the attack.");
+							displayCraftingDialog(actor, 'weapon');
+							return;
+						}
+						
+						selectedUuid = html.find("#item-selection").val();
+						dbSelectedUuid = html.find("#db-item-selection").val();
+						
+						debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+						
+						if (!selectedUuid){
+							selectedUuid = "none";
+						}
+						if (!dbSelectedUuid){
+							dbSelectedUuid = "none";
+						}
+						
+						craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					}
+				},
+				craftItemButtons['craft'] = {
+					icon: "<i class='fas fa-hammer'></i>",
+					label: "Craft",
+					callback: async (html) => {
+						if (!actor) {
+							ui.notifications.error("Actor not found.");
+							return;
+						}
+
+						// Perform actions with the actor
+						selectedUuid = html.find("#item-selection").val();
+						dbSelectedUuid = html.find("#db-item-selection").val();
+						debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+						if (!selectedUuid){
+							selectedUuid = "none";
+						}
+						if (!dbSelectedUuid){
+							dbSelectedUuid = "none";
+						}
+						craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					}
+				};
+				craftItemButtons['back'] = {
+					icon: "<i class='fas fa-arrow-left'></i>",
+					label: " Back",
+					callback: () => displayQuickAlchemyDialog(actor)
+				};
+			} else if (itemType === 'consumable'){
+				craftItemButtons['craft'] = {
+					icon: "<i class='fas fa-hammer'></i>",
+					label: "Craft",
+					callback: async (html) => {
+						if (!actor) {
+							ui.notifications.error("Actor not found.");
+							return;
+						}
+
+						// Perform actions with the actor
+						selectedUuid = html.find("#item-selection").val();
+						dbSelectedUuid = html.find("#db-item-selection").val();
+						
+						if (!selectedUuid){
+							selectedUuid = "none";
+						}
+						if (!dbSelectedUuid){
+							dbSelectedUuid = "none";
+						}
+						craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					}
+				};
+				craftItemButtons['back'] = {
+					icon: "<i class='fas fa-arrow-left'></i>",
+					label: " Back",
+					callback: () => displayQuickAlchemyDialog(actor)
+				};
+			} 
+			
+			const craftingDialog = new Dialog({
+				title: "Quick Alchemy",
+				content: content,
+				buttons: craftItemButtons,
+				default: "craft",
+				render: (html) => {
+				// Apply styles to specific buttons
+				html.find('button:contains("Craft")').css({
+					width: "100px",
+					height: "40px",
+					fontSize: "14px"
+				});
+				html.find('button:contains("Attack")').css({
+					height: "40px",
+					fontSize: "14px"
+				});
+				html.find('button:contains("Back")').css({
+					width: "50px",
+					height: "40px",
+					fontSize: "14px"
+				});
+			}
+			}, {
+					height: 280,  // Set desired height
+					width: 450    // Set desired width
+			});
+			craftingDialog.render(true);
+		}
+	}
+	
+	/*
+		Function to display Quick Alchemy Dialog
+	*/
+	async function displayQuickAlchemyDialog(actor){
 		
 		/*
 			First we will check how many versatile vials actor has,
-			if they only have 1 we will only ask them to craft another
+			if they have none we will only ask them to craft another
 		*/
 		const vialCount = getVersatileVialCount(actor);
 		debugLog(`Versatile Vial count for ${actor.name}: ${vialCount}`);
 		let dbbuttons = {};
-		if (vialCount < 2) { 
+		let content = "";
+		if (vialCount < 1) { 
 			dbbuttons['vial'] = { 
 				icon: "<i class='fas fa-vial'></i>",
 				label: "Versatile Vial",
 				callback: () => displayCraftingDialog(actor, 'vial')
 			};
+			content = `<p>You have no Versatile Vials, you must craft one first!</p>`;
 		} else {
 			dbbuttons['weapon'] = {
 				icon: "<i class='fas fa-bomb'></i>",
@@ -610,315 +1135,18 @@ Hooks.on("ready", () => {
 				label: "Versatile Vial",
 				callback: () => displayCraftingDialog(actor, 'vial')
 			};
+			content = `<p>What type of item do you wish to craft with Quick Alchemy?</p>`;
 		}
 		
-		debugLog(`dbbuttons object:`);
-		console.log(dbbuttons);
+		debugLog(`dbbuttons object:`, dbbuttons);
 		
-		const secondDialog = new Dialog({
+		const quickAlchemyDialog = new Dialog({
 			title: "Select Item Type",
-			content: `<p>What type of item do you wish to craft with Quick Alchemy for the <strong>second</strong> item?</p>`,
+			content: content,
 			buttons: dbbuttons,
 			default: "vial"
 		});
-		secondDialog.render(true);
-	}
-
-	/*
-		Function to display double brew crafting dialog
-		for displayItemTypeDialog(actor)
-	*/
-	async function displayCraftingDialog(actor, itemType) {
-		
-		/*
-			If we are creating a vial, we will just add one to inventory
-			otherwise display options
-		*/
-		if (itemType === 'vial') {
-			// Use UUID to get the versatile vial item
-			const uuid = "Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus";
-			const item = await fromUuid(uuid);
-
-			if (!item) {
-				debugLog(`No item found for versatile vial using UUID: ${uuid}`,"c",3);
-				return;
-			}
-
-			// Add the vial to the actor's inventory
-			await craftItem(item, actor, 1);
-
-			// Launch the displayQuickAlchemyDialog
-			displayQuickAlchemyDialog(actor);
-
-			//return; // Exit the function early since we're done
-		} else {
-		
-			let options = "";
-			
-			const { filteredEntries } = await processFilteredFormulasWithProgress(actor,itemType);
-			console.log(`filteredEntries: `,filteredEntries);
-			options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-			
-			const content = `
-				<form>
-				<div>
-				<label for="item-selection">Select an item to craft:</label>
-				<br/>
-				<select id="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
-				<br/><br/>
-				</div>
-				</form>
-				`;
-				
-			const craftingDialog = new Dialog({
-				title: "Select Item to Craft",
-				content: content,
-				buttons: {
-					craft: {
-						icon: "<i class='fas fa-hammer'></i>",
-						label: "Craft",
-						callback: async (html) => {
-							const selectedUuid = html.find("#item-selection").val();
-							const selectedItem = await fromUuid(selectedUuid);
-							if (selectedItem) {
-								await craftItem(selectedItem, actor);
-								const versatileVials = actor.items.filter((item) => item.slug === "versatile-vial");
-								debugLog(`consuming versatile vial| Item Created slug: ${selectedItem.slug} | versatileVials: ${versatileVials}`);
-								consumeVersatileVial(selectedItem.slug,versatileVials);
-								displayQuickAlchemyDialog(actor);
-							} else {
-								ui.notifications.error("No item selected or item not found.");
-							}
-						},
-						button: { style: "display: inline-block; margin-top: 10px;" }
-					}
-				},
-				default: "craft"
-			});
-			craftingDialog.render(true);
-		}
-	}
-	
-	
-	/*
-		Function to display Quick Alchemy Dialog
-	*/
-	async function displayQuickAlchemyDialog(actor){
-		
-		// Get known formulas
-		const { weaponEntries, consumableEntries, vialEntries, otherEntries } = await processFormulasWithProgress(actor);
-	
-		// Sort entries by name
-		vialEntries.sort((a, b) => a.name.localeCompare(b.name));
-		weaponEntries.sort((a, b) => a.name.localeCompare(b.name));
-		consumableEntries.sort((a, b) => a.name.localeCompare(b.name));
-		
-		// Generate sorted options
-		const vialOptions = vialEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-		const weaponOptions = weaponEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-		const consumableOptions = consumableEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-		
-		// Count the number of options in each
-		// Initialize counts
-		let weaponCount = "";
-		let consumableCount = "";
-		const showQACounts = game.settings.get("pf2e-alchemist-remaster-ducttape", "showQACounts");
-		if (showQACounts){
-			weaponCount = "(" + (weaponOptions.match(/<option/g) || []).length + ")";
-			consumableCount = "(" + (consumableOptions.match(/<option/g) || []).length + ")";
-			debugLog(`Showing Counts | weaponCount = ${weaponCount} | consumableCount = ${consumableCount}`);
-		}
-		
-		// Check Versatile Vial counts
-		const versatileVials = actor.items.filter((item) => item.slug === "versatile-vial");
-		//const vialCount = versatileVials.reduce((count, vial) => count + vial.quantity, 0);
-		const vialCount = getVersatileVialCount(actor);
-		let content = "";
-		if (vialCount < 1) { // no versatile vials
-			
-			// HTML content to prompt to create vial
-			content = `
-				<form>
-					<div>
-						<center>
-						<label for="vial-formula"><font color="red">No Versatile Vials!</font></label>
-						<br/><br/>
-						<select id="vial-formula" style="visibility: hidden; height: 0; width: 0;">${vialOptions}</select>
-						<button id="craft-vial-btn" type="button" style="display: inline-block; width: 150px; margin-right: 0%;"><i class='fas fa-vial'></i> Craft Versatile Vial</button>
-						</center>
-					</div>
-				</form>
-			`;
-		} else {
-	
-			// HTML content to prompt which formula to create
-			content = `
-				<form>
-					<p>Versatile Vials: ${vialCount}</p>
-					<div>
-						<label for="weapon-formula">Select a Weapon Formula ${weaponCount}</label>
-						<select id="weapon-formula">${weaponOptions}</select>
-						<button id="craft-weapon-btn" type="button" style="display: inline-block; width: 150px; margin-right: 0%;">
-						<i class='fas fa-bomb'></i> Craft and Attack</button>
-						<button id="craft-weapon-only-btn" type="button" style="display: inline-block; width: 100px; margin-top: 5px;"><i class='fas fa-hammer'></i> Craft Only</button>
-					</div>
-					<br/>
-					<div>
-						<label for="consumable-formula">Select a Consumable Formula ${consumableCount}</label>
-						<select id="consumable-formula">${consumableOptions}</select>
-						<button id="craft-consumable-btn" type="button" style="margin-top: 5px; width: 225px;"><i class='fas fa-hammer'></i> Craft</button>
-					</div>
-				</form>
-			`;
-		}
-		
-		let qaDialog = new Dialog({
-			title: "Quick Alchemy",
-			content: content,
-			buttons: {},
-			render: (html) => {
-
-				/*
-					-- Craft Vial Button -- 
-				*/
-				html.find("#craft-vial-btn").click(async () => {
-					const selectedUuid = html.find("#vial-formula").val();
-					const selectedItem = await fromUuid(selectedUuid);
-
-					if (selectedItem) {
-						
-						// Create/Add item
-						await craftItem(selectedItem, actor);
-						
-						// Equip item
-						const newUuid = await equipItemBySlug(selectedItem.slug);
-						
-						// Send Message to Chat
-						await sendVialAttackMessage(selectedItem.uuid,actor);
-						
-						// Close the dialog window
-						qaDialog.close();
-					
-					} else {
-						ui.notifications.error("Selected item is invalid.");
-					}
-				});
-	
-				// Craft And Attack button
-				html.find("#craft-weapon-btn").click(async () => {
-					// Get selected item
-					const selectedUuid = html.find("#weapon-formula").val();
-					const selectedItem = await fromUuid(selectedUuid); 
-					
-					// Ensure a target is selected
-					const target = game.user.targets.first();
-					if (!target) {
-						ui.notifications.error("Please target a token for the attack.");
-						return;
-					}
-					
-					// Create or increase item qty
-					if (selectedItem) {
-						
-						// Create/Add item
-						await craftItem(selectedItem, actor);
-						
-						// Equip Item
-						const newUuid = await equipItemBySlug(selectedItem.slug);
-						if (!newUuid) {
-							ui.notifications.error("Failed to equip item.");
-							return;
-						} 
-						const target = canvas.tokens.controlled[0]?.target;
-						
-						// Make sure we have a target
-						if (!target) {
-							ui.notifications.error("Please target a token for the attack.");
-							return;
-						} else {
-							// Initate rollActionMacro 
-							const actorUuid = actor.uuid;
-							game.pf2e.rollActionMacro({
-								actorUUID: actorUuid,
-								type: "strike",
-								itemId: newUuid,
-								slug: selectedItem.slug,
-							});
-						}
-
-						// Reduce Versatile Vial count
-						debugLog(`consuming versatile vial| Item Created slug: ${selectedItem.slug} | versatileVials: ${versatileVials}`);
-						consumeVersatileVial(selectedItem.slug,versatileVials);
-						
-						// Close the dialog window
-						qaDialog.close();	
-
-					} else {
-						debugLog("Selected item is invalid.", "u", 3);
-					}
-				});
-			
-				// Weapon Craft Button Weapon
-				html.find("#craft-weapon-only-btn").click(async () => {
-					const selectedUuid = html.find("#weapon-formula").val();
-					const selectedItem = await fromUuid(selectedUuid);
-
-					if (selectedItem) {
-						
-						// Create/Add item
-						await craftItem(selectedItem, actor);
-						
-						// Equip item
-						const newUuid = await equipItemBySlug(selectedItem.slug);
-						
-						// Send Message to Chat
-						if(selectedItem.slug === "versatile-vial"){
-							sendVialAttackMessage(selectedItem.uuid,actor);
-						} else {
-							await sendWeaponAttackMessage(`${actor.uuid}.Item.${newUuid}`);
-						}
-
-						// Reduce Versatile Vial count
-						debugLog(`consuming versatile vial| Item Created slug: ${selectedItem.slug} | versatileVials: <pre>${JSON.stringify(versatileVials, null, 2)}</pre>`);
-						consumeVersatileVial(selectedItem.slug,versatileVials);
-					
-						// Close the dialog window
-						qaDialog.close();
-					
-					} else {
-						debugLog("Selected item is invalid.", "u", 3);
-					}
-				});
-
-				// Craft Consumable button
-				html.find("#craft-consumable-btn").click(async () => {
-					const selectedUuid = html.find("#consumable-formula").val();
-					const selectedItem = await fromUuid(selectedUuid);
-
-					if (selectedItem) {
-						
-						// Create/Add item
-						await craftItem(selectedItem, actor);
-						
-						// Equip item
-						const newUuid = await equipItemBySlug(selectedItem.slug);
-						
-						// Send message to Chat
-						await sendConsumableUseMessage(`${actor.uuid}.Item.${newUuid}`);
-						
-						// Reduce Versatile Vial count
-						debugLog(`consuming versatile vial| Item Created slug: ${selectedItem.slug} | versatileVials: ${versatileVials}`);
-						consumeVersatileVial(selectedItem.slug,versatileVials);
-						
-						// Close the dialog window
-						qaDialog.close();	
-
-					} else {
-						debugLog("Selected item is invalid.", "u", 3);
-					}
-				});
-			},
-		},{width: 300, height: 'auto'}).render(true);
+		quickAlchemyDialog.render(true);
 	}
 	
 	/*
@@ -927,26 +1155,23 @@ Hooks.on("ready", () => {
 	async function qaCraftAttack() {
 		const token = canvas.tokens.controlled[0];
 		if (!token) {
-			debugLog("Please select a token first.", "u", 3);
+			ui.notifications.error("Please select a token first.");
 			return;
 		}
 		const actor = token.actor;
 		
+		// Make sure selected token is an alchemist
+		const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
+		if (!isAlchemist) {
+			ui.notifications.info("Selected Character is not an Alchemist!");
+			return;
+		}
+		
 		// Delete any items with "infused" tag and 0 qty
 		await clearInfused(actor);
 		
-		// Check if actor has double brew feat
-		const doubleBrewFeat = hasFeat(actor,"double-brew");
-		
-		//if actor has double brew feat, fisrt ask if we are using it
-		if (doubleBrewFeat) {
-			displayDoubleBrewDialog(actor);
-		} else {		
-			// Display Quick Alchemy dialog
-			displayQuickAlchemyDialog(actor);
-		}
+		// Display Quick Alchemy dialog
+		displayQuickAlchemyDialog(actor);
 	}
 
-  // Attach function to the global window object
-  window.qaCraftAttack = qaCraftAttack;
-});
+

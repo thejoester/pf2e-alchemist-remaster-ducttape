@@ -1,10 +1,27 @@
-import { debugLog } from './settings.js';
+  import { debugLog } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
 // Settings placeholders
 let addFormulasSetting = "disabled";
 let addNewFormulasToChat = false;
 let addFormulasPermission = "gm_only"; 
+
+/*
+  Function to check if actor has any active logged in owners
+*/
+function hasActiveOwners(actor) {
+    // Get owners with ownership level 3 ('Owner')
+    const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
+
+    // Filter for logged-in owners who are not GMs
+    const loggedInOwners = game.users.contents.filter(user => owners.includes(user.id) && user.active && !user.isGM);
+
+    // Debug output
+    debugLog(`Owners: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
+
+    // Return whether any non-GM logged-in owners exist
+    return loggedInOwners.length > 0;
+}
 
 Hooks.once('init', () => {
 
@@ -18,14 +35,19 @@ Hooks.once('init', () => {
         // Hook into updateActor to detect level-ups and grant Alchemist formulas
         Hooks.on('updateActor', async (actor, updateData, options, userId) => {
             // Check permissions
-			if (addFormulasPermission === "gm_only" && !game.user.isGM) return;
-			if (addFormulasPermission === "actor_owner" && !actor.isOwner) return;	
-			if (addFormulasPermission === "actor_owner" && game.user.isGM) return; // Prevent GM from being asked
-			
+            if (hasActiveOwners(actor)){ // only check for owner if they are logged in
+				debugLog(`Active Owner for ${actor.name} found!`);
+				if (addFormulasPermission === "actor_owner" && !actor.isOwner) return;
+				if (addFormulasPermission === "actor_owner" && game.user.isGM) return;
+            }
+			if (addFormulasPermission === "gm_only" && !game.user.isGM) {
+				debugLog(2,"Permission check failed: GM only setting, user is not a GM.");
+				return; // Show to GM only
+            }
             // Check if the actor's class is "Alchemist"
             const className = actor.class?.name?.toLowerCase() || '';
             if (className !== "alchemist") {
-                debugLog(`Character is not an Alchemist.`);
+                debugLog(2, `Character is not an Alchemist.`);
                 return;
             }
 
@@ -56,7 +78,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
     const compendium = game.packs.get(compendiumName);
     if (!compendium) {
         ui.notifications.error(`Compendium '${compendiumName}' not found.`);
-        debugLog(`Compendium '${compendiumName}' not found.`, "c", 3);
+        debugLog(3, `Compendium '${compendiumName}' not found.`);
         return;
     }
 
@@ -71,7 +93,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
                 const item = await fromUuid(uuid);
                 return item ? item.name.replace(/\s*\(.*?\)\s*/g, '') : null;
             } catch (error) {
-                debugLog(`Error extracting item for UUID: ${uuid} | Error: ${error.message}`, "c", 3);
+                debugLog(3, `Error extracting item for UUID: ${uuid} | Error: ${error.message}`, error);
                 return null;
             }
         })
@@ -128,11 +150,15 @@ async function grantAlchemistFormulas(actor, newLevel) {
             if (confirmed) {
                 const newFormulaObject = { uuid };
                 const updatedFormulaObjects = [...actor.system.crafting.formulas, newFormulaObject];
-                await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+                try {
+                  await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+                } catch (error) {
+                  debugLog(`Error updating formulas for ${actor.name}: ${error.message}`);
+                }
                 debugLog(`${actor.name} has learned the formula for ${item.name}.`);
 				addedFormulas.push(item.name);		
             } else {
-                debugLog(`User declined to add formula ${item.name} to ${actor.name}.`, "c", 2);
+                debugLog(`User declined to add formula ${item.name} to ${actor.name}.`);
             }
         }
 		// Send new formula list to chat
@@ -145,10 +171,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
 			formulasToPrompt.push({ uuid, name: item.name, level: item.system.level.value });
 		}
 		if (formulasToPrompt.length > 0) { // Make sure list is not empty
-			const formulaNames = await Promise.all(newFormulaUUIDs.map(async (uuid) => {
-                const item = await fromUuid(uuid);
-                return item?.name ?? 'Unknown Formula';
-            }));
+			const formulaNames = formulasToPrompt.map(f => f.name);
             // Add the formula names to the list
             addedFormulas.push(...formulaNames);
 			
@@ -162,7 +185,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
 				// Send new formula list to chat
 				newFormulasChatMsg(actor.name,addedFormulas.join('<br>'),addedFormulas.length);
 			} else {
-				debugLog(`User declined to add formulas to ${actor.name}.`, "c", 2);
+				debugLog(`User declined to add formulas to ${actor.name}.`);
 			}
 		}
     } else if (addFormulasSetting === "auto") {
@@ -182,7 +205,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
 			// Send new formula list to chat
 			newFormulasChatMsg(actor.name,addedFormulas.join('<br>'),addedFormulas.length);
         } catch (error) {
-            debugLog(`Error updating formulas for ${actor.name}: ${error.message}`, "c", 3);
+            debugLog(3, `Error updating formulas for ${actor.name}: ${error.message}`);
         }
     }
 }
@@ -195,9 +218,13 @@ async function grantAlchemistFormulas(actor, newLevel) {
  */
 function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	if (addNewFormulasToChat && newFormulaCount > 0) { // if option enabled and there was formulas added, display in chat
-        ChatMessage.create({ 
-            content: `<strong>${actorName}</strong> has learned the following new formulas:<br><br> ${newFormulas}`
-        });
+      try {
+          ChatMessage.create({ 
+              content: `<strong>${actorName}</strong> has learned the following new formulas:<br><br> ${newFormulas}`
+          });
+      } catch (error) {
+          debugLog(`Failed to send chat message for ${actorName}: ${error.message}`);
+      }
     } else {
 		debugLog(`actorName: ${actorName} | newFormulas: ${newFormulas} | newFormulaCount: ${newFormulaCount}`);
 	}
@@ -212,6 +239,12 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
  */
 function showFormulaListDialog(actor, formulas) {
     return new Promise((resolve) => {
+        // make sure there are formulas to process
+        if (formulas.length === 0) {
+            debugLog("No formulas to show in the dialog.");
+            return resolve(false);
+        }
+      
         // Sort formulas by level
         const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
 
