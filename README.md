@@ -1,7 +1,7 @@
 # PF2e Alchemist Remaster Duct Tape
 
 > [!IMPORTANT]
-> PF2e system 6.8.0 has been released with the Player Core 2 Alchemist features. 
+> PF2e system 6.8.0 has been released with the Player Core 2 Alchemist features. This module still functions and provides added functionality.
 > 
 
 A quality of life module to automate features for the Alchmist remaster from Player Core 2.
