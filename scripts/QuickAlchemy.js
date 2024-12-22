@@ -319,7 +319,7 @@ Hooks.on("ready", () => {
 
 	// Function to equip an item by slug
 	async function equipItemBySlug(slug,actor) {
-		debugLog(`equipItemBySlug(${slug}, ${actor})`);
+		debugLog(`equipItemBySlug(${slug}, ${actor.name})`);
 		
 		if (!actor) {
 			const actor = canvas.tokens.controlled[0]?.actor;

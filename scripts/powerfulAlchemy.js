@@ -10,18 +10,6 @@ import { hasFeat } from './settings.js';
 */
 function updateDescription(description, regexPattern, replacementFn) {
 	const updatedDescription = description.replace(regexPattern, replacementFn);
-	if (updatedDescription !== description) {
-		// Output to log
-		debugLog("Description was updated to Class DC!");
-
-		// Send Mesactorge to Chat
-		const itemName = item.name;
-		ChatMesactorge.create({
-			author: game.user?.id,    // User ID to send the mesactorge as the system
-			content: `<p>${itemName} created with Quick Alchemy using Class DC ${classDC}!</p><p>${item.system.description.value || "No description available."}</p>`,
-			speaker: { alias: "PF2e Powerful Alchemy" }  // Optional: sets the speaker to "System"
-		});
-	}
 	return updatedDescription;
 }
 
@@ -34,7 +22,7 @@ Hooks.on("ready", () => {
 		debugLog("PowerfulAlchemy enabled.");
 		
 		Hooks.on("createItem", async (item) => {
-			debugLog("Item Created!");
+			debugLog(`Item ${item.name} Created!`);
 			
 			// Get the actor from the item's parent (the actor who owns the item)
 			const actor = item.parent;
@@ -69,12 +57,11 @@ Hooks.on("ready", () => {
 			}
 
 			// Log infused item was created
-			debugLog(`Infused item created!`);
-			console.log(item);
-
+			debugLog(`Infused item created! Item: `, item);
+			
 			// Get the actor's class DC
 			const classDC = actor.system.attributes.classDC?.value;
-			console.log("Actor's Class DC:", classDC);
+			debugLog("Actor's Class DC:", classDC);
 			if (!classDC) {
 			  debugLog(2, "Warning: Class DC not found for the actor:", actor);
 			  return;
@@ -94,10 +81,21 @@ Hooks.on("ready", () => {
 			for (const { pattern, replaceFn } of replacements) {
 				updatedDescription = updateDescription(updatedDescription, pattern, replaceFn);
 			}
-
+			
 			// Update the item with the new description
-			await item.update({"system.description.value": updatedDescription});
-			debugLog("Item description updated successfully.");
+			if (updatedDescription !== description) {
+					await item.update({"system.description.value": updatedDescription});
+					debugLog("Description was updated to Class DC!");
+
+					// Send Mesactorge to Chat
+					const itemName = item.name;
+					ChatMessage.create({
+						author: game.user?.id,    // User ID to send the mesactorge as the system
+						content: `<p>${itemName} created with Quick Alchemy using Class DC ${classDC}!</p><p>${item.system.description.value || "No description available."}</p>`,
+						speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
+					});
+			}
+			
 
 		});
 	}

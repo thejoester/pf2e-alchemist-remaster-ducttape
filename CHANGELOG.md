@@ -1,3 +1,7 @@
+## 2.5.1
+### Bug Fix
+- (issue #10) Powerful Alchemy: fixed but preventing update of DC in description. 
+
 ## 2.5.0
 ### New features / improvements
 - Quick Alchemy Macro: Improved flow for more intuitive use. 
