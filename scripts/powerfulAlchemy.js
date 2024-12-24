@@ -1,5 +1,4 @@
-import { debugLog } from './settings.js';
-import { hasFeat } from './settings.js';
+import { debugLog, hasFeat, isAlchemist  } from './settings.js';
 
 /**
 	Update item description based on regex pattern and replacement logic.
@@ -31,42 +30,47 @@ Hooks.on("ready", () => {
 			  return;
 			}
 			
-			// Make sure selected token is an alchemist
-			const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
-			if (!isAlchemist) {
-				ui.notifications.info("Selected Character is not an Alchemist!");
+			// Make sure selected token is an alchemist or has archetype
+			const alchemistCheck = isAlchemist(actor);
+			if (alchemistCheck.qualifies) {
+				const classDC = alchemistCheck.dc;
+				debugLog("Actor's Class DC:", classDC);
+				if (!classDC) {
+					debugLog(2, "Warning: Class DC not found for the actor:", actor);
+					return;
+				}
+			} else {
+				debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
 				return;
 			}
 			
 			// First check if the actor has Powerful Alchemy - if not return with mesactorge in log	
 			if (!hasFeat(actor, "powerful-alchemy")) {
-				debugLog("Actor does not have Powerful alchemy, ignoring!");
+				debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 				return;	
+			}
+			
+			// ensure the item type is 'weapon' or 'consumable'
+			if (!item || (item.type !== "weapon" && item.type !== "consumable")) {
+			  debugLog(`Item type (${item.type}) is not weapon or consumable or item is undefined - Ignoring.`);
+			  return;
 			}
 			
 			// Ensure the item has the 'alchemical' trait
 			if (!item || !item.system.traits.value.includes("alchemical")) {
-			  debugLog("Item does not have the 'alchemical' trait or item is undefined.");
+			  debugLog(`Item (${item.name}) does not have the 'alchemical' trait or item is undefined.`);
 			  return;
 			}
 			
 			// Ensure Quick Alchemy was used to create item - it will have the "infused" trait
 			if (!item || !item.system.traits.value.includes("infused")) {
-			  debugLog("Item does not have the 'infused' trait or item is undefined.");
+			  debugLog(`Item (${item.name}) does not have the 'infused' trait or item is undefined.`);
 			  return;
 			}
 
 			// Log infused item was created
 			debugLog(`Infused item created! Item: `, item);
-			
-			// Get the actor's class DC
-			const classDC = actor.system.attributes.classDC?.value;
-			debugLog("Actor's Class DC:", classDC);
-			if (!classDC) {
-			  debugLog(2, "Warning: Class DC not found for the actor:", actor);
-			  return;
-			}
-
+						
 			// Get current description of item
 			let description = item.system.description.value;
 			

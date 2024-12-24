@@ -1,3 +1,20 @@
+## 2.5.3
+### Bug Fixes
+- Vial Search: When "finding" versatile vials, will now add proper item level vials. 
+- Fixed bug preventing macro execution on different languages (issue #14).
+- Settings: Corrected descriptions
+
+## 2.5.2
+### New features / improvements
+- Support for Archetype characters!
+  - Does not apply to Vial Search.
+  - Cannot craft versatile vials but can craft quick vials
+- Level Up: New options on leveling up
+  - Choose how to handle lower level formulas, add lower, remove lower, disabled
+  - if remove lower level formulas is selected, will prompt based on setting for adding higher level formulas (ask for all, ask for each, auto)
+### Bug Fixes
+- Fixed annoying notification on non alchemist characters (issue #13)
+
 ## 2.5.1
 ### Bug Fix
 - (issue #10) Powerful Alchemy: fixed bug preventing update of DC in description. 

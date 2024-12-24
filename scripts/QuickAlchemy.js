@@ -1,4 +1,6 @@
-import { debugLog, hasFeat  } from './settings.js';
+import { debugLog, hasFeat, isAlchemist  } from './settings.js';
+
+let isArchetype = false;
 
 Hooks.on("combatTurnChange", async (combat, prior, current) => {
     // Get the combatant whose turn just ended
@@ -226,7 +228,7 @@ Hooks.on("ready", () => {
 					}
 
 					// Show Quick Alchemy dialog
-					displayQuickAlchemyDialog(actor);
+					qaDialog(actor);
 				});
 			}
 		});
@@ -441,7 +443,7 @@ Hooks.on("ready", () => {
 	/*
 		Function to get count of versatile vials in actor's inventory
 	*/
-	function getVersatileVialCount(actor) {
+	export function getVersatileVialCount(actor) {
 		// Verify valid actor passed
 		if (!actor || !actor.items) {
 			debugLog(3, `Error: no valid actor passed to getVersatileVialCount()`);
@@ -682,7 +684,6 @@ Hooks.on("ready", () => {
 	
 	/*
 		Helper function for craftButton() and craftAttackButton()
-		
 	*/
 	async function handleCrafting(uuid, actor, doubleBrew = false, attack = false){
 	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${doubleBrew}, ${attack}) called.`);
@@ -711,7 +712,7 @@ Hooks.on("ready", () => {
 			ui.notifications.error("No versatile vials available.");
 			return;
 		}
-		debugLog(`equipItemBySlug(${temporaryItem.slug}, ${actor.name}`);
+		debugLog(`equipItemBySlug(${temporaryItem.slug}, ${actor.name})`);
 		const newUuid = await equipItemBySlug(temporaryItem.slug, actor);
 		if (!newUuid) {
 			debugLog(3, `Failed to equip item with slug: ${temporaryItem.slug}`);
@@ -801,11 +802,9 @@ Hooks.on("ready", () => {
 		let dbSelectedUuid = "";
 		let craftItemButtons = {};
 		
-		
 		/*
 			If we are creating a vial, we will add one to inventory
 			Then check if we have Double Brew Feat 
-			
 			otherwise ask display list of item type selected
 		*/
 		if (itemType === 'vial') {
@@ -892,7 +891,7 @@ Hooks.on("ready", () => {
 			craftItemButtons['back'] = {
 				icon: "<i class='fas fa-arrow-left'></i>",
 				label: " Back",
-				callback: () => displayQuickAlchemyDialog(actor),
+				callback: () => qaDialog(actor),
 				render: (html) => {
 					html.find("button").css({
 						"width": "50px",
@@ -948,7 +947,7 @@ Hooks.on("ready", () => {
 					content = `${content} 
 						<form>
 							<h3>Double Brew Feat</h3>
-							<p>Crafting Versatile Vial, do you also want to use Double Brew to craft another item?</p>
+							<p>Do you also want to use Double Brew to craft another item?</p>
 							<div>
 								<label for="db-item-selection">Choose Item or leave "-None-":</label>
 								<select id="db-item-selection">
@@ -961,20 +960,22 @@ Hooks.on("ready", () => {
 								<br/>
 								`;
 				} else { // we will only prompt to make another vial
-					content = `${content} 
-						<form>
-						<div>
-							<h3>Double Brew Feat</h3>
-							<p>You only have ${vialCount}, use Double Brew to craft another?</p>
-								<label for="db-item-selection">Double Brew:</label>
-								<select id="db-item-selection">
-								<option value="none">-None-</option>
-								<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
-								</select>
-							</div>
-						</form>
-						<br/>`;
 				
+					if (!isArchetype){ // do not show for Archetype
+						content = `${content} 
+							<form>
+							<div>
+								<h3>Double Brew Feat</h3>
+								<p>You only have ${vialCount}, use Double Brew to craft another?</p>
+									<label for="db-item-selection">Double Brew:</label>
+									<select id="db-item-selection">
+									<option value="none">-None-</option>
+									<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
+									</select>
+								</div>
+							</form>
+							<br/>`;
+					}
 				}
 			}
 		
@@ -1037,7 +1038,7 @@ Hooks.on("ready", () => {
 				craftItemButtons['back'] = {
 					icon: "<i class='fas fa-arrow-left'></i>",
 					label: " Back",
-					callback: () => displayQuickAlchemyDialog(actor)
+					callback: () => qaDialog(actor)
 				};
 			} else if (itemType === 'consumable'){
 				craftItemButtons['craft'] = {
@@ -1065,7 +1066,7 @@ Hooks.on("ready", () => {
 				craftItemButtons['back'] = {
 					icon: "<i class='fas fa-arrow-left'></i>",
 					label: " Back",
-					callback: () => displayQuickAlchemyDialog(actor)
+					callback: () => qaDialog(actor)
 				};
 			} 
 			
@@ -1092,7 +1093,7 @@ Hooks.on("ready", () => {
 				});
 			}
 			}, {
-					height: 280,  // Set desired height
+					 // Set desired height
 					width: 450    // Set desired width
 			});
 			craftingDialog.render(true);
@@ -1102,17 +1103,23 @@ Hooks.on("ready", () => {
 	/*
 		Function to display Quick Alchemy Dialog
 	*/
-	async function displayQuickAlchemyDialog(actor){
-		
+	async function qaDialog(actor){
+		// catch archetype
+		if (isArchetype){
+			qaDialogArchtype(actor);
+			return;
+		}
 		/*
 			First we will check how many versatile vials actor has,
 			if they have none we will only ask them to craft another
+			unless they are an archetype. 
 		*/
 		const vialCount = getVersatileVialCount(actor);
 		debugLog(`Versatile Vial count for ${actor.name}: ${vialCount}`);
 		let dbbuttons = {};
 		let content = "";
-		if (vialCount < 1) { 
+		
+		if (vialCount < 1) {
 			dbbuttons['vial'] = { 
 				icon: "<i class='fas fa-vial'></i>",
 				label: "Versatile Vial",
@@ -1150,6 +1157,53 @@ Hooks.on("ready", () => {
 	}
 	
 	/*
+		Function to display Quick Alchemy Dialog
+	*/
+	async function qaDialogArchtype(actor){
+		/*
+			First we will check how many versatile vials actor has,
+			if they have none we display message.  
+		*/
+		const vialCount = getVersatileVialCount(actor);
+		debugLog(`Versatile Vial count for ${actor.name}: ${vialCount}`);
+		let dbbuttons = {};
+		let content = "";
+		let quickAlchemyDialog;
+		if (vialCount < 1) {
+			dbbuttons['ok'] = { 
+				icon: "<i class='fas fa-check'></i>",
+				label: "Versatile Vial",
+				callback: () => quickAlchemyDialog.close()
+			};
+			content = `<p>You have run out of Versatile Vials. </p>`;
+		} else {
+			dbbuttons['weapon'] = {
+				icon: "<i class='fas fa-bomb'></i>",
+				label: "Weapon",
+				callback: () => displayCraftingDialog(actor, 'weapon')
+			};
+			dbbuttons['consumable'] = {
+				icon: "<i class='fas fa-flask'></i>",
+				label: "Consumable",
+				callback: () => displayCraftingDialog(actor, 'consumable')
+			};
+			
+			content = `<p>What type of item do you wish to craft with Quick Alchemy?</p>`;
+		}
+		// Dynamically set the default button
+		const defaultButton = dbbuttons['ok'] ? 'ok' : 'weapon';
+		debugLog(`dbbuttons object:`, dbbuttons);
+		
+		quickAlchemyDialog = new Dialog({
+			title: "Select Item Type",
+			content: content,
+			buttons: dbbuttons,
+			default: defaultButton
+		});
+		quickAlchemyDialog.render(true);
+	}
+	
+	/*
 		Main crafting function
 	*/
 	async function qaCraftAttack() {
@@ -1160,18 +1214,25 @@ Hooks.on("ready", () => {
 		}
 		const actor = token.actor;
 		
-		// Make sure selected token is an alchemist
-		const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
-		if (!isAlchemist) {
-			ui.notifications.info("Selected Character is not an Alchemist!");
+		// Make sure selected token is an alchemist or has archetype
+		const alchemistCheck = isAlchemist(actor);
+		if (!alchemistCheck.qualifies) {
+			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
 			return;
-		}
+		} 
+		
+		// Check if character is archetype for features. 
+		isArchetype = alchemistCheck.isArchetype;
 		
 		// Delete any items with "infused" tag and 0 qty
 		await clearInfused(actor);
 		
 		// Display Quick Alchemy dialog
-		displayQuickAlchemyDialog(actor);
+		if (isArchetype){
+			qaDialogArchtype(actor);
+		} else {
+			qaDialog(actor);
+		}
 	}
 
 

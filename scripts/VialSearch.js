@@ -1,5 +1,4 @@
-import { debugLog } from './settings.js';
-import { hasFeat } from './settings.js';
+import { debugLog, hasFeat, isAlchemist  } from './settings.js';
 
 // See if VialSearch option enabled, default to false
 let vialSearchReminder = false;
@@ -93,6 +92,10 @@ Hooks.once('init', () => {
 			for (const actor of game.actors.party.members) {
 				if (!actor || actor.type !== 'character') continue; // Actor is character
 
+				/*
+					Checking that actor is Alchemist
+					!!!Archetype does not qualify for this feature!!!
+				*/
 				const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
 				if (!isAlchemist) continue; // actor is not alchemist, stop
 
@@ -249,7 +252,48 @@ export async function addVialsToActor(actor, count) {
 		is replaced in the PF2e system. 
 	
 	*/
+
+	// Determine the actor's level
+	const actorLevel = actor.system.details.level.value;
+	// Determine the highest crafting tier based on actor's level
+	const itemLevel = actorLevel >= 18 ? 18 : actorLevel >= 12 ? 12 : actorLevel >= 4 ? 4 : 1;
+	// Check if the actor already has the versatile vial item
+	let vialItem = actor.items.find(item => item.system.slug === 'versatile-vial');
+	try {
+		if (vialItem) {
+			// Update the item if it exists
+			const currentQuantity = vialItem.system.quantity ?? 0;
+			
+			// Update item level if it doesn't match the expected level
+            const currentLevel = vialItem.system.level.value;
+            if (currentLevel !== itemLevel) {
+                await vialItem.update({ 'system.level.value': itemLevel });
+                console.log(`${actor.name}'s versatile vial level updated to ${itemLevel}.`);
+            }
+
+			// Update the item's quantity
+			const newQuantity = currentQuantity + count;
+			await vialItem.update({ 'system.quantity': newQuantity });
+			debugLog(`Updated versatile vial quantity for ${actor.name} to ${newQuantity}.`);
+		} else {
+			// Add a new versatile vial item from the compendium
+			const versatileVials = actor.getResource("versatileVials");
+			if (versatileVials) {
+				
+				// Determine the highest crafting tier based on actor's level
+				const itemLevel = actorLevel >= 18 ? 18 : actorLevel >= 12 ? 12 : actorLevel >= 4 ? 4 : 1;
+				await actor.updateResource("versatileVials", versatileVials.value + count);
+				vialItem = actor.items.find(item => item.system.slug === 'versatile-vial');
+				if (vialItem) await vialItem.update({ 'system.level.value': itemLevel });
+				debugLog(`Added item (quantity: ${count}, level: ${vialItem.level}) to ${actor.name}: `, vialItem );
+			}
+		}
+	} catch (error) {
+		debugLog(`Error adding versatile vial for actor ${actor.name}:`, error);
+	}
 	
+	
+	/*
 	// Check if actor has versatile vial item and add to quantity
 	let vialItem = actor.items.find(item => item.system.slug === 'versatile-vial');
 	if (vialItem) {
@@ -258,6 +302,8 @@ export async function addVialsToActor(actor, count) {
 		await vialItem.update({ 'system.quantity': newQuantity });
 	} else { // actor has no versatile vials
 		try {
+			
+			/*
 			// Use UUID to get the versatile vial item
 			const uuid = "Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus";
 			const item = await fromUuid(uuid);
@@ -279,8 +325,21 @@ export async function addVialsToActor(actor, count) {
 			} else {
 				debugLog(`Successfully created versatile vial for actor: ${actor.name}`);
 			}
+			*/
+			// Check if the actor is valid and the getResource function exists
+/*			
+			const versatileVials = await actor.getResource("versatileVials");
+			debugLog(`Added versatileVials: `, versatileVials);
+			debugLog(`count: `, count);
+			if (versatileVials) {
+				await actor.updateResource("versatileVials", versatileVials.value + count);
+				await actor.updateResource("versatileVials", versatileVials.system.level = );
+				debugLog(`updated versatileVials.value: ${versatileVials.value} | `, versatileVials);
+			}
+			
 		} catch (error) {
 			debugLog(3,`Error adding versatile vial for actor ${actor.name}:`, error);
 		}
 	}
+*/
 }

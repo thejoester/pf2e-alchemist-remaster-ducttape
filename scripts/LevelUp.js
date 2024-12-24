@@ -1,56 +1,48 @@
-  import { debugLog } from './settings.js';
+import { debugLog, hasFeat, isAlchemist  } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
 // Settings placeholders
 let addFormulasSetting = "disabled";
 let addNewFormulasToChat = false;
 let addFormulasPermission = "gm_only"; 
+let handleLowerFormulasOnLevelUp = "disabled";
 
-/*
-  Function to check if actor has any active logged in owners
-*/
-function hasActiveOwners(actor) {
-    // Get owners with ownership level 3 ('Owner')
-    const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
-
-    // Filter for logged-in owners who are not GMs
-    const loggedInOwners = game.users.contents.filter(user => owners.includes(user.id) && user.active && !user.isGM);
-
-    // Debug output
-    debugLog(`Owners: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
-
-    // Return whether any non-GM logged-in owners exist
-    return loggedInOwners.length > 0;
-}
+Hooks.once('ready', () => {
+	getAlchemistLevels();
+	
+});	
 
 Hooks.once('init', () => {
-
+	
     // Get Settings
     addFormulasSetting = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
+	handleLowerFormulasOnLevelUp = game.settings.get("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp");
 	addNewFormulasToChat = game.settings.get("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat");
 	addFormulasPermission = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasPermission");
-    debugLog(`Setting - Add Formulas on level up: ${addFormulasSetting}`);
+	
+	
+    
 
     if (addFormulasSetting !== "disabled") {
         // Hook into updateActor to detect level-ups and grant Alchemist formulas
         Hooks.on('updateActor', async (actor, updateData, options, userId) => {
-            // Check permissions
-            if (hasActiveOwners(actor)){ // only check for owner if they are logged in
-				debugLog(`Active Owner for ${actor.name} found!`);
-				if (addFormulasPermission === "actor_owner" && !actor.isOwner) return;
-				if (addFormulasPermission === "actor_owner" && game.user.isGM) return;
-            }
-			if (addFormulasPermission === "gm_only" && !game.user.isGM) {
-				debugLog(2,"Permission check failed: GM only setting, user is not a GM.");
-				return; // Show to GM only
-            }
-            // Check if the actor's class is "Alchemist"
-            const className = actor.class?.name?.toLowerCase() || '';
-            if (className !== "alchemist") {
-                debugLog(2, `Character is not an Alchemist.`);
-                return;
-            }
-
+			
+			debugLog(`Settings | 
+				addFormulasSetting: ${addFormulasSetting} | 
+				handleLowerFormulasOnLevelUp: ${handleLowerFormulasOnLevelUp} | 
+				addNewFormulasToChat: ${addNewFormulasToChat} | 
+				addFormulasPermission: ${addFormulasPermission}`); 
+					
+			// Make sure selected token is an alchemist or has archetype
+			const alchemistCheck = isAlchemist(actor);
+			if (!alchemistCheck.qualifies) {
+				debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
+				return;
+			}
+			
+			// Check permissions
+            if (!canManageFormulas(actor)) return;
+			
             // Check if the level was updated
             const newLevel = updateData?.system?.details?.level?.value;
             if (newLevel === undefined) {
@@ -61,6 +53,12 @@ Hooks.once('init', () => {
             
             // Update formulas
             await grantAlchemistFormulas(actor, newLevel);
+			if (handleLowerFormulasOnLevelUp === "remove_lower" ) {
+				await removeLowerLevelFormulas(actor);
+			}
+			await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel', actor.system.details.level.value);	
+			debugLog(`Previous level flag set for ${actor.name} = ${actor.system.details.level.value}`);
+			
         });
     }
 });
@@ -117,13 +115,19 @@ async function grantAlchemistFormulas(actor, newLevel) {
     const relevantItems = await Promise.all(
         relevantEntries.map(entry => compendium.getDocument(entry._id))
     );
+	
+	// Ger Previous level from actor flag
+	const previousLevel = actor.getFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel') || 1;
+	debugLog(`previous level for ${actor.name}: ${previousLevel}`);
 
-	// Filter items to only items that match new level & have common trait & have alchemical trait
-    const filteredItems = relevantItems.filter(item => 
-		item.system.level.value <= newLevel &&
-        item.system.traits?.value?.includes('alchemical') && 
-        item.system.traits?.rarity === 'common'
-    );
+	// Filter items to only items that match settings & have common trait & have alchemical trait
+	const filteredItems = relevantItems.filter(item => {
+		const isAlchemical = item.system.traits?.value?.includes('alchemical');
+		const isCommon = item.system.traits?.rarity === 'common';
+		const levelCheck = item.system.level.value <= newLevel && item.system.level.value > previousLevel;
+	
+		return isAlchemical && isCommon && levelCheck;
+	});
 
     const relevantUUIDs = filteredItems.map(item => `Compendium.${compendiumName}.Item.${item.id}`);
     const newFormulaUUIDs = relevantUUIDs.filter(uuid => !knownFormulaUUIDs.includes(uuid));
@@ -230,36 +234,31 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	}
 }
 
-/**
- * Show a dialog to ask if the user wants to add all the gathered formulas.
- * 
- * @param {Actor} actor - The actor receiving the formulas.
- * @param {Array} formulas - The list of formulas to add.
- * @returns {Promise<boolean>} - Resolves to true if user clicks "Yes", false otherwise.
- */
-function showFormulaListDialog(actor, formulas) {
+/*
+	Show a dialog to ask if the user wants to add all the gathered formulas.
+*/
+async function showFormulaListDialog(actor, formulas, isRemoving = false) {
     return new Promise((resolve) => {
-        // make sure there are formulas to process
         if (formulas.length === 0) {
             debugLog("No formulas to show in the dialog.");
             return resolve(false);
         }
-      
-        // Sort formulas by level
-        const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
 
-        // Build the list of formulas to display
+        const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
         const formulaListHTML = sortedFormulas.map(f => 
             `<li>Level ${f.level}: <strong>${f.name}</strong></li>`
         ).join('');
 
+        const title = isRemoving ? "Remove Lower-Level Formulas" : "New Formulas Discovered";
+        const content = isRemoving
+            ? `<p>${actor.name} has the following lower-level formulas that are being replaced:</p>
+                <ul>${formulaListHTML}</ul><p>Do you want to remove these formulas?</p>`
+            : `<p>${actor.name} has unlocked new formulas:</p>
+                <ul>${formulaListHTML}</ul><p>Do you want to add these formulas?</p>`;
+
         new Dialog({
-            title: "New Formulas Discovered",
-            content: `
-                <p>${actor.name} has unlocked the following new formulas:</p>
-                <ul>${formulaListHTML}</ul>
-                <p>Would you like to add all of these formulas to their crafting book?</p>
-            `,
+            title,
+            content,
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-check"></i>',
@@ -277,19 +276,20 @@ function showFormulaListDialog(actor, formulas) {
     });
 }
 
-/**
- * Show a dialog to ask if the user wants to add a formula.
- * 
- * @param {Actor} actor - The actor receiving the formula.
- * @param {Item} item - The item (formula) to add.
- * @param {number} newLevel - The actor's new level.
- * @returns {Promise<boolean>} - Resolves to true if user clicks "Yes", false otherwise.
- */
-function showFormulaDialog(actor, item, itemLevel) {
+
+/*
+	Show a dialog to ask if the user wants to add a formula.
+*/
+async function showFormulaDialog(actor, formula, level, isRemoving = false) {
     return new Promise((resolve) => {
+        const title = isRemoving ? "Remove Formula" : "New Formula Discovered";
+        const content = isRemoving
+            ? `<p>${actor.name} has the formula for <strong>${formula.name}</strong> (Level ${level}). Do you want to remove it?</p>`
+            : `<p>${actor.name} has unlocked the formula for <strong>${formula.name}</strong> (Level ${level}). Do you want to add it?</p>`;
+
         new Dialog({
-            title: "New Formula Discovered",
-            content: `<p>${actor.name} has unlocked the formula for <strong>${item.name}</strong> at level ${itemLevel}. Would you like to add it?</p>`,
+            title,
+            content,
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-check"></i>',
@@ -305,4 +305,181 @@ function showFormulaDialog(actor, item, itemLevel) {
             default: "yes",
         }).render(true);
     });
+}
+
+
+/*
+  Function to check if actor has any active logged in owners
+*/
+function hasActiveOwners(actor) {
+    // Get owners with ownership level 3 ('Owner')
+    const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
+
+    // Filter for logged-in owners who are not GMs
+    const loggedInOwners = game.users.contents.filter(user => owners.includes(user.id) && user.active && !user.isGM);
+
+    // Debug output
+    debugLog(`Owners: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
+
+    // Return whether any non-GM logged-in owners exist
+    return loggedInOwners.length > 0;
+}
+
+/*
+  Function to handle permissions
+*/
+function canManageFormulas(actor) {
+    const activeOwnersExist = hasActiveOwners(actor);
+
+    if (addFormulasPermission === "gm_only") {
+        // GM-only permission: Allow only the GM
+        if (!game.user.isGM) {
+            debugLog(`User ${game.user.name} is not a GM and cannot manage formulas for ${actor.name}.`);
+            return false;
+        } else {
+			return true;
+		}
+    }
+
+    if (addFormulasPermission === "actor_owner") {
+        // If there are active owners, allow only owners to proceed
+        if (activeOwnersExist) { // An owner is logged in 
+            if (actor.isOwner && !game.user.isGM) { // Allow only active non-GM owner
+				return true; 
+            } else {
+				debugLog(`User ${game.user.name} is not an owner of ${actor.name}.`);
+                return false;
+			}
+			
+		// If no active owners, allow GM to manage formulas
+        } else if (game.user.isGM) {
+        
+            debugLog(`No active non-GM owners for ${actor.name}. Allowing GM to manage formulas.`);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/**
+ * Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
+ *
+ * @param {Actor} actor - The actor whose formulas will be processed.
+ * @returns {Promise<void>} - Resolves after updating the actor's formulas.
+ */
+async function removeLowerLevelFormulas(actor) {
+	
+    const knownFormulas = actor.system.crafting.formulas;
+    const formulaMap = new Map(); // Map to store the highest-level version of each base formula
+    let removedFormulas = []; // Track removed formulas
+
+    // Iterate through known formulas
+    for (const formula of knownFormulas) {
+		const item = await fromUuid(formula.uuid);
+		if (!item) {
+			console.warn(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
+			continue;
+		}
+
+		// Extract the base formula name
+		const baseName = item.name.replace(/\s*\(.*?\)\s*/g, '').trim();
+		const level = Number(item.system.level.value);
+		
+		// Compare levels and store the highest-level version
+		const currentLevel = formulaMap.has(baseName) ? formulaMap.get(baseName).level : null;
+
+		if (!formulaMap.has(baseName) || currentLevel < level) {
+			// If a lower-level version exists, move it to removedFormulas
+			if (formulaMap.has(baseName)) {
+				const lowerLevelFormula = formulaMap.get(baseName);
+				removedFormulas.push(lowerLevelFormula);
+				debugLog(`Replacing ${lowerLevelFormula.name} (Level ${lowerLevelFormula.level}) with ${item.name} (Level ${level}) as the highest-level version of ${baseName}.`);
+			}
+			// Set the current formula as the highest-level version
+			formulaMap.set(baseName, { uuid: formula.uuid, level, name: item.name });
+			debugLog(`Setting ${item.name} (Level ${level}) as the highest-level version of ${baseName}.`);
+		} else {
+			// If the current formula is lower level, mark it for removal
+			removedFormulas.push({ uuid: formula.uuid, name: item.name, level });
+			debugLog(`Marking ${item.name} (Level ${level}) for removal.`);
+		}
+		debugLog(`Removed formulas: ${removedFormulas.map(f => `${f.name} (Level ${f.level})`).join(', ')}`);
+
+	}
+
+    // If no formulas to remove, exit early
+    if (removedFormulas.length === 0) {
+        debugLog(`No lower-level formulas to remove for ${actor.name}.`);
+        return;
+    }
+
+    // Handle ask_all: Compile and prompt for all at once
+    if (addFormulasSetting === "ask_all") {
+        const confirmed = await showFormulaListDialog(actor, removedFormulas.map(f => ({
+            uuid: f.uuid,
+            name: f.name,
+            level: f.level
+        })), true);
+
+        if (!confirmed) {
+            debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
+            return; // Exit if user cancels
+        }
+    } else if (addFormulasSetting === "ask_each") {
+        // Handle ask_each: Prompt for each formula individually
+        const keptFormulas = [];
+        for (const formula of removedFormulas) {
+            const confirmed = await showFormulaDialog(actor, { name: formula.name, level: formula.level }, formula.level, true);
+            if (!confirmed) {
+                keptFormulas.push(formula); // Keep formulas user declined to remove
+            }
+        }
+        removedFormulas = removedFormulas.filter(f => !keptFormulas.includes(f)); // Exclude kept formulas
+    }
+
+    // Filter out formulas to keep
+    const uuidsToKeep = Array.from(formulaMap.values()).map(entry => entry.uuid);
+    const updatedFormulas = knownFormulas.filter(f => uuidsToKeep.includes(f.uuid));
+
+    // Update the actor's formulas if changes were made
+    if (updatedFormulas.length !== knownFormulas.length) {
+        await actor.update({ 'system.crafting.formulas': updatedFormulas });
+        debugLog(`Updated formulas for ${actor.name}: Removed lower-level versions.`);
+    }
+
+    // Output to chat if enabled
+    if (addNewFormulasToChat && removedFormulas.length > 0) {
+        const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
+        ChatMessage.create({
+            content: `<strong>${actor.name}</strong> has removed the following lower-level formulas:<br><br>${removedFormulaNames}`
+        });
+    }
+}
+
+/*
+	Function to get all Alchemists current level at start
+*/
+async function getAlchemistLevels(){
+	// Avoid sending multiple messages for the same actor
+	const processedActorIds = new Set();
+
+	// Loop through all actors and find Alchemists
+	for (const actor of game.actors.party.members) {
+		// Make sure selected token is an alchemist or has archetype
+		const alchemistCheck = isAlchemist(actor);
+		if (!alchemistCheck.qualifies) {
+			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
+		} else {
+
+			// Avoid processing the same actor multiple times
+			if (processedActorIds.has(actor.id)) continue;
+			processedActorIds.add(actor.id);
+			
+			// Set previous level flag as current level
+			await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel', actor.system.details.level.value);	
+			debugLog(`Previous level flag set for ${actor.name} = ${actor.system.details.level.value}`);
+		}
+	}
 }

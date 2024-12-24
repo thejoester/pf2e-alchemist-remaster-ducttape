@@ -54,7 +54,7 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 				console.log(`%cP2Fe Alchemist Duct Tape | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;", objObject);
 				break;
 			case 3: // Critical/Error
-				console.log(`%cP2Fe Alchemist Duct Tape | ERROR: ${formattedLogMsg}`, "color: maroon; font-weight: bold;", objObject);
+				console.log(`%cP2Fe Alchemist Duct Tape | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;", objObject);
 				break;
 			default:
 				console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
@@ -68,7 +68,7 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 				console.log(`%cP2Fe Alchemist Duct Tape | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;");
 				break;
 			case 3: // Critical/Error
-				console.log(`%cP2Fe Alchemist Duct Tape | ERROR: ${formattedLogMsg}`, "color: maroon; font-weight: bold;");
+				console.log(`%cP2Fe Alchemist Duct Tape | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;");
 				break;
 			default:
 				console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
@@ -84,6 +84,37 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 */
 export function hasFeat(actor, slug) {
 	return actor.itemTypes.feat.some((feat) => feat.slug === slug);
+}
+
+/**
+ * Checks if a character qualifies for Alchemist benefits.
+ * @param {Actor} actor - The actor to check.
+ * @returns {Object} - An object with `qualifies` (boolean), `dc` (number), and `isArchetype` (boolean).
+ */
+export function isAlchemist(actor) {
+    if (!actor) return { qualifies: false, dc: 0, isArchetype: false };
+
+
+    // Check if the actor's class matches the localized Alchemist class name
+    const isAlchemistClass = actor?.class?.system?.slug === 'alchemist';
+	
+	debugLog(`isAlchemistClass: ${isAlchemistClass} | ${actor?.class?.system?.slug}`);
+
+    // Check if the actor has the localized Alchemist Dedication feat
+    const hasAlchemistDedication = hasFeat(actor, "alchemist-dedication");
+
+    // If the actor qualifies, get the Alchemist Class DC
+    if (isAlchemistClass || hasAlchemistDedication) {
+        const alchemistClassDC = actor.system.proficiencies.classDCs.alchemist?.dc || 0;
+        return {
+            qualifies: true,
+            dc: alchemistClassDC,
+            isArchetype: hasAlchemistDedication && !isAlchemistClass
+        };
+    }
+
+    // If the actor doesn't qualify
+    return { qualifies: false, dc: 0, isArchetype: false };
 }
 
 Hooks.once("init", () => {
@@ -176,8 +207,11 @@ Hooks.once("init", () => {
 		LevelUp - auto add formulas
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
-		name: "Add higher level version of known formulas upon level up.",
-		hint: "If enabled, when leveled up will add higher level version of known formulas. Ask for each = will prompt for each formula; Ask for all = will prompt for all formulas at once; Auto = will automatically add formulas.",
+		name: "Level Up: Add higher level version of known formulas upon level up.",
+		hint: `If enabled, when leveled up will add higher level version of known formulas. 
+		Ask for each = will prompt for each formula; 
+		Ask for all = will prompt for all formulas at once; 
+		Auto = will automatically add formulas.`,
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
 		type: String, // Dropdown uses a string type
@@ -190,10 +224,26 @@ Hooks.once("init", () => {
 		default: "ask_all",  // The default value of the setting
 		requiresReload: true,
 	});
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp", {
+		name: "Level Up: Lower level formula handling:",
+		hint: `Upon level up, will check for available lower level formulas, or remove them to keep your formula list small. 
+		Add lower level versions = Will add lower level versions of known formulas; 
+		Remove lower level versions (default) = Will Remove lower level formulas if a higher level is known.`,
+		scope: "world", // "client" or "world" depending on your use case
+		config: true,    // Whether to show this in the module settings UI
+		type: String, // Dropdown uses a string type
+		choices: {
+			disabled: "Disabled.",
+			add_lower: "Add lower level versions.",
+			remove_lower: "Remove lower level versions."
+		},
+		default: "remove_lower",  // The default value of the setting
+		requiresReload: true,
+	});
 	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
-		name: "Specify who is asked to add formulas to actor:",
-		hint: "",
+		name: "Level Up: Permission level to add/remove formulas to actor:",
+		hint: "(If actor owner is not logged in, GM will be prompted)",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
 		type: String, // Dropdown uses a string type
@@ -206,7 +256,7 @@ Hooks.once("init", () => {
 	});
 	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
-		name: "Add the list of new formulas added upon level up to chat.",
+		name: "Level Up: Add the list of new/removed formulas upon level up to chat.",
 		hint: "",
 		scope: "world", // "client" or "world" depending on your use case
 		config: true,    // Whether to show this in the module settings UI
@@ -220,7 +270,8 @@ Hooks.once("init", () => {
 		const controllerSetting = "pf2e-alchemist-remaster-ducttape.addFormulasOnLevelUp";
 		const dependentSettings = [
 			"pf2e-alchemist-remaster-ducttape.addNewFormulasToChat",
-			"pf2e-alchemist-remaster-ducttape.addFormulasPermission" // Both Boolean and String types
+			"pf2e-alchemist-remaster-ducttape.addFormulasPermission",
+            "pf2e-alchemist-remaster-ducttape.handleLowerFormulasOnLevelUp"
 		];
 		
 		// Get the current value of the controller setting
@@ -302,21 +353,5 @@ Hooks.once("init", () => {
 	// Log debug status
 	const debugLevel = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugLevel");
 	console.log(`%cPF2E Alchemist Remaster Duct Tape | Debugging Level: ${debugLevel}`,"color: aqua; font-weight: bold;");
-	/*
-	game.settings.register("pf2e-alchemist-remaster-ducttape", "debugEnabled", {
-		name: "Enable Debugging",
-		hint: "If enabled, debugging logs will be output.",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		default: false,  // The default value of the setting
-		type: Boolean,   // The type of setting (true/false)
-		requiresReload: true,
-	});
-	const debugEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugEnabled");
-	if (debugEnabled){
-		console.log("%cPF2E Alchemist Remaster Duct Tape | Debugging Enabled","color: aqua; font-weight: bold;");
-	} else {
-		console.log("%cPF2E Alchemist Remaster Duct Tape | Debugging Disabled","color: aqua; font-weight: bold;");
-	}
-	*/
+	
 });
