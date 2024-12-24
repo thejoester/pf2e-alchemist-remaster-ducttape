@@ -1172,7 +1172,7 @@ Hooks.on("ready", () => {
 		if (vialCount < 1) {
 			dbbuttons['ok'] = { 
 				icon: "<i class='fas fa-check'></i>",
-				label: "Versatile Vial",
+				label: "OK",
 				callback: () => quickAlchemyDialog.close()
 			};
 			content = `<p>You have run out of Versatile Vials. </p>`;
