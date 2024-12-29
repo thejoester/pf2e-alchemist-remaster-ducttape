@@ -13,13 +13,13 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 
 	// Map debugLevel setting to numeric value for comparison
 	const levelMap = {
-		"none": 0,
+		"none": 4,
 		"error": 3,
 		"warn": 2,
 		"all": 1
 	};
 
-	const currentLevel = levelMap[debugLevel] || 0; // Default to 'none' if debugLevel is undefined
+	const currentLevel = levelMap[debugLevel] || 4; // Default to 'none' if debugLevel is undefined
 
 	// Check if the log type should be logged based on the current debug level
 	if (intLogType < currentLevel) return;
