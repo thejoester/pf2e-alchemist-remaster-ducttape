@@ -2,6 +2,7 @@
 ### Bug Fixes
 - Quick Alchemy: when creating a versatile vial it will make the appropriate level vial. 
 - Powerful Alchemy: Fixed bug preventing item DC from being adjusted.
+- Debugging: Fixed setting "None", to not show any debugging messages in console.
 
 ## 2.5.3
 ### Bug Fixes
