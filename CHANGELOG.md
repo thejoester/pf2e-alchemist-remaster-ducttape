@@ -1,3 +1,8 @@
+## 2.5.4
+### Bug Fixes
+- Quick Alchemy: when creating a versatile vial it will make the appropriate level vial. 
+- Powerful Alchemy: Fixed bug preventing item DC from being adjusted.
+
 ## 2.5.3
 ### Bug Fixes
 - Vial Search: When "finding" versatile vials, will now add proper item level vials. 

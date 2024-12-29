@@ -33,9 +33,8 @@ Hooks.on("ready", () => {
 			// Make sure selected token is an alchemist or has archetype
 			const alchemistCheck = isAlchemist(actor);
 			if (alchemistCheck.qualifies) {
-				const classDC = alchemistCheck.dc;
-				debugLog("Actor's Class DC:", classDC);
-				if (!classDC) {
+				debugLog("Actor's Class DC:", alchemistCheck.dc);
+				if (!alchemistCheck.dc) {
 					debugLog(2, "Warning: Class DC not found for the actor:", actor);
 					return;
 				}
@@ -44,7 +43,7 @@ Hooks.on("ready", () => {
 				return;
 			}
 			
-			// First check if the actor has Powerful Alchemy - if not return with mesactorge in log	
+			// Check if the actor has Powerful Alchemy - if not return with mesactorge in log	
 			if (!hasFeat(actor, "powerful-alchemy")) {
 				debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 				return;	
@@ -76,8 +75,8 @@ Hooks.on("ready", () => {
 			
 			// Check for strings to replace in item description
 			const replacements = [
-				{ pattern: /@Check\[\w+\|dc:(\d+)\]/g, replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${classDC}`) }, // If using @check in description
-				{ pattern: /DC is (\d+)/g, replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${classDC}`) } // Example "DC is 17"
+				{ pattern: /@Check\[\w+\|dc:(\d+)\]/g, replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistCheck.dc}`) }, // If using @check in description
+				{ pattern: /DC is (\d+)/g, replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistCheck.dc}`) } // Example "DC is 17"
 			];
 			
 			// Make replacements
@@ -95,7 +94,7 @@ Hooks.on("ready", () => {
 					const itemName = item.name;
 					ChatMessage.create({
 						author: game.user?.id,    // User ID to send the mesactorge as the system
-						content: `<p>${itemName} created with Quick Alchemy using Class DC ${classDC}!</p><p>${item.system.description.value || "No description available."}</p>`,
+						content: `<p>${itemName} created with Quick Alchemy using Class DC ${alchemistCheck.dc}!</p><p>${item.system.description.value || "No description available."}</p>`,
 						speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
 					});
 			}

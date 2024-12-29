@@ -433,8 +433,17 @@ Hooks.on("ready", () => {
 					}
 				}
 				
+				// If we are crafting a versatile vial adjust level
+				if (selectedItem.slug === 'versatile-vial'){
+					// Determine the actor's level
+					const actorLevel = selectedActor.system.details.level.value;
+					// Determine the highest crafting tier based on actor's level
+					const itemLevel = actorLevel >= 18 ? 18 : actorLevel >= 12 ? 12 : actorLevel >= 4 ? 4 : 1;
+					modifiedItem.system.level.value = itemLevel;
+				}
+				
 				// Create the items for the actor
-				const createdItem = await await selectedActor.createEmbeddedDocuments("Item", [modifiedItem]);
+				const createdItem = await selectedActor.createEmbeddedDocuments("Item", [modifiedItem]);
 				debugLog(`Created item with Quick Alchemy: `, createdItem);
 			}
 		}
