@@ -728,6 +728,12 @@ Hooks.on("ready", () => {
 			return false;
 		}
 		
+		// If we are crafting a veratile vial, do not consume, return true
+		if (slug.startsWith("versatile-vial") || slug.startsWith("quick-vial")){
+			debugLog(`Crafted item with slug ${slug} without consuming vial`);
+			return true;
+		}
+		
 		// Find versatile-vial in inventory
 		const regularVial = actor.items.find(item => item.slug === "versatile-vial");
 

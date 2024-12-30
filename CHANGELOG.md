@@ -1,3 +1,7 @@
+## 2.5.6
+## Bug Fixes
+- Quick Alchemy: Reversed changes to how Quick Vials consume versatile vials. Now they do not. 
+
 ## 2.5.5
 ### New Features
 - Quick Alchemy: added support for "Bomber", and "Advanced Vials (Bomber)" feats (Player Core 2 pg. 61).
