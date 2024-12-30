@@ -1,3 +1,15 @@
+## 2.5.5
+### New Features
+- Quick Alchemy: added support for "Bomber", and "Advanced Vials (Bomber)" feats (Player Core 2 pg. 61).
+  - "Bomber" feat allows the damage type to be changed when Quick Vial created. 
+  - "Advanced Vials (Bomber)" feat allows to add special ingredients (chosen from adamantine, cold iron, and dawnsilver) to the Quick Vial adding that material trait to the vial. 
+- Quick Alchemy: added support for "Chirurgeon" feat (Player Core 2 pg. 61). 
+  - When crafting a quick vial will prompt to craft a "Healing Quick Vial", this will create an Elixir with the Healing and Coagulant traits that can be consumed or thrown at a creature.
+### Bug Fixes
+- Quick Alchemy: Reworked quick alchemy to follow RAW, that you can only craft a Quick Vial (consuming a versatile vial) to use as a bomb or for the versatile vial option from your research field (Player Core 2 pg. 59). Now Quick Alchemy will only have option to craft "Quick Vial".
+### Still Needs work
+- Quick Alchemy: Toxicologist support (Player Core 2 pg. 62).
+
 ## 2.5.4
 ### Bug Fixes
 - Quick Alchemy: when creating a versatile vial it will make the appropriate level vial. 

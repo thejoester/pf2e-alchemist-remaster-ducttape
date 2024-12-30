@@ -342,9 +342,9 @@ Hooks.once("init", () => {
 		type: String,
 		choices: {
 			"none": "None",
-			"all": "All",
+			"error": "Errors",
 			"warn": "Warnings",
-			"error": "Errors"
+			"all": "All"
 		},
 		default: "none", // Default to no logging
 		requiresReload: true
