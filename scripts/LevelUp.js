@@ -282,7 +282,7 @@ async function removeLowerLevelFormulas(actor) {
 		}
 
 		// Extract the base formula name
-		const baseName = item.name.replace(/\s*\(.*?\)\s*/g, '').trim();
+		const baseName = extractBaseName(item.name);
 		const level = Number(item.system.level.value);
 		
 		// Compare levels and store the highest-level version
