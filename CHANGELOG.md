@@ -1,3 +1,7 @@
+## 2.5.7
+### Bug Fixes
+- Level Up: (issue #15) Resolved issues with adding or removing versions of known formulas in languages that use commas instead of parentheses to indicate formula quality (e.g., lesser, greater).
+
 ## 2.5.6
 ## Bug Fixes
 - Quick Alchemy: Reversed changes to how Quick Vials consume versatile vials. Now they do not. 
