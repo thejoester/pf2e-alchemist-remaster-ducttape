@@ -76,21 +76,16 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	}
 }
 
-/**
+/*
 	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
-	@param {actor} actor object.
-	@param {slug} sug of feat.
-	@returns {true/false}
 */
 export function hasFeat(actor, slug) {
 	return actor.itemTypes.feat.some((feat) => feat.slug === slug);
 }
 
-/**
- * Checks if a character qualifies for Alchemist benefits.
- * @param {Actor} actor - The actor to check.
- * @returns {Object} - An object with `qualifies` (boolean), `dc` (number), and `isArchetype` (boolean).
- */
+/*
+	Checks if a character qualifies for Alchemist benefits.
+*/
 export function isAlchemist(actor) {
     if (!actor) return { qualifies: false, dc: 0, isArchetype: false };
 
@@ -316,7 +311,6 @@ Hooks.once("init", () => {
 	/* 
 		Searchable Formulas
 	*/
-	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Formula Search settings...","color: aqua; font-weight: bold;");
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
 		name: "Enable Formula Search",
 		hint: "Enables the search/filter for formulas on character sheet.",
@@ -329,6 +323,24 @@ Hooks.once("init", () => {
         },
 		requiresReload: true
 	});
+	
+	/* 
+		Collapse Item Description in chat
+	*/
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
+		name: "Collapse item description in chat",
+		hint: `Shortens chat messages with long item descriptions, click the Eye icon to expand.`,
+		scope: "world", // "world" makes it available to all players; use "client" for a single user
+		config: true, // Show this setting in the configuration UI
+		type: Boolean, // Checkbox input type
+        default: true, // Default value is unchecked
+        onChange: (value) => {
+            console.log(`PF2E Alchemist Remaster Duct Tape | collapseChatDesc enabled: ${value}`);
+        },
+		requiresReload: true
+	});
+	
+	
 	
 	/*
 		Debugging

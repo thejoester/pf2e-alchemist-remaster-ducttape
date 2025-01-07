@@ -87,19 +87,17 @@ Hooks.on("ready", () => {
 			
 			// Update the item with the new description
 			if (updatedDescription !== description) {
-					await item.update({"system.description.value": updatedDescription});
-					debugLog("Description was updated to Class DC!");
-
-					// Send Mesactorge to Chat
-					const itemName = item.name;
-					ChatMessage.create({
-						author: game.user?.id,    // User ID to send the mesactorge as the system
-						content: `<p>${itemName} created with Quick Alchemy using Class DC ${alchemistCheck.dc}!</p><p>${item.system.description.value || "No description available."}</p>`,
-						speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
-					});
+				await item.update({"system.description.value": updatedDescription});
+				debugLog("Description was updated to Class DC!");
+				
+				// Send Mesactorge to Chat
+				const itemName = item.name;
+				ChatMessage.create({
+					author: game.user?.id,    // User ID to send the mesactorge as the system
+					content: `<h3>Powerful Alchemy:</h3><p>${itemName} updated using Class DC ${alchemistCheck.dc}!</p>`,
+					speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
+				});
 			}
-			
-
 		});
 	}
 });

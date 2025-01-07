@@ -2,6 +2,7 @@ import { debugLog, hasFeat, isAlchemist  } from './settings.js';
 
 let isArchetype = false;
 
+
 Hooks.on("combatTurnChange", async (combat, prior, current) => {
     // Get the combatant whose turn just ended
     const priorCombatant = combat.combatants.get(prior.combatantId);
@@ -37,6 +38,109 @@ Hooks.on("deleteCombat", async (combat) => {
         // Perform cleanup of Quick Alchemy items created during combat
         await deleteTempItems(actor);
     }
+});
+
+Hooks.on("renderChatMessage", (message, html) => {
+    
+	 // Check for the user setting
+    const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+
+    // Identify the message type
+    const itemCard = html[0]?.querySelector('.item-card');
+    const messageSource = itemCard?.getAttribute('data-source') || 'system';
+
+    // Handle custom weapon messages
+    if (messageSource === 'weapon') {
+        // Ensure collapsible content is properly initialized
+        html.find('.collapsible-content').each((_, element) => {
+            if (collapseChatDesc) {
+                element.style.display = 'none';
+            }
+        });
+
+        html.find('.toggle-icon').on('click', (event) => {
+            const toggleIcon = event.currentTarget;
+            const collapsibleContent = toggleIcon.closest('.collapsible-message')?.querySelector('.collapsible-content');
+            if (!collapsibleContent) {
+                console.warn("No collapsible content found for weapon message.");
+                return;
+            }
+
+            const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
+            collapsibleContent.style.display = isHidden ? 'block' : 'none';
+
+            toggleIcon.classList.toggle('fa-eye', !isHidden);
+            toggleIcon.classList.toggle('fa-eye-slash', isHidden);
+        });
+    }
+
+    // Handle system-generated consumable messages
+    if (messageSource === 'system') {
+        html.find('.item-card').each((_, element) => {
+            const cardHeader = element.querySelector('.card-header');
+            const cardContent = element.querySelector('.card-content');
+
+            if (cardHeader && cardContent) {
+                if (collapseChatDesc) {
+                    cardContent.style.display = 'none';
+                }
+
+                if (!cardHeader.querySelector('.toggle-icon')) {
+                    const eyeIcon = `
+                        <div class="flexrow" style="margin-top: 5px;">
+                            <i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
+                        </div>
+                    `;
+                    cardHeader.insertAdjacentHTML('afterend', eyeIcon);
+                }
+            }
+        });
+
+        html.find('.toggle-icon').on('click', (event) => {
+            const toggleIcon = event.currentTarget;
+            const collapsibleContent = toggleIcon.closest('.item-card')?.querySelector('.card-content');
+            if (!collapsibleContent) {
+                console.warn("No collapsible content found for consumable message.");
+                return;
+            }
+
+            const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
+            collapsibleContent.style.display = isHidden ? 'block' : 'none';
+
+            toggleIcon.classList.toggle('fa-eye', !isHidden);
+            toggleIcon.classList.toggle('fa-eye-slash', isHidden);
+        });
+    }
+
+    // Handle "Roll Attack" button
+    html.find(".roll-attack").on("click", async (event) => {
+        const itemUuid = event.currentTarget.dataset.uuid;
+        const actorId = event.currentTarget.dataset.actorId;
+        const itemId = event.currentTarget.dataset.itemId;
+
+        const actor = game.actors.get(actorId);
+        const item = actor?.items.get(itemId);
+
+        if (!actor || !item) {
+            ui.notifications.error("Actor or item not found.");
+            return;
+        }
+
+        // Ensure a target is selected
+        const target = game.user.targets.first();
+        if (!target) {
+            ui.notifications.error("Please target a token for the attack.");
+            return;
+        }
+
+        // Roll the attack with the appropriate MAP modifier
+        game.pf2e.rollActionMacro({
+            actorUUID: actor.uuid,
+            type: "strike",
+            itemId: item.id,
+            slug: item.slug,
+        });
+    });
 });
 
 Hooks.on("ready", () => {
@@ -153,9 +257,24 @@ Hooks.on("ready", () => {
 		// Construct the chat message content with buttons for attack rolls
 		const content = `
 			<p><strong>${actor.name} created Quick Vial with Quick Alchemy!</strong></p>
-			<p>${item.system.description.value || "No description available."}</p>
+			<div class="collapsible-message">
+				<i class="fas fa-eye toggle-icon"></i>
+				<div class="collapsible-content" style="display: none;">
+					<p>${item.system.description.value || "No description available."}</p>
+				</div>
+			</div>
+			<script>
+			  const toggleIcon = document.querySelector('.collapsible-message .toggle-icon');
+			  const collapsibleContent = document.querySelector('.collapsible-message .collapsible-content');
+			  
+			  toggleIcon.addEventListener('click', () => {
+				const isHidden = collapsibleContent.style.display === 'none';
+				collapsibleContent.style.display = isHidden ? 'block' : 'none';
+				toggleIcon.classList.toggle('fa-eye', !isHidden);
+				toggleIcon.classList.toggle('fa-eye-slash', isHidden);
+			  });
+			</script>
 			<button class="roll-attack" data-uuid="${itemUuid}" data-actor-id="${actor.id}" data-item-id="${item.id}" data-map="0" style="margin-top: 5px;">Roll Attack</button>
-			<button class="qa-craft" data-actor-id="${actor.id}" style="margin-top: 5px;">Use with Quick Alchemy</button>
 		`;
 
 		// Send the message to chat
@@ -163,74 +282,6 @@ Hooks.on("ready", () => {
 			user: game.user.id,
 			speaker: ChatMessage.getSpeaker({ actor: actor }),
 			content: content,
-		});
-
-		// Event listener for the button click to roll the attack
-		Hooks.once("renderChatMessage", (app, html) => {
-			
-			/*
-				 Roll Attack Button
-			*/
-			// Ensure we only add event listeners once
-			if (html.find(".roll-attack").length > 0) {
-				html.find(".roll-attack").click(async (event) => {
-					const itemUuid = event.currentTarget.dataset.uuid;
-					const mapValue = parseInt(event.currentTarget.dataset.map, 10);
-					const actorId = event.currentTarget.dataset.actorId;
-					const itemId = event.currentTarget.dataset.itemId;
-
-					// Fetch the actor and item based on their IDs
-					const actor = game.actors.get(actorId);
-					const item = actor.items.get(itemId);
-
-					if (!actor || !item) {
-						sendAlreadyConsumedChat();
-						debugLog(3, "Actor or Item not found, item already used or UUIDs might be invalid.");
-						return;
-					}
-
-					// Ensure a target is selected
-					const target = game.user.targets.first();
-					if (!target) {
-						ui.notifications.error("Please target a token for the attack.");
-						return;
-					} else {
-						// Roll the attack with the appropriate MAP modifier
-						game.pf2e.rollActionMacro({
-							actorUUID: actor.uuid,
-							type: "strike",
-							itemId: item.id,
-							slug: item.slug,
-						});
-					}
-				});
-			}
-
-			/*
-				 Craft Button
-			*/
-			// Ensure we only add event listeners once
-			if (html.find(".qa-craft").length > 0) {
-				html.find(".qa-craft").click(async (event) => {
-					const itemUuid = event.currentTarget.dataset.uuid;
-					const mapValue = parseInt(event.currentTarget.dataset.map, 10);
-					const actorId = event.currentTarget.dataset.actorId;
-					const itemId = event.currentTarget.dataset.itemId;
-
-					// Fetch the actor and item based on their IDs
-					const actor = game.actors.get(actorId);
-					//const item = actor.items.get(itemId);
-
-					if (!actor) {
-						sendAlreadyConsumedChat();
-						debugLog(3, "Actor or Item not found, item already used or UUIDs might be invalid.");
-						return;
-					}
-
-					// Show Quick Alchemy dialog
-					qaDialog(actor);
-				});
-			}
 		});
 	}
 
@@ -243,7 +294,7 @@ Hooks.on("ready", () => {
 		const item = await fromUuid(itemUuid);
 		if (!item) {
 			ui.notifications.error("Item not found.");
-			debugLog(3,`Failed to fetch item with UUID ${itemUuid}`);
+			debugLog(3, `Failed to fetch item with UUID ${itemUuid}`);
 			return;
 		}
 
@@ -252,20 +303,48 @@ Hooks.on("ready", () => {
 			ui.notifications.error("The item is not a weapon.");
 			return;
 		}
-
+		
 		// Fetch the actor associated with the item
 		const actor = item.actor;
 		if (!actor) {
 			ui.notifications.error("No actor associated with this item.");
-			debugLog(3,`No actor associated with this item: `,item);
+			debugLog(3, `No actor associated with this item: `, item);
 			return;
 		}
 
-		// Construct the chat message content with buttons for attack rolls
+		// Check if description collapsing is enabled
+		const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+
+		// Construct the chat message content
+		const itemName = item.name;
+		const itemImg = item.img || "path/to/default-image.webp";
+		const itemDescription = item.system?.description?.value || "No description available.";
 		const content = `
-			<p><strong>New Item created by Quick Alchemy: ${item.name}</strong></p>
-			<p>${item.system.description.value || "No description available."}</p>
-			<button class="roll-attack" data-uuid="${itemUuid}" data-actor-id="${actor.id}" data-item-id="${item.id}" data-map="0" style="margin-top: 5px;">Roll Attack</button>
+			<div class="pf2e chat-card item-card" data-actor-id="${actor.id}" data-item-id="${item.id}" data-source="weapon">
+				<header class="card-header flexrow">
+					<h3 class="chat-portrait-text-size-name-pf2e">
+						<img src="${itemImg}" alt="${itemName}" width="36" height="36" class="chat-portrait-image-size-name-pf2e">
+						${itemName}
+					</h3>
+				</header>
+
+				${collapseChatDesc ? `
+					<div class="collapsible-message">
+						<i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
+						<div class="collapsible-content" style="display: none;">
+							<div class="card-content"><p>${itemDescription}</p></div>
+						</div>
+					</div>
+				` : `
+					<div class="card-content">${itemDescription}</div>
+				`}
+
+				<div class="card-buttons">
+					<button type="button" class="roll-attack" data-uuid="${itemUuid}" data-actor-id="${actor.id}" data-item-id="${item.id}" data-map="0">
+						Roll Attack
+					</button>
+				</div>
+			</div>
 		`;
 
 		// Send the message to chat
@@ -274,49 +353,7 @@ Hooks.on("ready", () => {
 			speaker: ChatMessage.getSpeaker({ actor: actor }),
 			content: content,
 		});
-
-		// Event listener for the button click to roll the attack
-		Hooks.once("renderChatMessage", (app, html) => {
-			
-			
-			/*
-				Roll Attack Button
-			*/
-			// Ensure we only add event listeners once
-			if (html.find(".roll-attack").length > 0) {
-				html.find(".roll-attack").click(async (event) => {
-					const itemUuid = event.currentTarget.dataset.uuid;
-					const mapValue = parseInt(event.currentTarget.dataset.map, 10);
-					const actorId = event.currentTarget.dataset.actorId;
-					const itemId = event.currentTarget.dataset.itemId;
-
-					// Fetch the actor and item based on their IDs
-					const actor = game.actors.get(actorId);
-					const item = actor.items.get(itemId);
-
-					if (!actor || !item) { 
-						sendAlreadyConsumedChat();
-						debugLog(2, "Actor or Item not found, item already used or UUIDs might be invalid.");
-						return;
-					}
-
-					// Ensure a target is selected
-					const target = game.user.targets.first();
-					if (!target) {
-						ui.notifications.error("Please target a token for the attack.");
-						return;
-					} else {
-						// Roll the attack with the appropriate MAP modifier
-						game.pf2e.rollActionMacro({
-							actorUUID: actor.uuid,
-							type: "strike",
-							itemId: item.id,
-							slug: item.slug,
-						});
-					}
-				});
-			}
-		});
+		
 	}
 
 	// Function to equip an item by slug
@@ -365,18 +402,6 @@ Hooks.on("ready", () => {
 		} else {
 			debugLog("No infused items with quantity 0 found.");
 		}
-	}
-	
-	// Set Item created as Infused
-	async function makeInfused(itemToInfuse){
-		if (!itemToInfuse || !itemToInfuse.system || !itemToInfuse.system.traits || !Array.isArray(itemToInfuse.system.traits.value)) {
-			debugLog(3, "Invalid item structure");
-			return;
-		}
-		
-		if (!itemToInfuse.system.traits.value.includes("infused")) {
-				await itemToInfuse.system.traits.value.push("infused");
-        }	
 	}
 	
 	/* 	
