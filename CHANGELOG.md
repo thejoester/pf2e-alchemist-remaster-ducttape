@@ -1,6 +1,6 @@
 ## 2.5.8
 ### New Feature
-- Quick Alchemy: Messages for crafted items will hide the item descritpion for shorter messages (Thanks for the suggestion [xdy](https://github.com/xdy)!).
+- Quick Alchemy: Messages for crafted items will hide the item description for shorter messages (Thanks for the suggestion [xdy](https://github.com/xdy)!).
   - click eye icon to expand.
   - Can disable in settings. 
 - Powerful Alchemy: in the spirit of shortening messages, I removed item description and only output simple message to chat when item description was modified. 
