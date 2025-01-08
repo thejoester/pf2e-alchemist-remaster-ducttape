@@ -24,7 +24,7 @@
   "readme": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/README.md",
   "changelog": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/CHANGELOG.md",
   "license": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/LICENSE.txt",
-  "bugs": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/",
+  "bugs": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues",
   "flags": {
     "allowBugReporter": true
   },
