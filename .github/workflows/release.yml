@@ -19,11 +19,6 @@ jobs:
         with:
           node-version: 18
 
-      - name: Build Packs
-        run: |
-          npm clean-install
-          npm run build
-
       - name: Extract Version From Tag
         id: get_version
         uses: battila7/get-version-action@v2
