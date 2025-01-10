@@ -3,7 +3,7 @@
 ## [2.5.9] - 2025-01-10
 ### Fixed
 - [Issue #17](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/17) Only messages from this module are collapesed when setting is enabled. 
-- [Issue #18](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/18) Found and fixed bug where if alchemist character did not have versatile vial item in invetory but did have quick vial item and rested, it would update the quantity of the quick vial item to what should have been the versatile vial item quantity. 
+- [Issue #18](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/18) Found and fixed bug where if alchemist character did not have versatile vial item in inventory but did have quick vial item and rested, it would update the quantity of the quick vial item to what should have been the versatile vial item quantity. 
 
 ## [2.5.8] - 2025-01-08
 ### Added
