@@ -41,78 +41,69 @@ Hooks.on("deleteCombat", async (combat) => {
 });
 
 Hooks.on("renderChatMessage", (message, html) => {
-    
-	 // Check for the user setting
+    // Check for the user setting
     const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
 
-    // Identify the message type
-    const itemCard = html[0]?.querySelector('.item-card');
-    const messageSource = itemCard?.getAttribute('data-source') || 'system';
+    // Process only messages with the alias "Quick Alchemy"
+    if (message.speaker.alias !== "Quick Alchemy") return;
 
-    // Handle custom weapon messages
-    if (messageSource === 'weapon') {
-        // Ensure collapsible content is properly initialized
-        html.find('.collapsible-content').each((_, element) => {
-            if (collapseChatDesc) {
-                element.style.display = 'none';
+    // Add collapsible functionality to the message
+    html.find('.collapsible-content').each((_, element) => {
+        if (collapseChatDesc) {
+            element.style.display = 'none'; // Collapse by default if the setting is enabled
+        }
+    });
+
+    html.find('.toggle-icon').on('click', (event) => {
+        const toggleIcon = event.currentTarget;
+        const collapsibleContent = toggleIcon.closest('.collapsible-message')?.querySelector('.collapsible-content');
+
+        if (!collapsibleContent) {
+            debugLog(2, "No collapsible content found.");
+            return;
+        }
+
+        // Toggle visibility
+        const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
+        collapsibleContent.style.display = isHidden ? 'block' : 'none';
+
+        // Toggle icon state
+        toggleIcon.classList.toggle('fa-eye', !isHidden);
+        toggleIcon.classList.toggle('fa-eye-slash', isHidden);
+    });
+	
+	// Handle "Use" button functionality for consumables
+    html.find('.use-consumable').on('click', async (event) => {
+        const button = event.currentTarget;
+        const itemId = button.dataset.itemId;
+        const actorId = button.dataset.actorId;
+
+        const actor = game.actors.get(actorId);
+        if (!actor) {
+            debugLog(2, "Actor not found.");
+            return;
+        }
+
+        const item = actor.items.get(itemId);
+        if (!item) {
+           debugLog(2, "Item not found.");
+            return;
+        }
+
+        try {
+            if (item.type === "consumable") {
+                // Use the `consume()` method
+                await item.consume();
+               debugLog(`${item.name} consumed.`);
+            } else {
+                debugLog(2, `${item.name} cannot be consumed.`);
             }
-        });
-
-        html.find('.toggle-icon').on('click', (event) => {
-            const toggleIcon = event.currentTarget;
-            const collapsibleContent = toggleIcon.closest('.collapsible-message')?.querySelector('.collapsible-content');
-            if (!collapsibleContent) {
-                console.warn("No collapsible content found for weapon message.");
-                return;
-            }
-
-            const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
-            collapsibleContent.style.display = isHidden ? 'block' : 'none';
-
-            toggleIcon.classList.toggle('fa-eye', !isHidden);
-            toggleIcon.classList.toggle('fa-eye-slash', isHidden);
-        });
-    }
-
-    // Handle system-generated consumable messages
-    if (messageSource === 'system') {
-        html.find('.item-card').each((_, element) => {
-            const cardHeader = element.querySelector('.card-header');
-            const cardContent = element.querySelector('.card-content');
-
-            if (cardHeader && cardContent) {
-                if (collapseChatDesc) {
-                    cardContent.style.display = 'none';
-                }
-
-                if (!cardHeader.querySelector('.toggle-icon')) {
-                    const eyeIcon = `
-                        <div class="flexrow" style="margin-top: 5px;">
-                            <i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
-                        </div>
-                    `;
-                    cardHeader.insertAdjacentHTML('afterend', eyeIcon);
-                }
-            }
-        });
-
-        html.find('.toggle-icon').on('click', (event) => {
-            const toggleIcon = event.currentTarget;
-            const collapsibleContent = toggleIcon.closest('.item-card')?.querySelector('.card-content');
-            if (!collapsibleContent) {
-                console.warn("No collapsible content found for consumable message.");
-                return;
-            }
-
-            const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
-            collapsibleContent.style.display = isHidden ? 'block' : 'none';
-
-            toggleIcon.classList.toggle('fa-eye', !isHidden);
-            toggleIcon.classList.toggle('fa-eye-slash', isHidden);
-        });
-    }
-
-    // Handle "Roll Attack" button
+        } catch (error) {
+            debugLog(3, `Failed to use the item: ${error.message}`, error);
+        }
+    });
+	
+    // Handle "Roll Attack" button functionality
     html.find(".roll-attack").on("click", async (event) => {
         const itemUuid = event.currentTarget.dataset.uuid;
         const actorId = event.currentTarget.dataset.actorId;
@@ -122,7 +113,7 @@ Hooks.on("renderChatMessage", (message, html) => {
         const item = actor?.items.get(itemId);
 
         if (!actor || !item) {
-            ui.notifications.error("Actor or item not found.");
+            debugLog(3, "Actor or item not found.");
             return;
         }
 
@@ -142,6 +133,7 @@ Hooks.on("renderChatMessage", (message, html) => {
         });
     });
 });
+
 
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape (QuickAlchemy.js) loaded", "color: aqua; font-weight: bold;");
@@ -189,21 +181,56 @@ Hooks.on("ready", () => {
 	
 	// Function to send a message with a link to use a consumable item
 	async function sendConsumableUseMessage(itemUuid) {
-		// Get the item from the provided UUID
 		const item = await fromUuid(itemUuid);
 		if (!item) {
 			ui.notifications.warn("Item not found.");
 			return;
 		}
 
-		// Use the item programmatically
-		try {
-			await item.toChat(); // Display item in chat
-			//await item.use({ configureDialog: false }); // Trigger item use (e.g., apply effects)
-		} catch (error) {
-			debugLog(3,`Error using item: ${error.message}`,error);
-			ui.notifications.error("Failed to use the item.");
+		const actor = item.actor;
+		if (!actor) {
+			ui.notifications.warn("No actor associated with this item.");
+			return;
 		}
+
+		const itemName = item.name;
+		const itemImg = item.img || "path/to/default-image.webp";
+		const itemDescription = item.system?.description?.value || "No description available.";
+		const itemId = item.id; // Add item ID for tracking
+		const actorId = actor.id; // Pass actor ID explicitly
+
+		const content = `
+			<div class="pf2e chat-card item-card">
+				<header class="card-header flexrow">
+					<h3 class="chat-portrait-text-size-name-pf2e">
+						<img src="${itemImg}" alt="${itemName}" width="36" height="36" class="chat-portrait-image-size-name-pf2e">
+						${itemName}
+					</h3>
+				</header>
+
+				<div class="collapsible-message">
+					<i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
+					<div class="collapsible-content" style="display: none;">
+						<div class="card-content">
+							<p>${itemDescription}</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="card-buttons">
+					<button type="button" class="use-consumable" data-item-id="${itemId}" data-actor-id="${actorId}">
+						Use
+					</button>
+				</div>
+			</div>
+		`;
+
+		// Create the chat message
+		ChatMessage.create({
+			user: game.user.id,
+			speaker: { alias: "Quick Alchemy", actor: actorId }, // Ensure the actor ID is available in speaker
+			content: content,
+		});
 	}
 
 	/*
@@ -350,7 +377,7 @@ Hooks.on("ready", () => {
 		// Send the message to chat
 		ChatMessage.create({
 			user: game.user.id,
-			speaker: ChatMessage.getSpeaker({ actor: actor }),
+			speaker: { alias: "Quick Alchemy" },
 			content: content,
 		});
 		
@@ -500,7 +527,6 @@ Hooks.on("ready", () => {
 		
 		// Get actor size to use for new item size
 		const actorSize = await getActorSize(selectedActor);
-		
 		
 		// If actor has chirurgeon feat
 		if (hasFeat(selectedActor, "chirurgeon")) {
@@ -1125,13 +1151,19 @@ Hooks.on("ready", () => {
 		*/
 		if (itemType === 'vial') {
 			
-			// Use UUID to get the versatile vial item
-			const uuid = "Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus";
+			// Get Quick Vial item from compendium
+			const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
+			if (!compendium) {
+				debugLog(3,"Compendium not found.");
+				return;
+			}
+			const uuid = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.5OFfH8W00oz6TeA3";
 			
+			// get item details from uuid
 			const item = await fromUuid(uuid);
 
 			if (!item) {
-				debugLog(3, `No item found for versatile vial using UUID: ${uuid}`);
+				debugLog(3, `No item found for quick vial using UUID: ${uuid}`);
 				return;
 			}
 			debugLog(`actor: ${actor.name} |itemType: ${itemType} | uuid: ${uuid} | item name: ${item.name}`);

@@ -1,138 +1,131 @@
-## 2.5.8
-### New Feature
-- Quick Alchemy: Messages for crafted items will hide the item description for shorter messages (Thanks for the suggestion [xdy](https://github.com/xdy)!).
-  - click eye icon to expand.
-  - Can disable in settings. 
-- Powerful Alchemy: in the spirit of shortening messages, I removed item description and only output simple message to chat when item description was modified. 
+# Changelog
 
-## 2.5.7
-### Bug Fixes
-- Level Up: (issue #15) Resolved issues with adding or removing versions of known formulas in languages that use commas instead of parentheses to indicate formula quality (e.g., lesser, greater).
+## [2.5.9] - 2025-01-10
+### Fixed
+- [Issue #17](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/17) Only messages from this module are collapesed when setting is enabled. 
+- [Issue #18](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/18) Found and fixed bug where if alchemist character did not have versatile vial item in invetory but did have quick vial item and rested, it would update the quantity of the quick vial item to what should have been the versatile vial item quantity. 
 
-## 2.5.6
-## Bug Fixes
-- Quick Alchemy: Reversed changes to how Quick Vials consume versatile vials. Now they do not. 
+## [2.5.8] - 2025-01-08
+### Added
+- **Quick Alchemy**: Messages for crafted items will hide the item description for shorter messages (Thanks for the suggestion [xdy](https://github.com/xdy)!).
+  - Added eye icon to expand.
+  - Can be disabled in settings.
+- **Powerful Alchemy**: Simplified chat messages for modified item descriptions.
 
-## 2.5.5
-### New Features
-- Quick Alchemy: added support for "Bomber", and "Advanced Vials (Bomber)" feats (Player Core 2 pg. 61).
-  - "Bomber" feat allows the damage type to be changed when Quick Vial created. 
-  - "Advanced Vials (Bomber)" feat allows to add special ingredients (chosen from adamantine, cold iron, and dawnsilver) to the Quick Vial adding that material trait to the vial. 
-- Quick Alchemy: added support for "Chirurgeon" feat (Player Core 2 pg. 61). 
-  - When crafting a quick vial will prompt to craft a "Healing Quick Vial", this will create an Elixir with the Healing and Coagulant traits that can be consumed or thrown at a creature.
-### Bug Fixes
-- Quick Alchemy: Reworked quick alchemy to follow RAW, that you can only craft a Quick Vial (consuming a versatile vial) to use as a bomb or for the versatile vial option from your research field (Player Core 2 pg. 59). Now Quick Alchemy will only have option to craft "Quick Vial".
-### Still Needs work
-- Quick Alchemy: Toxicologist support (Player Core 2 pg. 62).
+## [2.5.7] - 2025-01-01
+### Fixed
+- **Level Up**: (issue #15) Resolved issues with adding or removing versions of known formulas in languages that use commas instead of parentheses to indicate formula quality (e.g., lesser, greater).
 
-## 2.5.4
-### Bug Fixes
-- Quick Alchemy: when creating a versatile vial it will make the appropriate level vial. 
-- Powerful Alchemy: Fixed bug preventing item DC from being adjusted.
-- Debugging: Fixed setting "None", to not show any debugging messages in console.
+## [2.5.6] - 2024-12-25
+### Fixed
+- **Quick Alchemy**: Reversed changes to how Quick Vials consume versatile vials. Now they do not.
 
-## 2.5.3
-### Bug Fixes
-- Vial Search: When "finding" versatile vials, will now add proper item level vials. 
-- Fixed bug preventing macro execution on different languages (issue #14).
-- Settings: Corrected descriptions
+## [2.5.5] - 2024-12-15
+### Added
+- **Quick Alchemy**: Added support for "Bomber" and "Advanced Vials (Bomber)" feats (Player Core 2 pg. 61).
+  - "Bomber" allows changing damage type for Quick Vials.
+  - "Advanced Vials (Bomber)" adds material traits (adamantine, cold iron, dawnsilver) to Quick Vials.
+- **Quick Alchemy**: Added support for the "Chirurgeon" feat (Player Core 2 pg. 61).
+  - Can craft a "Healing Quick Vial," which creates an Elixir with Healing and Coagulant traits.
+### Fixed
+- **Quick Alchemy**: Enforces RAW for crafting "Quick Vials" using versatile vials. Removes unsupported options.
+### Known Issues
+- **Quick Alchemy**: Toxicologist support (Player Core 2 pg. 62) still needs work.
 
-## 2.5.2
-### New features / improvements
-- Support for Archetype characters!
-  - Does not apply to Vial Search.
-  - Cannot craft versatile vials but can craft quick vials
-- Level Up: New options on leveling up
-  - Choose how to handle lower level formulas, add lower, remove lower, disabled
-  - if remove lower level formulas is selected, will prompt based on setting for adding higher level formulas (ask for all, ask for each, auto)
-### Bug Fixes
-- Fixed annoying notification on non alchemist characters (issue #13)
+## [2.5.4] - 2024-12-10
+### Fixed
+- **Quick Alchemy**: Corrected crafting of appropriate level versatile vials.
+- **Powerful Alchemy**: Fixed issue with adjusting item DCs.
+- **Debugging**: Disabled debug messages when set to "None".
 
-## 2.5.1
-### Bug Fix
-- (issue #10) Powerful Alchemy: fixed bug preventing update of DC in description. 
+## [2.5.3] - 2024-12-01
+### Fixed
+- **Vial Search**: Corrected addition of proper item level vials.
+- **Settings**: Fixed descriptions.
+- **Quick Alchemy**: Resolved macro execution issues in different languages (issue #14).
 
-## 2.5.0
-### New features / improvements
-- Quick Alchemy Macro: Improved flow for more intuitive use. 
-- Quick Alchemy Macro: Items crafted with Double Brew feat will display message in chat with button to use it. 
-- Quick Alchemy Macro: Items created with Quick Alchemy macro will now be labeled with "(Temporary)" and modified slug with added "-temp" to separate them from more permanent items. 
-- Quick Alchemy Macro: Items created with Quick Alchemy macro will now be removed at end of combat turn. 
-- Quick Alchemy Macro: Will only function if selected token is an Alchemist.
-- Level Up: If no Actor Owner is logged in when character levels up, will prompt GM to add upgraded formulas. 
-- Debugging: improved debugging. 
+## [2.5.2] - 2024-11-25
+### Added
+- **Archetype Support**: Allows crafting quick vials but not versatile vials.
+- **Level Up**: New formula management options:
+  - Add or remove lower-level formulas.
+  - Settings for auto-prompting formula upgrades.
+### Fixed
+- Annoying notifications for non-Alchemist characters (issue #13).
 
-## 2.4.3
-### Bug fixes
-- Vial Search: Limiting to party characters to improve performance
-- Vial Search: Will now calculate multiple increments of 10 minutes and add appropriate number of vials. 
+## [2.5.1] - 2024-11-20
+### Fixed
+- **Powerful Alchemy**: Corrected DC update bug in descriptions (issue #10).
 
-## 2.4.2
-### New Features
-- Quick Alchemy: Added support for Double Brew feat.
-  - Will be prompted if you want to use feat, then for second item to create before main Quick Alchemy window is shown. 
-- Settings: New option for adding new formulas on level up, "Ask for all" will ask once for all formulas being added. 
-- Vial Search: Will disable "add vial" button for user when clicked. (known issue: will not disable for GM or if actor is owned by multiple users all users will be able to click once.)
-### Bug Fixes
-- Corrected spelling errors in settings
-- Vial Search: Fixed bug so Alchemists with Alchemical Expertise feat to not increase max vial only found vials. 
-- Vial Search: Fixed issue where non-english foundry versions cannot find vials. 
-  - Removed setting as it is no longer needed
+## [2.5.0] - 2024-11-15
+### Added
+- **Quick Alchemy**: Improved macro flow and added features:
+  - Temporary item labels and slugs.
+  - Automatic removal of items at the end of combat.
+  - Double Brew feat support.
+- **Level Up**: Added GM prompts for formula upgrades when no actor owner is logged in.
+- **Debugging**: Enhanced logging.
 
-## 2.4.1
-### Features
-- Vial Search: Added option to output new formulas to chat
-- Vial Search: Added "Alchemical Expertise" feat support
-### Bug Fixes
-- Vial Search: Added ablity to change name of versatile vial for non english users in settings
+## [2.4.3] - 2024-11-01
+### Fixed
+- **Vial Search**: Performance improvements and proper handling of versatile vials.
 
-## 2.4.0
-### Features
-- Monitors game time, after 10 minutes of exploration (non combat) will prompt alchemist characters to add vials if needed. 
+## [2.4.2] - 2024-10-25
+### Added
+- **Quick Alchemy**: Added Double Brew feat support.
+- **Settings**: Added "Ask for all" formula handling option.
+### Fixed
+- **Module**: Corrected spelling errors.
+- **Vial Search**: Improved support for non-English Foundry versions.
 
-## 2.3.1
-### Bug Fixes
-- When leveling up and skipping levels (example level 1 to level 5) it will search for formulas for all levels that you know to add higher level version if enabled in settings. 
+## [2.4.1] - 2024-10-10
+### Added
+- **Vial Search**: Chat output for new formulas and Alchemical Expertise support.
+### Fixed
+- **Quick Alchemy**: Non-English support for versatile vial renaming.
 
-## 2.3.0
-### Features
-- Auto add higher level versions of known formulas when leveling up. 
-### Bug Fixes
-- improved debug logging
+## [2.4.0] - 2024-10-01
+### Added
+- **Vial Search**: Monitors game time and prompts Alchemists to add vials after 10 minutes of exploration.
 
-# 2.2.1
-### New Features
-- Quick Alchemy macro will now show "loading" window with progress.
-- Setting option to show counts of formulas on Quick Alchemy screen. 
+## [2.3.1] - 2024-09-15
+### Fixed
+- **Level Up**: Properly handles skipped levels when adding higher-level formulas.
 
-### Bug fixes
-- (Bug #5) Error catching on possible corruption or errors in actor's formulas. 
+## [2.3.0] - 2024-09-01
+### Added
+- **Level Up**: Automatic addition of higher-level versions of known formulas during level-up.
 
-# 2.2.0
-- Added formula search feature.
-- added support for Bug Reporter (https://github.com/League-of-Foundry-Developers/bug-reporter)
+## [2.2.1] - 2024-08-15
+### Added
+- **Quick Alchemy**: loading screen and formula counts in UI.
+### Fixed
+- **Quick Alchemy**: Error handling for corrupted actor formulas (issue #5).
 
-# 2.1.2
-- fix QuickAlchemy.js errant line of code preventing file to load. Thanks to tpendragon!
+## [2.2.0] - 2024-08-01
+### Added
+- **Quick Alchemy**: Formula search feature 
+- **Module**: Bug Reporter integration.
 
-# 2.1.1
-- fixed debug setting that would prevent important notifications being displayed.
+## [2.1.2] - 2024-07-15
+### Fixed
+- **Quick Alchemy**: Removed errant line causing file loading issues.
 
-# 2.1.0
-- Added settings options.
-  - Added settings option to enable/disable Powerful Alchemy (default: enabled).
-  - Added settings option to enable size based quick alchemy. Three settings, Disabled = will not adjust item size based on actor size, Tiny Only = only adjust item size for tiny actors, All Sizes = will adjust item size for all size actors. 
-- If no Versatile Vials are in inventory and the Quick Alchemy macro is run, it will prompt to create one. 
+## [2.1.1] - 2024-07-01
+### Fixed
+- **Quick Alchemy**: Debug settings preventing important notifications.
 
-# 2.0.2
-- Updated to support pf2e v6.7.0.
+## [2.1.0] - 2024-06-15
+### Added
+- **Quick Alchemy**: Settings to enable/disable Powerful Alchemy and adjust item sizes for actors.
+- **Quick Alchemy**: Prompt for creating versatile vials if none are available.
 
-# 2.0.1
-### New Features
-- Option to only craft weapon items.
-- When only crafting, will send message to chat with link use / attack.
+## [2.0.2] - 2024-06-01
+### Added
+- **Module**: Compatibility with PF2e system v6.7.0.
 
-### Bug Fixes
-- Creating a Versatile Vile will not consume a Versatile Vial. 
-- Added more error handling so that Versatile Vials are less likely to be consumed if error happens at wrong moment. 
-- Fixed bug where multiple of the items could be crafted in separate stacks. Now will increase quantity.
+## [2.0.1] - 2024-05-15
+### Added
+- **Quick Alchemy**: Option to only craft weapon items with chat messages.
+### Fixed
+- **Quick Alchemy**: Improved error handling for versatile vials.
