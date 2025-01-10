@@ -1,4 +1,4 @@
-console.log("%cPF2e Alchemist Remaster Duct Tape: settings.js loaded","color: aqua; font-weight: bold;");
+console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
 
 // Function for debugging
 export function debugLog(intLogType, stringLogMsg, objObject = null) {
@@ -112,6 +112,37 @@ export function isAlchemist(actor) {
     return { qualifies: false, dc: 0, isArchetype: false };
 }
 
+/* 
+	Function to dynamically manage collapseChatDesc setting based on Workbench's setting
+*/
+function adjustCollapseSettingBasedOnWorkbench() {
+    const settingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
+    const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
+    const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
+
+    if (!isWorkbenchInstalled) return; // Not installed - exit early
+	
+	if (!game.settings.settings.has(workbenchSettingKey)) {// settings key not found
+        console.log(`Workbench setting '${workbenchSettingKey}' not found.`);
+        return;
+    }
+    const currentWorkbenchSetting = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
+
+    // Check if the collapseChatDesc setting exists
+    if (!game.settings.settings.has(settingKey)) return;
+
+    // If Workbench is managing collapsibility, set collapseChatDesc to false
+    if (currentWorkbenchSetting === "collapsedDefault" || currentWorkbenchSetting === "nonCollapsedDefault") {
+        if (game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc") === true) {
+            game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
+            console.log(
+                "PF2e Alchemist Remaster Duct Tape | xdy-pf2e-workbench is managing collapsibility."
+            );
+        }
+    }
+}
+
+
 Hooks.once("init", () => {
 	
 	/*	
@@ -140,22 +171,23 @@ Hooks.once("init", () => {
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItems", {
 		name: "Quick Alchemy: remove temporary items at end of turn?",
 		hint: "If enabled, will automatically remove items crafted with quick alchemy (per RAW).",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		default: true,  // The default value of the setting
-		type: Boolean,   // The type of setting (true/false)
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
 		requiresReload: true,
 	});
+	
 	/*
 		Show Quick Alchemy counts
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQACounts", {
 		name: "Quick Alchemy: Show formula counts",
 		hint: "If enabled, will show the number of available formulas.",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		default: false,  // The default value of the setting
-		type: Boolean,   // The type of setting (true/false)
+		scope: "world",
+		config: true,    
+		default: false,  
+		type: Boolean,   
 		requiresReload: true,
 	});
 	
@@ -166,15 +198,15 @@ Hooks.once("init", () => {
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy", {
 		name: "Enable size-based alchemy for Quick Alchemy",
 		hint: "Adjust the size of items created by Quick Alchemy to match the creature's size.",
-		scope: "world", // "world" makes it available to all players; use "client" for a single user
-		config: true, // Show this setting in the configuration UI
-		type: String, // Dropdown uses a string type
+		scope: "world",
+		config: true,
+		type: String,
 		choices: {
 			disabled: "Disabled",
 			tinyOnly: "Tiny Only",
 			allSizes: "All Sizes"
 		},
-		default: "tinyOnly", // Default value
+		default: "tinyOnly",
 		onChange: (value) => {
 			console.log(`PF2E Alchemist Remaster Duct Tape | Size-based alchemy mode set to: ${value}`);
 		},
@@ -188,10 +220,10 @@ Hooks.once("init", () => {
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy", {
 		name: "Enable Powerful Alchemy",
 		hint: "Enables the auto-update of created items using Class DC.",
-		scope: "world", // "world" makes it available to all players; use "client" for a single user
-		config: true, // Show this setting in the configuration UI
-		type: Boolean, // Checkbox input type
-        default: true, // Default value is unchecked
+		scope: "world",
+		config: true,
+		type: Boolean,
+        default: true,
         onChange: (value) => {
             console.log(`PF2E Alchemist Remaster Duct Tape | Powerful Alchemy enabled: ${value}`);
         },
@@ -207,56 +239,57 @@ Hooks.once("init", () => {
 		Ask for each = will prompt for each formula; 
 		Ask for all = will prompt for all formulas at once; 
 		Auto = will automatically add formulas.`,
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		type: String, // Dropdown uses a string type
+		scope: "world",
+		config: true,
+		type: String,
 		choices: {
 			disabled: "Disabled",
 			ask_all: "Ask for all",
 			ask_each: "Ask for each",
 			auto: "Auto"
 		},
-		default: "ask_all",  // The default value of the setting
+		default: "ask_all",
 		requiresReload: true,
 	});
+	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp", {
 		name: "Level Up: Lower level formula handling:",
 		hint: `Upon level up, will check for available lower level formulas, or remove them to keep your formula list small. 
 		Add lower level versions = Will add lower level versions of known formulas; 
 		Remove lower level versions (default) = Will Remove lower level formulas if a higher level is known.`,
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		type: String, // Dropdown uses a string type
+		scope: "world",
+		config: true,
+		type: String,
 		choices: {
 			disabled: "Disabled.",
 			add_lower: "Add lower level versions.",
 			remove_lower: "Remove lower level versions."
 		},
-		default: "remove_lower",  // The default value of the setting
+		default: "remove_lower",
 		requiresReload: true,
 	});
 	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
 		name: "Level Up: Permission level to add/remove formulas to actor:",
 		hint: "(If actor owner is not logged in, GM will be prompted)",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		type: String, // Dropdown uses a string type
+		scope: "world",
+		config: true,
+		type: String,
 		choices: {
 			gm_only: "GM",
 			actor_owner: "Owner"
 		},
-		default: "ask",  // The default value of the setting
+		default: "ask",
 		requiresReload: true,
 	});
 	
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
 		name: "Level Up: Add the list of new/removed formulas upon level up to chat.",
 		hint: "",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		type: Boolean, // Dropdown uses a string type
-		default: true,  // The default value of the setting
+		scope: "world",
+		config: true,
+		type: Boolean,
+		default: true,
 		requiresReload: true,
 	});
 	
@@ -301,10 +334,10 @@ Hooks.once("init", () => {
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
 		name: "Vial search reminder",
 		hint: "When at least 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
-		scope: "world", // "client" or "world" depending on your use case
-		config: true,    // Whether to show this in the module settings UI
-		type: Boolean,   // The type of setting (true/false)
-		default: true,  // The default value of the setting
+		scope: "world", 
+		config: true,    
+		type: Boolean,   
+		default: true,  
 		requiresReload: true,
 	});
 
@@ -314,10 +347,10 @@ Hooks.once("init", () => {
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
 		name: "Enable Formula Search",
 		hint: "Enables the search/filter for formulas on character sheet.",
-		scope: "client", // "world" makes it available to all players; use "client" for a single user
-		config: true, // Show this setting in the configuration UI
-		type: Boolean, // Checkbox input type
-        default: true, // Default value is unchecked
+		scope: "client", 
+		config: true, 
+		type: Boolean, 
+        default: true, 
         onChange: (value) => {
             console.log(`PF2E Alchemist Remaster Duct Tape | FormulaSearch enabled: ${value}`);
         },
@@ -329,19 +362,66 @@ Hooks.once("init", () => {
 	*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
 		name: "Collapse item description in chat",
-		hint: `Shortens chat messages with long item descriptions, click the Eye icon to expand.`,
-		scope: "world", // "world" makes it available to all players; use "client" for a single user
-		config: true, // Show this setting in the configuration UI
-		type: Boolean, // Checkbox input type
-        default: true, // Default value is unchecked
+		hint: "Shortens chat messages with long item descriptions, click the Eye icon to expand.",
+		scope: "world", 
+		config: true, 
+		type: Boolean,
+        default: false,
         onChange: (value) => {
             console.log(`PF2E Alchemist Remaster Duct Tape | collapseChatDesc enabled: ${value}`);
         },
-		requiresReload: true
+		requiresReload: false
 	});
 	
-	
-	
+	Hooks.on("renderSettingsConfig", (app, html, data) => {
+		const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
+		const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
+
+		// Check if Workbench is installed and active
+		const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
+
+		//monitor for settings change of workbench collapse setting
+		if (isWorkbenchInstalled) {
+			// Get the current value of the Workbench setting
+			const workbenchSettingValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
+
+			// Get this setting input field in the UI
+			const thisSettingInput = html.find(`input[name="${thisSettingKey}"]`);
+
+			// Disable or enable this setting based on the Workbench setting
+			if (thisSettingInput.length) {
+				if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
+					thisSettingInput.prop("disabled", true);
+					thisSettingInput.parent().append(
+						`<p class="notes" style="color: red;">This setting is disabled because xdy-pf2e-workbench is managing collapsible content.</p>`
+					);
+				} else if (workbenchSettingValue === "noCollapse") {
+					thisSettingInput.prop("disabled", false);
+				}
+			}
+
+			// Watch for changes to the Workbench setting in the UI
+			html.find(`select[name="${workbenchSettingKey}"]`).change((event) => {
+				const selectedValue = event.target.value;
+
+				// Update this setting's state dynamically
+				if (thisSettingInput.length) {
+					if (selectedValue === "collapsedDefault" || selectedValue === "nonCollapsedDefault") {
+						thisSettingInput.prop("disabled", true);
+						thisSettingInput.parent().find(".notes").remove(); // Remove old notes
+						thisSettingInput.parent().append(
+							`<p class="notes" style="color: red;">This setting is disabled because xdy-pf2e-workbench is managing collapsible content.</p>`
+						);
+						game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
+					} else if (selectedValue === "noCollapse") {
+						thisSettingInput.prop("disabled", false);
+						thisSettingInput.parent().find(".notes").remove(); // Remove old notes
+					}
+				}
+			});
+		}
+	});
+
 	/*
 		Debugging
 	*/
@@ -365,5 +445,12 @@ Hooks.once("init", () => {
 	// Log debug status
 	const debugLevel = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugLevel");
 	console.log(`%cPF2E Alchemist Remaster Duct Tape | Debugging Level: ${debugLevel}`,"color: aqua; font-weight: bold;");
+});
+
+Hooks.once("ready", () => {
+    console.log("PF2e Alchemist Remaster Duct Tape | Ready hook triggered.");
+    
+    // Adjust collapseChatDesc based on the Workbench setting
+    adjustCollapseSettingBasedOnWorkbench();
 	
 });

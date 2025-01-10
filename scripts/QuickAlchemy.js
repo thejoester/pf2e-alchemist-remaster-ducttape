@@ -40,36 +40,38 @@ Hooks.on("deleteCombat", async (combat) => {
     }
 });
 
+/*
+	renderChatMessage Hook for .roll-attack and .use-consumable buttons
+*/
 Hooks.on("renderChatMessage", (message, html) => {
-    // Check for the user setting
-    const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+	// Handle "Roll Attack" button functionality
+    html.find(".roll-attack").on("click", async (event) => {
+        const itemUuid = event.currentTarget.dataset.uuid;
+        const actorId = event.currentTarget.dataset.actorId;
+        const itemId = event.currentTarget.dataset.itemId;
 
-    // Process only messages with the alias "Quick Alchemy"
-    if (message.speaker.alias !== "Quick Alchemy") return;
+        const actor = game.actors.get(actorId);
+        const item = actor?.items.get(itemId);
 
-    // Add collapsible functionality to the message
-    html.find('.collapsible-content').each((_, element) => {
-        if (collapseChatDesc) {
-            element.style.display = 'none'; // Collapse by default if the setting is enabled
-        }
-    });
-
-    html.find('.toggle-icon').on('click', (event) => {
-        const toggleIcon = event.currentTarget;
-        const collapsibleContent = toggleIcon.closest('.collapsible-message')?.querySelector('.collapsible-content');
-
-        if (!collapsibleContent) {
-            debugLog(2, "No collapsible content found.");
+        if (!actor || !item) {
+            debugLog(3, "Actor or item not found.");
             return;
         }
 
-        // Toggle visibility
-        const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
-        collapsibleContent.style.display = isHidden ? 'block' : 'none';
+        // Ensure a target is selected
+        const target = game.user.targets.first();
+        if (!target) {
+            ui.notifications.error("Please target a token for the attack.");
+            return;
+        }
 
-        // Toggle icon state
-        toggleIcon.classList.toggle('fa-eye', !isHidden);
-        toggleIcon.classList.toggle('fa-eye-slash', isHidden);
+        // Roll the attack with the appropriate MAP modifier
+        game.pf2e.rollActionMacro({
+            actorUUID: actor.uuid,
+            type: "strike",
+            itemId: item.id,
+            slug: item.slug,
+        });
     });
 	
 	// Handle "Use" button functionality for consumables
@@ -102,37 +104,72 @@ Hooks.on("renderChatMessage", (message, html) => {
             debugLog(3, `Failed to use the item: ${error.message}`, error);
         }
     });
-	
-    // Handle "Roll Attack" button functionality
-    html.find(".roll-attack").on("click", async (event) => {
-        const itemUuid = event.currentTarget.dataset.uuid;
-        const actorId = event.currentTarget.dataset.actorId;
-        const itemId = event.currentTarget.dataset.itemId;
-
-        const actor = game.actors.get(actorId);
-        const item = actor?.items.get(itemId);
-
-        if (!actor || !item) {
-            debugLog(3, "Actor or item not found.");
-            return;
-        }
-
-        // Ensure a target is selected
-        const target = game.user.targets.first();
-        if (!target) {
-            ui.notifications.error("Please target a token for the attack.");
-            return;
-        }
-
-        // Roll the attack with the appropriate MAP modifier
-        game.pf2e.rollActionMacro({
-            actorUUID: actor.uuid,
-            type: "strike",
-            itemId: item.id,
-            slug: item.slug,
-        });
-    });
 });
+
+/*
+	renderChatMessage Hook for collapsable messages
+*/
+Hooks.on("renderChatMessage", (message, html) => {
+    debugLog("Hook called for message:", message);
+
+    // Check if Workbench is installed and its collapse setting is enabled
+    const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
+    const workbenchCollapseEnabled = isWorkbenchInstalled
+        ? game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent")
+        : false;
+    debugLog("PF2e Workbench installed:", isWorkbenchInstalled);
+    debugLog("Workbench collapse setting enabled:", workbenchCollapseEnabled);
+
+    // Check your module's collapse setting
+    const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+    debugLog("Your module collapse setting enabled:", collapseChatDesc);
+
+    // If Workbench is managing the collapsible content, skip your logic
+    if (workbenchCollapseEnabled === "collapsedDefault" || workbenchCollapseEnabled === "nonCollapsedDefault") {
+        debugLog("Skipping collapsible functionality due to Workbench setting.");
+        return;
+    }
+
+    // Process only messages with the alias "Quick Alchemy"
+    if (message.speaker.alias !== "Quick Alchemy") {
+        debugLog("Skipping non-Quick Alchemy message.");
+        return;
+    }
+
+    // Add collapsible functionality only if your module's setting is enabled
+    if (collapseChatDesc) {
+        debugLog("Adding collapsible functionality.");
+
+        // Collapse the content by default
+        html.find('.collapsible-content').each((_, element) => {
+            element.style.display = 'none';
+        });
+
+        // Handle toggle icon click
+        html.find('.toggle-icon').on('click', (event) => {
+            debugLog("Toggle icon clicked");
+            const toggleIcon = event.currentTarget;
+            const collapsibleContent = toggleIcon.closest('.collapsible-message')?.querySelector('.collapsible-content');
+
+            if (!collapsibleContent) {
+                debugLog(2, "No collapsible content found.");
+                return;
+            }
+
+            // Toggle visibility
+            const isHidden = collapsibleContent.style.display === 'none' || collapsibleContent.style.display === '';
+            collapsibleContent.style.display = isHidden ? 'block' : 'none';
+
+            // Toggle icon state
+            toggleIcon.classList.toggle('fa-eye', !isHidden);
+            toggleIcon.classList.toggle('fa-eye-slash', isHidden);
+            debugLog("Toggle icon classes updated");
+        });
+    } else {
+        debugLog("Collapsible functionality disabled; skipping.");
+    }
+});
+
 
 
 Hooks.on("ready", () => {
@@ -193,12 +230,13 @@ Hooks.on("ready", () => {
 			return;
 		}
 
+		const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
 		const itemName = item.name;
 		const itemImg = item.img || "path/to/default-image.webp";
 		const itemDescription = item.system?.description?.value || "No description available.";
 		const itemId = item.id; // Add item ID for tracking
-		const actorId = actor.id; // Pass actor ID explicitly
-
+		//const actorId = actor.id; // Pass actor ID explicitly
+/*
 		const content = `
 			<div class="pf2e chat-card item-card">
 				<header class="card-header flexrow">
@@ -224,11 +262,43 @@ Hooks.on("ready", () => {
 				</div>
 			</div>
 		`;
+*/		
+		const content = `
+        <div class="pf2e chat-card item-card">
+            <header class="card-header flexrow">
+                <h3 class="chat-portrait-text-size-name-pf2e">
+                    <img src="${itemImg}" alt="${itemName}" width="36" height="36" class="chat-portrait-image-size-name-pf2e">
+                    ${itemName}
+                </h3>
+            </header>
+
+            ${collapseChatDesc ? `
+                <div class="collapsible-message">
+                    <i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
+                    <div class="collapsible-content" style="display: none;">
+                        <div class="card-content">
+                            <p>${itemDescription}</p>
+                        </div>
+                    </div>
+                </div>
+            ` : `
+                <div class="card-content">
+                    <p>${itemDescription}</p>
+                </div>
+            `}
+
+            <div class="card-buttons">
+                <button type="button" class="use-consumable" data-item-id="${item.id}" data-actor-id="${actor.id}">
+                    Use
+                </button>
+            </div>
+        </div>
+    `;
 
 		// Create the chat message
 		ChatMessage.create({
 			user: game.user.id,
-			speaker: { alias: "Quick Alchemy", actor: actorId }, // Ensure the actor ID is available in speaker
+			speaker: { alias: "Quick Alchemy", actor: actor.id }, // Ensure the actor ID is available in speaker
 			content: content,
 		});
 	}
@@ -836,8 +906,8 @@ Hooks.on("ready", () => {
 		const consumableEntries = [];
 
 		// Gather entries in respective arrays
+		let listProcessedFormulas = "";
 		for (let [index, formula] of formulas.entries()) {
-			debugLog(`Formula UUID: ${formula.uuid}`);
 			const entry = await fromUuid(formula.uuid);
 
 			// Update progress
@@ -847,25 +917,27 @@ Hooks.on("ready", () => {
 
 			// Check if entry is null
 			if (entry != null) {
-				debugLog(`slug: ${entry.slug}, name: ${entry.name}, uuid: ${entry.uuid}`);
+				listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} |`;
 
 				if (entry.slug === "versatile-vial") {
 					// do nothing 
-					debugLog("slug = versatile-vial: skipping");
+					listProcessedFormulas = `${listProcessedFormulas} | skipping`;
 				} else if (entry.type === "weapon") {
 					weaponEntries.push(entry);
-					debugLog("added to weaponEntries");
+					listProcessedFormulas = `${listProcessedFormulas} added to weaponEntries`;
 				} else if (entry.type === "consumable") {
 					consumableEntries.push(entry);
-					debugLog("added to consumableEntries");
+					listProcessedFormulas = `${listProcessedFormulas} added to consumableEntries`;
 				} else {
 					//otherEntries.push(entry);
-					debugLog("Not Weapon or consumable, ignoring");
+					listProcessedFormulas = `${listProcessedFormulas} ignoring.`;
 				}
 			} else { // entry is null
-				debugLog(3, `entry ${formula.uuid} is null`);
+				listProcessedFormulas = `${listProcessedFormulas} entry ${formula.uuid} is null`;
 			}
+			listProcessedFormulas = `${listProcessedFormulas}\n`;
 		}
+		debugLog(`Processed Formulas:\n${listProcessedFormulas}`);
 
 		// Close progress dialog
 		progressDialog.close();
@@ -943,8 +1015,8 @@ Hooks.on("ready", () => {
 		const filteredEntries = [];
 		
 		// Gather entries in respective arrays
+		let listProcessedFormulas = "";
 		for (let [index, formula] of formulas.entries()) {
-			debugLog(`Formula UUID: ${formula.uuid}`);
 			const entry = await fromUuid(formula.uuid);
 
 			// Update progress
@@ -954,20 +1026,20 @@ Hooks.on("ready", () => {
 
 			// Check if entry is null
 			if (entry != null) {
-				debugLog(`slug: ${entry.slug}, name: ${entry.name}, uuid: ${entry.uuid}`);
-
+				listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} | `;
 				if (entry.slug === "versatile-vial") {
 					//do nothing
-					debugLog("slug = versatile-vial: skipping");
+					listProcessedFormulas = `${listProcessedFormulas} skipping`;
 				} else if (entry.type === type) {
 					filteredEntries.push(entry);
-					debugLog("added to filteredEntries");
+					listProcessedFormulas = `${listProcessedFormulas} added to filteredEntries`;
 				} 
 			} else { // entry is null
-				debugLog(3, `entry ${formula.uuid} is null`);
+				listProcessedFormulas = `${listProcessedFormulas} entry ${formula.uuid} is null`;
 			}
+			listProcessedFormulas = `${listProcessedFormulas}\n`;
 		}
-
+		debugLog(`Processed Formulas:\n${listProcessedFormulas}`);
 		// Close progress dialog
 		progressDialog.close();
 
