@@ -235,34 +235,7 @@ Hooks.on("ready", () => {
 		const itemImg = item.img || "path/to/default-image.webp";
 		const itemDescription = item.system?.description?.value || "No description available.";
 		const itemId = item.id; // Add item ID for tracking
-		//const actorId = actor.id; // Pass actor ID explicitly
-/*
-		const content = `
-			<div class="pf2e chat-card item-card">
-				<header class="card-header flexrow">
-					<h3 class="chat-portrait-text-size-name-pf2e">
-						<img src="${itemImg}" alt="${itemName}" width="36" height="36" class="chat-portrait-image-size-name-pf2e">
-						${itemName}
-					</h3>
-				</header>
-
-				<div class="collapsible-message">
-					<i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
-					<div class="collapsible-content" style="display: none;">
-						<div class="card-content">
-							<p>${itemDescription}</p>
-						</div>
-					</div>
-				</div>
-
-				<div class="card-buttons">
-					<button type="button" class="use-consumable" data-item-id="${itemId}" data-actor-id="${actorId}">
-						Use
-					</button>
-				</div>
-			</div>
-		`;
-*/		
+		
 		const content = `
         <div class="pf2e chat-card item-card">
             <header class="card-header flexrow">
@@ -959,10 +932,6 @@ Hooks.on("ready", () => {
 		sortEntries(weaponEntries);
 		sortEntries(consumableEntries);
 		
-		/*
-		weaponEntries.sort((a, b) => a.name.localeCompare(b.name));
-		consumableEntries.sort((a, b) => a.name.localeCompare(b.name));
-		*/
 		// Generate sorted options
 		const weaponOptions = weaponEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		const consumableOptions = consumableEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
