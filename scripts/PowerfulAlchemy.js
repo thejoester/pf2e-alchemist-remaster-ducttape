@@ -1,8 +1,8 @@
 import { debugLog, hasFeat, isAlchemist  } from './settings.js';
 
 /**
-	Update item description based on regex pattern and replacement logic.
-	@param {string} description - The original item description.
+	Update item description based on regex pattern and replacement logic. 
+	@param {string} description - The original item description. 
 	@param {RegExp} regexPattern - The regex pattern to match.
 	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
 	@returns {string} - The updated item description.
