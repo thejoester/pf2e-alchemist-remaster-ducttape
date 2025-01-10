@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.10] - 2025-01-10
+### Fixed
+- [Issue #19](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/19) 
+  - Healing Quick Vial (from Chirurgeon field research) no longer consumes versatile vial to create.
+  - Added description text from Chirurgeon field research.
+
 ## [2.5.9] - 2025-01-10
 ### Fixed
 - [Issue #17](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/17) Only messages from this module are collapesed when setting is enabled. 

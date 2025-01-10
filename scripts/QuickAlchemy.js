@@ -822,8 +822,8 @@ Hooks.on("ready", () => {
 			return false;
 		}
 		
-		// If we are crafting a veratile vial, do not consume, return true
-		if (slug.startsWith("versatile-vial") || slug.startsWith("quick-vial")){
+		// If we are crafting a veratile vial, Quick Vial, or Healing Vial do not consume, return true
+		if (slug.startsWith("versatile-vial") || slug.startsWith("quick-vial") || slug.startsWith("healing-quick-vial"){
 			debugLog(`Crafted item with slug ${slug} without consuming vial`);
 			return true;
 		}
