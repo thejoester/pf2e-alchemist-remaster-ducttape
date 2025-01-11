@@ -4,6 +4,7 @@
 ### Fixed
 - **Quick Alchemy:** Fixed issue preventing macro to operate (a goblin stole a semicolon!). 
 - **Quick Alchemy:** When choosing "craft and attack" it will only put a message in the chat by default, can be changed in settings.
+  - Will still display if crafting something using Double Brew feat. 
 - **Settings:** Cleaned up settings file. 
 
 ## [2.5.10] - 2025-01-10
