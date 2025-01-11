@@ -1,4 +1,4 @@
-import { debugLog, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","color: aqua; font-weight: bold;");
 
 /*
@@ -52,7 +52,7 @@ function addFormulaSearch(html) {
 Hooks.on("ready", () => {
     
 	//check if Searchable Formulas is enabled
-	const sfEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "searchableFormulas");
+	const sfEnabled = getSetting("searchableFormulas");
 	if (sfEnabled) {	
 		Hooks.on("renderActorSheet", (app, html, data) => {
 			const actor = app.actor;

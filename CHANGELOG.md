@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.11] - 2025-01-10
+### Fixed
+- **Quick Alchemy:** Fixed issue preventing macro to operate (a goblin stole a semicolon!). 
+- **Quick Alchemy:** When choosing "craft and attack" it will only put a message in the chat by default, can be changed in settings.
+- **Settings:** Cleaned up settings file. 
+
 ## [2.5.10] - 2025-01-10
 ### Fixed
 - [Issue #19](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/19) 

@@ -1,4 +1,4 @@
-import { debugLog, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
 // Settings placeholders
@@ -15,10 +15,10 @@ Hooks.once('ready', () => {
 Hooks.once('init', () => {
 	
     // Get Settings
-    addFormulasSetting = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
-	handleLowerFormulasOnLevelUp = game.settings.get("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp");
-	addNewFormulasToChat = game.settings.get("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat");
-	addFormulasPermission = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasPermission");
+    addFormulasSetting = getSetting("addFormulasOnLevelUp","disabled");
+	handleLowerFormulasOnLevelUp = getSetting("handleLowerFormulasOnLevelUp","disabled");
+	addNewFormulasToChat = getSetting("addNewFormulasToChat");
+	addFormulasPermission = getSetting("addFormulasPermission","actor_owner");
 	
 	
     

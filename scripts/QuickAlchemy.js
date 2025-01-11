@@ -1,4 +1,4 @@
-import { debugLog, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 
 let isArchetype = false;
 
@@ -121,7 +121,7 @@ Hooks.on("renderChatMessage", (message, html) => {
     debugLog("Workbench collapse setting enabled:", workbenchCollapseEnabled);
 
     // Check your module's collapse setting
-    const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+    const collapseChatDesc = getSetting("collapseChatDesc");
     debugLog("Your module collapse setting enabled:", collapseChatDesc);
 
     // If Workbench is managing the collapsible content, skip your logic
@@ -230,7 +230,7 @@ Hooks.on("ready", () => {
 			return;
 		}
 
-		const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+		const collapseChatDesc = getSetting("collapseChatDesc");
 		const itemName = item.name;
 		const itemImg = item.img || "path/to/default-image.webp";
 		const itemDescription = item.system?.description?.value || "No description available.";
@@ -383,7 +383,7 @@ Hooks.on("ready", () => {
 		}
 
 		// Check if description collapsing is enabled
-		const collapseChatDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc");
+		const collapseChatDesc = getSetting("collapseChatDesc");
 
 		// Construct the chat message content
 		const itemName = item.name;
@@ -482,7 +482,7 @@ Hooks.on("ready", () => {
 	async function craftHealingVial(selectedItem, selectedActor) {
 		// Define the slug for the healing quick vial
 		const healingSlug = "healing-quick-vial-temp";
-		const alchemyMode = game.settings.get("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy");
+		const alchemyMode = getSetting("enableSizeBasedAlchemy", "disabled");
 		
 		// Get actor size to use for new item size
 		const actorSize = await getActorSize(selectedActor);
@@ -566,7 +566,7 @@ Hooks.on("ready", () => {
 		}
 		let newItemSlug = "";
 		
-		const alchemyMode = game.settings.get("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy");
+		const alchemyMode = getSetting("enableSizeBasedAlchemy","disabled");
 		
 		// Get actor size to use for new item size
 		const actorSize = await getActorSize(selectedActor);
@@ -744,7 +744,7 @@ Hooks.on("ready", () => {
 		debugLog(`Selected Item: ${selectedItem?.name || "No Name"}`);
 		debugLog(`Selected Actor: ${selectedActor?.name || "No Name"}`);
 		
-		const alchemyMode = game.settings.get("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy");
+		const alchemyMode = getSetting("enableSizeBasedAlchemy","disabled");
 		
 		if (!selectedItem || !selectedActor) {
 			debugLog(3, "Invalid item or actor provided.");
@@ -823,7 +823,7 @@ Hooks.on("ready", () => {
 		}
 		
 		// If we are crafting a veratile vial, Quick Vial, or Healing Vial do not consume, return true
-		if (slug.startsWith("versatile-vial") || slug.startsWith("quick-vial") || slug.startsWith("healing-quick-vial"){
+		if (slug.startsWith("versatile-vial") || slug.startsWith("quick-vial") || slug.startsWith("healing-quick-vial")){
 			debugLog(`Crafted item with slug ${slug} without consuming vial`);
 			return true;
 		}
@@ -1105,8 +1105,7 @@ Hooks.on("ready", () => {
 			debugLog(`Double Brew enabled, sending item to chat only | newUuid: ${formattedUuid} | actor: `, actor);
 			await sendMsg(temporaryItem.type, formattedUuid, actor);
 		} else if (attack) {
-			await sendMsg(temporaryItem.type, formattedUuid, actor);
-			
+			if (getSetting("sendAtkToChat")) await sendMsg(temporaryItem.type, formattedUuid, actor);
 			game.pf2e.rollActionMacro({
 				actorUUID: actor.uuid,
 				type: "strike",

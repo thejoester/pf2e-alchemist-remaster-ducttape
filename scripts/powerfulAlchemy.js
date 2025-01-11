@@ -1,4 +1,4 @@
-import { debugLog, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 
 /**
 	Update item description based on regex pattern and replacement logic. 
@@ -16,7 +16,7 @@ Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape: PowerfulAlchemy.js loaded","color: aqua; font-weight: bold;");
 	
 	//check if Powerful Alchemy is enabled
-	const paEnabled = game.settings.get("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy");
+	const paEnabled = getSetting("enablePowerfulAlchemy");
 	if (paEnabled) {
 		debugLog("PowerfulAlchemy enabled.");
 		

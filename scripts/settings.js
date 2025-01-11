@@ -1,6 +1,7 @@
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
-
-// Function for debugging
+/*
+	Function for debugging
+*/
 export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	// Handle the case where the first argument is a string
 	if (typeof intLogType === "string") {
@@ -77,6 +78,36 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 }
 
 /*
+	Function to check setting and return it
+	will ONLY work for settings for this module!
+*/
+export function getSetting(settingName, returnIfError = false) {
+    // Validate the setting name
+    if (typeof settingName !== "string" || settingName.trim() === "") {
+        debugLog(3, `Invalid setting name provided: ${settingName}`);
+        return returnIfError; // Return undefined or a default value
+    }
+
+    // Check if the setting is registered
+    if (!game.settings.settings.has(`pf2e-alchemist-remaster-ducttape.${settingName}`)) {
+        debugLog(3, `Setting "${settingName}" is not registered.`);
+        return returnIfError; // Return undefined or a default value
+    }
+
+    try {
+        // Attempt to retrieve the setting value
+        const value = game.settings.get("pf2e-alchemist-remaster-ducttape", settingName);
+        debugLog(1, `Successfully retrieved setting "${settingName}":`, value);
+        return value;
+    } catch (error) {
+        // Log the error and return undefined or a default value
+        debugLog(3, `Failed to get setting "${settingName}":`, error);
+        return returnIfError;
+    }
+}
+
+
+/*
 	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
 */
 export function hasFeat(actor, slug) {
@@ -145,9 +176,9 @@ function adjustCollapseSettingBasedOnWorkbench() {
 
 Hooks.once("init", () => {
 	
-	/*	
-		Saved Data Settings
-	*/
+/*	
+	Saved Data Settings
+*/
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
         name: 'Last Processed Time',
         hint: 'Tracks the last processed time for exploration mode.',
@@ -165,9 +196,11 @@ Hooks.once("init", () => {
 		default: 0
 	});
 	
-	/*
-		Show Quick Alchemy counts
-	*/
+/*
+	QUICK ALCHEMY SETTINGS
+*/
+	
+	// Quick Alchemy: remove temporary items at end of turn
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItems", {
 		name: "Quick Alchemy: remove temporary items at end of turn?",
 		hint: "If enabled, will automatically remove items crafted with quick alchemy (per RAW).",
@@ -178,12 +211,10 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
-	/*
-		Show Quick Alchemy counts
-	*/
-	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQACounts", {
-		name: "Quick Alchemy: Show formula counts",
-		hint: "If enabled, will show the number of available formulas.",
+	// Send attack messages to chat
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "sendAtkToChat", {
+		name: "Quick Alchemy: Send all crafted items to chat?",
+		hint: 'If enabled, will send an item card to chat for all items made with Quick Alchemy, even the items made choosing "Craft and attack".',
 		scope: "world",
 		config: true,    
 		default: false,  
@@ -191,12 +222,9 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
-	/* 
-		Sized Based Alchemy Settings
-	*/
-	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Tiny Alchemy settings...","color: aqua; font-weight: bold;");
+	// Sized Based Alchemy Settings
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy", {
-		name: "Enable size-based alchemy for Quick Alchemy",
+		name: "Quick Alchemy: Enable size-based alchemy?",
 		hint: "Adjust the size of items created by Quick Alchemy to match the creature's size.",
 		scope: "world",
 		config: true,
@@ -213,9 +241,9 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-	/* 
-		Powerful Alchemy Settings
-	*/
+/* 
+	Powerful Alchemy Settings
+*/
 	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Powerful Alchemy settings...","color: aqua; font-weight: bold;");
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy", {
 		name: "Enable Powerful Alchemy",
@@ -230,9 +258,10 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-	/*
-		LevelUp - auto add formulas
-	*/
+/*
+	LevelUp - auto add formulas
+*/
+	// Add higher level versions of known formulas on level up?
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
 		name: "Level Up: Add higher level version of known formulas upon level up.",
 		hint: `If enabled, when leveled up will add higher level version of known formulas. 
@@ -252,6 +281,7 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
+	// How to handle lower level formulas
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp", {
 		name: "Level Up: Lower level formula handling:",
 		hint: `Upon level up, will check for available lower level formulas, or remove them to keep your formula list small. 
@@ -269,6 +299,7 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 	
+	// Who is asked by default to add/remove formulas
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
 		name: "Level Up: Permission level to add/remove formulas to actor:",
 		hint: "(If actor owner is not logged in, GM will be prompted)",
@@ -279,10 +310,11 @@ Hooks.once("init", () => {
 			gm_only: "GM",
 			actor_owner: "Owner"
 		},
-		default: "ask",
+		default: "actor_owner",
 		requiresReload: true,
 	});
 	
+	// add list of new formulas learned to chat
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
 		name: "Level Up: Add the list of new/removed formulas upon level up to chat.",
 		hint: "",
@@ -328,9 +360,9 @@ Hooks.once("init", () => {
 	});
 
 	
-	/*
-		Vial Search Reminders
-	*/
+/*
+	Vial Search 
+*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
 		name: "Vial search reminder",
 		hint: "When at least 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
@@ -341,9 +373,9 @@ Hooks.once("init", () => {
 		requiresReload: true,
 	});
 
-	/* 
-		Searchable Formulas
-	*/
+/* 
+	Searchable Formulas
+*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
 		name: "Enable Formula Search",
 		hint: "Enables the search/filter for formulas on character sheet.",
@@ -357,9 +389,9 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-	/* 
-		Collapse Item Description in chat
-	*/
+/* 
+	Collapse Item Description in chat
+*/
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
 		name: "Collapse item description in chat",
 		hint: "Shortens chat messages with long item descriptions, click the Eye icon to expand.",
@@ -422,9 +454,9 @@ Hooks.once("init", () => {
 		}
 	});
 
-	/*
-		Debugging
-	*/
+/*
+	Debugging
+*/
 	// Register debugLevel setting
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "debugLevel", {
 		name: "Debug Level",

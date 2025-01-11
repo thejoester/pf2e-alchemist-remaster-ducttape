@@ -1,4 +1,4 @@
-import { debugLog, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 
 // See if VialSearch option enabled, default to false
 let vialSearchReminder = false;
@@ -6,7 +6,7 @@ let versatileVialName = "versatile vial";
 
 Hooks.once('init', () => {
     // Check if the vialSearchReminder setting is enabled globally
-    vialSearchReminder = game.settings.get("pf2e-alchemist-remaster-ducttape", "vialSearchReminder");
+    vialSearchReminder = getSetting("vialSearchReminder");
 	
     if (vialSearchReminder) {
 		
@@ -26,8 +26,8 @@ Hooks.once('init', () => {
 			
 			// Initialize explorationBlocks and get explorationTime and previousTime from game settings
 			let explorationBlocks = 0;
-			let explorationTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'explorationTime') ?? 0;
-			let previousTime = game.settings.get('pf2e-alchemist-remaster-ducttape', 'previousTime');
+			let explorationTime = getSetting('explorationTime') ?? 0;
+			let previousTime = getSetting('previousTime');
 			const currentTime = game.time.worldTime;
 
 			// If previousTime is not set, initialize it to current world time
