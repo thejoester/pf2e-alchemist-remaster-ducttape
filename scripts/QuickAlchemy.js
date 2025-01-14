@@ -2,42 +2,80 @@ import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 
 let isArchetype = false;
 
-
+// Hook for combat turn change to remove temp items on start of turn
 Hooks.on("combatTurnChange", async (combat, prior, current) => {
-    // Get the combatant whose turn just ended
-    const priorCombatant = combat.combatants.get(prior.combatantId);
-    if (!priorCombatant) {
-        debugLog("No valid prior combatant found during combatTurnChange.");
-        return;
+	
+	// Get Setting to see if we are removing Quick Vials at start of turn
+	if (getSetting("removeTempItemsAtTurnChange", true)) {
+		
+		//get previous combatant - check for Quick Vials
+		const priorCombatant = combat.combatants.get(prior.combatantId)
+		if (!priorCombatant) {
+			debugLog("prior combatant not found during combatTurnChange.");
+		} else {
+			const priorActor = priorCombatant.actor;
+			if (!priorActor || priorActor.type !== 'character'){
+				debugLog("No valid prior combatant found during combatTurnChange.");
+			}
+			const alchemistCheck = isAlchemist(priorActor);
+			if (!alchemistCheck.qualifies) {
+				debugLog(`Prior combatant ${priorActor.name} is not an alchemist`);
+			} else {
+				debugLog(`End of ${priorActor.name}'s turn, deleting Quick Vials.`);
+				await deleteTempItems(priorActor, true); // Delete Quick Vials
+			}
+		}
+		
+		// Get the combatant whose turn it is
+		const currentCombatant = combat.combatants.get(current.combatantId);
+		
+		// Make sure there is a current combatant
+		if (!currentCombatant) {
+			debugLog(2, "No valid current combatant found during combatTurnChange.");
+			return;
+		}
+		//Get current combatant actor
+		const currentActor = currentCombatant.actor;
+		// Make sure the actor exists and is a character
+		if (!currentActor || currentActor.type !== 'character' ){
+			debugLog(1, "No valid actor for current combatant found during combatTurnChange.");
+			return;
+		}
+		debugLog(1, `${currentActor.name}'s turn.`);
+		// Ensure current combatant is alchemist
+		const alchemistCheck = isAlchemist(currentActor);
+		if (alchemistCheck.qualifies) {
+			// Delete temp items
+			await deleteTempItems(currentActor);
+		}
     }
-	const priorActor = priorCombatant.actor;
-	if (!priorActor || priorActor.type !== 'character'){
-		debugLog("No valid prior combatant found during combatTurnChange.");
-	}
-	debugLog(`End of ${priorActor.name}'s turn.`);
-	await deleteTempItems(priorActor);
-    
 });
 
+// Hook for combat end to remove temp items
 Hooks.on("deleteCombat", async (combat) => {
-    if (!combat) {
-        debugLog("No combat found during deleteCombat hook.");
-        return;
-    }
+    // Get Setting to see if we are removing items at start of turn
+	if (getSetting("removeTempItemsAtEndCombat", true)) {
+		// Make surre combat object exists
+		if (!combat) {
+			debugLog(2, "No combat found during deleteCombat hook.");
+			return;
+		}
 
-    debugLog(`Combat ended. Cleaning up items for combatants in Combat ID: ${combat.id}`);
+		debugLog(1, `Combat ended. Cleaning up items for combatants in Combat ID: ${combat.id}`);
 
-    // Iterate through all combatants in the combat encounter
-    for (const combatant of combat.combatants) {
-        const actor = combatant.actor;
-        if (!actor || actor.type !== 'character') {
-            debugLog(`Actor associated with combatant ${combatant.name} not valid`);
-            continue;
-        }
-		
-        // Perform cleanup of Quick Alchemy items created during combat
-        await deleteTempItems(actor);
-    }
+		// Iterate through all combatants in the combat encounter
+		for (const combatant of combat.combatants) {
+			const actor = combatant.actor;
+			// Make sure they exist and are a character
+			if (!actor || actor.type !== 'character') {
+				debugLog(1, `Actor associated with combatant ${combatant.name} not valid`);
+				continue;
+			}
+			// Perform cleanup of temporary Quick Alchemy items created during combat
+			await deleteTempItems(actor);
+			await deleteTempItems(actor, true);
+		}
+	}
 });
 
 /*
@@ -110,35 +148,37 @@ Hooks.on("renderChatMessage", (message, html) => {
 	renderChatMessage Hook for collapsable messages
 */
 Hooks.on("renderChatMessage", (message, html) => {
-    debugLog("Hook called for message:", message);
-
-    // Check if Workbench is installed and its collapse setting is enabled
+	let messageHook = `Hook called for message from '${message.speaker?.alias || message.flavor || "Unknown"}'`;
+	
+	// Process only messages with the alias "Quick Alchemy"
+    if (message.speaker.alias !== "Quick Alchemy") {
+        messageHook = `${messageHook}\n -> Skipping non-Quick Alchemy message.`;
+		debugLog(messageHook);
+        return;
+    }
+    
+	// Check if Workbench is installed and its collapse setting is enabled
     const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
     const workbenchCollapseEnabled = isWorkbenchInstalled
         ? game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent")
         : false;
-    debugLog("PF2e Workbench installed:", isWorkbenchInstalled);
-    debugLog("Workbench collapse setting enabled:", workbenchCollapseEnabled);
+    messageHook = `${messageHook}\n -> PF2e Workbench installed: ${isWorkbenchInstalled}`;
+    messageHook = `${messageHook}\n -> Workbench collapse setting enabled: ${workbenchCollapseEnabled}`;
 
     // Check your module's collapse setting
     const collapseChatDesc = getSetting("collapseChatDesc");
-    debugLog("Your module collapse setting enabled:", collapseChatDesc);
+    messageHook = `${messageHook}\n -> Your module collapse setting enabled ${collapseChatDesc}`;
 
     // If Workbench is managing the collapsible content, skip your logic
     if (workbenchCollapseEnabled === "collapsedDefault" || workbenchCollapseEnabled === "nonCollapsedDefault") {
-        debugLog("Skipping collapsible functionality due to Workbench setting.");
-        return;
-    }
-
-    // Process only messages with the alias "Quick Alchemy"
-    if (message.speaker.alias !== "Quick Alchemy") {
-        debugLog("Skipping non-Quick Alchemy message.");
+        messageHook = `${messageHook}\n -> Skipping collapsible functionality due to Workbench setting.`;
+		debugLog(messageHook);
         return;
     }
 
     // Add collapsible functionality only if your module's setting is enabled
     if (collapseChatDesc) {
-        debugLog("Adding collapsible functionality.");
+        messageHook = `${messageHook}\n -> Adding collapsible functionality.`;
 
         // Collapse the content by default
         html.find('.collapsible-content').each((_, element) => {
@@ -153,6 +193,7 @@ Hooks.on("renderChatMessage", (message, html) => {
 
             if (!collapsibleContent) {
                 debugLog(2, "No collapsible content found.");
+				debugLog(messageHook);
                 return;
             }
 
@@ -166,11 +207,10 @@ Hooks.on("renderChatMessage", (message, html) => {
             debugLog("Toggle icon classes updated");
         });
     } else {
-        debugLog("Collapsible functionality disabled; skipping.");
+        messageHook = `${messageHook}\n -> Collapsible functionality disabled; skipping.`;
     }
+	debugLog(messageHook);
 });
-
-
 
 Hooks.on("ready", () => {
   console.log("%cPF2e Alchemist Remaster Duct Tape (QuickAlchemy.js) loaded", "color: aqua; font-weight: bold;");
@@ -179,24 +219,39 @@ Hooks.on("ready", () => {
 });
 	/*
 		Function to clear temporary items from inventory
-		
 	*/
-	async function deleteTempItems(actor){
-		debugLog(`deleteTempItems(${actor.name}) called`);
-		// Perform cleanup of Quick Alchemy items created during the turn
-		const quickAlchemyItems = actor.items.filter(item => 
-			item.name.endsWith("(*Temporary)"));
-		const removedItems = []; // to collect list of items removed
+	async function deleteTempItems(actor, quickVial = false){
+		debugLog(`Deleting temp items for ${actor.name}, Quick Vials = ${quickVial}`);
+		
+		let quickAlchemyItems = [];
+		// See if we are deleting Quick Vials (at enf of alchemist turn)
+		 if (quickVial) {
+			// Get Quick Vial Items (ensure slug exists)
+			quickAlchemyItems = Array.from(actor.items.values()).filter(item =>
+				item.system.slug && item.system.slug.startsWith("quick-vial")
+			);
+		} else {
+			// Get consumables created with Quick Alchemy (ensure name exists)
+			quickAlchemyItems = Array.from(actor.items.values()).filter(item =>
+				item.name && item.name.endsWith("(*Temporary)")
+			);
+		}
+		
+		const removedItems = []; // Collect list of removed items
 		for (const item of quickAlchemyItems) {
-			removedItems.push(item.name);
-			await item.delete();
-			debugLog(`Removed ${item.name} from ${actor.name}.`);
+			try {
+				removedItems.push(item.name);
+				await item.delete();
+				debugLog(`Removed ${item.name} from ${actor.name}.`);
+			} catch (err) {
+				debugLog(`Failed to remove ${item.name} from ${actor.name}. Error:`, err);
+			}
 		}
 
 		// Send a single chat message summarizing removed items
 		if (removedItems.length > 0) {
 			const messageContent = `
-				<p>The following items created with Quick Alchemy were removed from ${actor.name}'s inventory:</p>
+				<p>The following temporary items created with Quick Alchemy were removed from ${actor.name}'s inventory:</p>
 				<ul>${removedItems.map(name => `<li>${name}</li>`).join('')}</ul>
 			`;
 			ChatMessage.create({
@@ -525,7 +580,7 @@ Hooks.on("ready", () => {
 				const itemFormula = actorLevel >= 18 ? "4d6" : actorLevel >= 12 ? "3d6" : actorLevel >= 4 ? "2d6" : "1d6";
 				modifiedItem.system.level.value = itemLevel;
 				modifiedItem.system.damage.formula = itemFormula;
-
+				
 				// Rename the item
 				modifiedItem.name += " (*Temporary)";
 			
@@ -1531,8 +1586,13 @@ Hooks.on("ready", () => {
 				label: "OK",
 				callback: () => quickAlchemyDialog.close()
 			};
+			dbbuttons['vial'] = {
+				icon: "<i class='fas fa-vial'></i>",
+				label: "Quick Vial",
+				callback: () => displayCraftingDialog(actor, 'vial')
+			};
 			content = `<p>You have no more Versatile Vials.</p>`;
-			if (!isArchetype) content = `${content} You must spend 10 minutes searching for reagents to craft more.`;
+			if (!isArchetype) content = `${content} You must spend 10 minutes searching for reagents to craft more.<br/><br/>`;
 		} else {
 			dbbuttons['weapon'] = {
 				icon: "<i class='fas fa-bomb'></i>",

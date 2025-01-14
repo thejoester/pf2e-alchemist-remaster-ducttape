@@ -97,7 +97,7 @@ export function getSetting(settingName, returnIfError = false) {
     try {
         // Attempt to retrieve the setting value
         const value = game.settings.get("pf2e-alchemist-remaster-ducttape", settingName);
-        debugLog(1, `Successfully retrieved setting "${settingName}":`, value);
+        //debugLog(1, `Successfully retrieved setting "${settingName}":`, value);
         return value;
     } catch (error) {
         // Log the error and return undefined or a default value
@@ -201,14 +201,25 @@ Hooks.once("init", () => {
 */
 	
 	// Quick Alchemy: remove temporary items at end of turn
-	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItems", {
-		name: "Quick Alchemy: remove temporary items at end of turn?",
-		hint: "If enabled, will automatically remove items crafted with quick alchemy (per RAW).",
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtTurnChange", {
+		name: "Quick Alchemy: remove temporary items at start of turn?",
+		hint: "If enabled, will automatically remove items crafted with quick alchemy at the start of character turn (per RAW).",
 		scope: "world",
 		config: true,
 		default: true,
 		type: Boolean,
-		requiresReload: true,
+		requiresReload: false,
+	});
+	
+	// Quick Alchemy: remove temporary items at end of combat
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtEndCombat", {
+		name: "Quick Alchemy: remove temporary items at end of combat?",
+		hint: "If enabled, will automatically remove items crafted with quick alchemy at the end of combat.",
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+		requiresReload: false,
 	});
 	
 	// Send attack messages to chat
@@ -219,7 +230,7 @@ Hooks.once("init", () => {
 		config: true,    
 		default: false,  
 		type: Boolean,   
-		requiresReload: true,
+		requiresReload: false,
 	});
 	
 	// Sized Based Alchemy Settings
@@ -238,7 +249,7 @@ Hooks.once("init", () => {
 		onChange: (value) => {
 			console.log(`PF2E Alchemist Remaster Duct Tape | Size-based alchemy mode set to: ${value}`);
 		},
-		requiresReload: true
+		requiresReload: false
 	});
 	
 /* 
@@ -471,7 +482,7 @@ Hooks.once("init", () => {
 			"all": "All"
 		},
 		default: "none", // Default to no logging
-		requiresReload: true
+		requiresReload: false
 	});
 
 	// Log debug status

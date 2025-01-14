@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.12] - 
+### Fixed
+- **Quick Alchemy:** When character had no versatile vials in inventory, it would not allow to create Quick Vial. Now shows option. 
+- **Quick Alchemy:** Corrected when temporary items created by Quick Alchemy are removed from character inventory. 
+  - Quick Vials are removed at the end of the alchemist's turn.
+  - Other infused items with "(\*Temporary)" in the name are deleted at the start of the Alchemist's turn.
+- **Settings:** Removed reload requirement from most settings that do not need them. 
+
 ## [2.5.11] - 2025-01-10
 ### Fixed
 - **Quick Alchemy:** Fixed issue preventing macro to operate (a goblin stole a semicolon!). 
