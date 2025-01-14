@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.5.12] - 
+## [2.5.12] - 2025-01-13
 ### Fixed
 - **Quick Alchemy:** When character had no versatile vials in inventory, it would not allow to create Quick Vial. Now shows option. 
 - **Quick Alchemy:** Corrected when temporary items created by Quick Alchemy are removed from character inventory. 
