@@ -6,20 +6,34 @@ let addFormulasSetting = "disabled";
 let addNewFormulasToChat = false;
 let addFormulasPermission = "gm_only"; 
 let handleLowerFormulasOnLevelUp = "disabled";
+let promptLowerFormulasOnLevelUp = "ask_each_lower";
 
-Hooks.once('ready', () => {
+Hooks.once('ready', async () => {
+	
+	const compendiumName = "pf2e.equipment-srd"; // Target specific compendium
+    const compendium = game.packs.get(compendiumName);
+    if (compendium) {
+        await compendium.getIndex(); // Rebuild the index to include slug
+        debugLog(`Rebuilt index for compendium: ${compendium.metadata.label} (${compendiumName})`);
+    } else {
+        debugLog(3, `Compendium '${compendiumName}' not found.`);
+    }
+	
 	getAlchemistLevels();
 	
 });	
 
 Hooks.once('init', () => {
 	
+	// Configure compendiums to have slug indexable
+	CONFIG.Item.compendiumIndexFields = ["system.slug"];
+	
     // Get Settings
     addFormulasSetting = getSetting("addFormulasOnLevelUp","disabled");
 	handleLowerFormulasOnLevelUp = getSetting("handleLowerFormulasOnLevelUp","disabled");
 	addNewFormulasToChat = getSetting("addNewFormulasToChat");
 	addFormulasPermission = getSetting("addFormulasPermission","actor_owner");
-	
+	promptLowerFormulasOnLevelUp = getSetting('promptLowerFormulasOnLevelUp');
 	
     
 
@@ -68,7 +82,7 @@ Hooks.once('init', () => {
 */
 async function grantAlchemistFormulas(actor, newLevel) {
     debugLog(`Checking for new formulas for ${actor.name} for level ${newLevel}.`);
-    
+
     const compendiumName = 'pf2e.equipment-srd';
     const compendium = game.packs.get(compendiumName);
     if (!compendium) {
@@ -81,12 +95,12 @@ async function grantAlchemistFormulas(actor, newLevel) {
     const knownFormulaUUIDs = actor.system.crafting.formulas.map(f => (typeof f.uuid === 'string' ? f.uuid : null)).filter(Boolean);
     debugLog(`Known formula UUIDs for ${actor.name}:\n ${knownFormulaUUIDs.join(' \n')}`);
 
-    // Extract base formula names from the known UUIDs
-    const knownBaseFormulas = await Promise.all(
+    // Extract base slugs from the known UUIDs
+    const knownBaseSlugs = await Promise.all(
         knownFormulaUUIDs.map(async (uuid) => {
             try {
                 const item = await fromUuid(uuid);
-                return item ? extractBaseName(item.name) : null;
+                return item ? extractBaseSlug(item.system.slug) : null;
             } catch (error) {
                 debugLog(3, `Error extracting item for UUID: ${uuid} | Error: ${error.message}`, error);
                 return null;
@@ -94,27 +108,26 @@ async function grantAlchemistFormulas(actor, newLevel) {
         })
     );
 
-	// Filters out any duplicates and false values from the knownBaseFormulas array.
-    const deduplicatedBaseNames = [...new Set(knownBaseFormulas.filter(Boolean))];
-	debugLog("Deduplicated base names:", deduplicatedBaseNames);
-	
-    if (deduplicatedBaseNames.length === 0) {
-        debugLog(`No base formulas found for ${actor.name}.`);
+    // Filter out duplicates and null values
+    const deduplicatedBaseSlugs = [...new Set(knownBaseSlugs.filter(Boolean))];
+    debugLog("Deduplicated base slugs:", deduplicatedBaseSlugs);
+
+    if (deduplicatedBaseSlugs.length === 0) {
+        debugLog(2, `No base formulas found for ${actor.name}.`);
         return;
     }
-	
-	// Get the index from the compendium
-    const index = await compendium.getIndex();
-	debugLog("Compendium index:", index);
-    
-	// Pre-filter the index based on names
+
+	const index = compendium.index; // Use the prebuilt index
+	debugLog("Compendium index (prebuilt):", index);
+
     const filteredIndex = index.filter(entry => {
-        const normalizedName = extractBaseName(entry.name); // Normalize entry name
-        return deduplicatedBaseNames.some(baseName => normalizedName === baseName);
+        const baseSlug = extractBaseSlug(entry.system.slug);
+        return deduplicatedBaseSlugs.includes(baseSlug);
     });
+    debugLog("Filtered index:", filteredIndex);
 
     // Fetch the full documents for relevant entries
-	let fetchedItems = ""; // placeholder for list of fetched items
+    let fetchedItems = ""; // Placeholder for list of fetched items
     const relevantItems = await Promise.all(
         filteredIndex.map(async (entry) => {
             try {
@@ -127,60 +140,39 @@ async function grantAlchemistFormulas(actor, newLevel) {
             }
         })
     );
-	debugLog(`Fetched items:\n${fetchedItems}`);
-	
-	const relevantItemsFiltered = relevantItems.filter(Boolean);
+    debugLog(`Fetched items:\n${fetchedItems}`);
+
+    const relevantItemsFiltered = relevantItems.filter(Boolean);
     debugLog("Relevant items:", relevantItemsFiltered);
-	
-	// Deduplicate by base name, keeping the highest level
-    const uniqueItemsByBaseName = relevantItemsFiltered.reduce((map, item) => {
-        const baseName = extractBaseName(item.name); // Normalize item name
-        if (!baseName) {
-            debugLog(`No baseName value for item "${item.name}"`);
-            return map;
-        }
 
-        const existing = map.get(baseName);
-        if (!existing || item.system.level.value > existing.system.level.value) {
-            map.set(baseName, item); // Keep the highest-level item
-        }
-        return map;
-    }, new Map());
+    // Get previous level from actor flag
+    const previousLevel = actor.getFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel') || 1;
+    debugLog(`Previous level for ${actor.name}: ${previousLevel}`);
 
-    const uniqueItems = Array.from(uniqueItemsByBaseName.values());
-    debugLog("Unique items by base name:", uniqueItems);
-	
-	// Ger Previous level from actor flag
-	const previousLevel = actor.getFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel') || 1;
-	debugLog(`previous level for ${actor.name}: ${previousLevel}`);
+    // Filter items by level, traits, and rarity
+    const filteredItems = relevantItemsFiltered.filter(item => {
+        const isAlchemical = item.system.traits?.value?.includes('alchemical');
+        const isCommon = item.system.traits?.rarity === 'common';
+        const levelCheck = item.system.level.value <= newLevel && item.system.level.value > previousLevel;
+        return isAlchemical && isCommon && levelCheck;
+    });
 
-	// Filter items to only items that match settings & have common trait & have alchemical trait
-	const filteredItems = relevantItems.filter(item => {
-		const isAlchemical = item.system.traits?.value?.includes('alchemical');
-		const isCommon = item.system.traits?.rarity === 'common';
-		const levelCheck = item.system.level.value <= newLevel && item.system.level.value > previousLevel;
-	
-		return isAlchemical && isCommon && levelCheck;
-	});
-	
-	debugLog("Filtered items: ", filteredItems);
+    debugLog("Filtered items:", filteredItems);
 
     const relevantUUIDs = filteredItems.map(item => `Compendium.${compendiumName}.Item.${item.id}`);
     debugLog(`Relevant UUIDs:\n${relevantUUIDs.join('\n')}`);
-	
-    const newFormulaUUIDs = relevantUUIDs.filter(uuid => !knownFormulaUUIDs.includes(uuid));
-    debugLog(`New formula UUIDs:\n${relevantUUIDs.join('\n')}`);
 
-    // Check if no new formulas to add
+    const newFormulaUUIDs = relevantUUIDs.filter(uuid => !knownFormulaUUIDs.includes(uuid));
+    debugLog(`New formula UUIDs:\n${newFormulaUUIDs.join('\n')}`);
+
     if (newFormulaUUIDs.length === 0) {
         debugLog(`No new formulas to add for ${actor.name}.`);
         return;
     }
 
-    // List formulas in console if we are debugging
-    debugLog(`Adding the following new formula UUIDs to ${actor.name}:\n${newFormulaUUIDs.join('\n')}`);
-
-    // Collect added formulas for the chat message
+    debugLog(`Adding the following new formulas to ${actor.name}:\n${newFormulaUUIDs.join('\n')}`);
+    
+	// Collect added formulas for the chat message
     let addedFormulas = [];
   
 	// check setting to see if we asking for each formula
@@ -253,6 +245,7 @@ async function grantAlchemistFormulas(actor, newLevel) {
     }
 }
 
+
 /*
 	Function to extract base name ignoring parenthisis and contents within, 
 	as well as commas and text after
@@ -264,48 +257,54 @@ function extractBaseName(name) {
 		.trim();
 }
 
+// Helper function to extract base slug
+function extractBaseSlug(slug) {
+	return slug ? slug.split('-').slice(0, -1).join('-') : null;
+}
+
 /*
 	Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
 */
 async function removeLowerLevelFormulas(actor) {
-	
     const knownFormulas = actor.system.crafting.formulas;
     const formulaMap = new Map(); // Map to store the highest-level version of each base formula
     let removedFormulas = []; // Track removed formulas
 
     // Iterate through known formulas
     for (const formula of knownFormulas) {
-		const item = await fromUuid(formula.uuid);
-		if (!item) {
-			console.warn(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
-			continue;
-		}
+        const item = await fromUuid(formula.uuid);
+        if (!item) {
+            debugLog(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
+            continue;
+        }
 
-		// Extract the base formula name
-		const baseName = extractBaseName(item.name);
-		const level = Number(item.system.level.value);
-		
-		// Compare levels and store the highest-level version
-		const currentLevel = formulaMap.has(baseName) ? formulaMap.get(baseName).level : null;
+        // Extract the base formula slug
+        const baseSlug = extractBaseSlug(item.system.slug);
+        if (!baseSlug) {
+            debugLog(`Skipping formula with invalid slug: ${item.name}`);
+            continue;
+        }
 
-		if (!formulaMap.has(baseName) || currentLevel < level) {
-			// If a lower-level version exists, move it to removedFormulas
-			if (formulaMap.has(baseName)) {
-				const lowerLevelFormula = formulaMap.get(baseName);
-				removedFormulas.push(lowerLevelFormula);
-				debugLog(`Replacing ${lowerLevelFormula.name} (Level ${lowerLevelFormula.level}) with ${item.name} (Level ${level}) as the highest-level version of ${baseName}.`);
-			}
-			// Set the current formula as the highest-level version
-			formulaMap.set(baseName, { uuid: formula.uuid, level, name: item.name });
-			debugLog(`Setting ${item.name} (Level ${level}) as the highest-level version of ${baseName}.`);
-		} else {
-			// If the current formula is lower level, mark it for removal
-			removedFormulas.push({ uuid: formula.uuid, name: item.name, level });
-			debugLog(`Marking ${item.name} (Level ${level}) for removal.`);
-		}
-		debugLog(`Removed formulas: ${removedFormulas.map(f => `${f.name} (Level ${f.level})`).join(', ')}`);
+        const level = Number(item.system.level.value);
+        const currentLevel = formulaMap.has(baseSlug) ? formulaMap.get(baseSlug).level : null;
 
-	}
+        // Compare levels and store the highest-level version
+        if (!formulaMap.has(baseSlug) || currentLevel < level) {
+            // If a lower-level version exists, move it to removedFormulas
+            if (formulaMap.has(baseSlug)) {
+                const lowerLevelFormula = formulaMap.get(baseSlug);
+                removedFormulas.push(lowerLevelFormula);
+                debugLog(`Replacing ${lowerLevelFormula.name} (Level ${lowerLevelFormula.level}) with ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
+            }
+            // Set the current formula as the highest-level version
+            formulaMap.set(baseSlug, { uuid: formula.uuid, level, name: item.name });
+            debugLog(`Setting ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
+        } else {
+            // If the current formula is lower level, mark it for removal
+            removedFormulas.push({ uuid: formula.uuid, name: item.name, level, baseSlug });
+            debugLog(`Marking ${item.name} (Level ${level}) for removal.`);
+        }
+    }
 
     // If no formulas to remove, exit early
     if (removedFormulas.length === 0) {
@@ -313,8 +312,8 @@ async function removeLowerLevelFormulas(actor) {
         return;
     }
 
-    // Handle ask_all: Compile and prompt for all at once
-    if (addFormulasSetting === "ask_all") {
+    // Handle ask_all_lower: Compile and prompt for all at once
+    if (promptLowerFormulasOnLevelUp === "ask_all_lower") {
         const confirmed = await showFormulaListDialog(actor, removedFormulas.map(f => ({
             uuid: f.uuid,
             name: f.name,
@@ -325,17 +324,37 @@ async function removeLowerLevelFormulas(actor) {
             debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
             return; // Exit if user cancels
         }
-    } else if (addFormulasSetting === "ask_each") {
-        // Handle ask_each: Prompt for each formula individually
-        const keptFormulas = [];
-        for (const formula of removedFormulas) {
-            const confirmed = await showFormulaDialog(actor, { name: formula.name, level: formula.level }, formula.level, true);
-            if (!confirmed) {
-                keptFormulas.push(formula); // Keep formulas user declined to remove
-            }
-        }
-        removedFormulas = removedFormulas.filter(f => !keptFormulas.includes(f)); // Exclude kept formulas
-    }
+    } else if (promptLowerFormulasOnLevelUp === "ask_each_lower") {
+		// Handle ask_each_lower: Prompt for each formula individually
+		const keptFormulas = [];
+		for (const formula of removedFormulas) {
+			const confirmed = await showFormulaDialog(actor, { name: formula.name, level: formula.level }, formula.level, true);
+			if (!confirmed) {
+				keptFormulas.push(formula); // Keep formulas user declined to remove
+			}
+		}
+
+		debugLog(`Kept formulas: ${keptFormulas.map(f => f.name).join(', ')}`);
+
+		// Filter out formulas to remove
+		removedFormulas = removedFormulas.filter(f => {
+			if (keptFormulas.some(kf => kf.uuid === f.uuid)) {
+				debugLog(`Keeping formula: ${f.name} (Level ${f.level})`);
+				// Ensure the kept formula is added to formulaMap
+				formulaMap.set(f.uuid, { uuid: f.uuid, level: f.level, name: f.name });
+				return false; // Exclude from removal
+			} else {
+				debugLog(`Removing formula: ${f.name} (Level ${f.level})`);
+				return true; // Include in removal
+			}
+		});
+
+		debugLog(
+			`Final formulaMap after ask_each_lower: ${Array.from(formulaMap.entries())
+				.map(([uuid, data]) => `${data.name} (Level ${data.level})`)
+				.join(', ')}`
+		);
+	}
 
     // Filter out formulas to keep
     const uuidsToKeep = Array.from(formulaMap.values()).map(entry => entry.uuid);
@@ -415,7 +434,6 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
     });
 }
 
-
 /*
 	Show a dialog to ask if the user wants to add a formula.
 */
@@ -445,7 +463,6 @@ async function showFormulaDialog(actor, formula, level, isRemoving = false) {
         }).render(true);
     });
 }
-
 
 /*
   Function to check if actor has any active logged in owners
@@ -500,8 +517,6 @@ function canManageFormulas(actor) {
 
     return false;
 }
-
-
 
 /*
 	Function to get all Alchemists current level at start

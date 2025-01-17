@@ -106,7 +106,6 @@ export function getSetting(settingName, returnIfError = false) {
     }
 }
 
-
 /*
 	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
 */
@@ -289,7 +288,7 @@ Hooks.once("init", () => {
 			auto: "Auto"
 		},
 		default: "ask_all",
-		requiresReload: true,
+		requiresReload: false,
 	});
 	
 	// How to handle lower level formulas
@@ -307,7 +306,23 @@ Hooks.once("init", () => {
 			remove_lower: "Remove lower level versions."
 		},
 		default: "remove_lower",
-		requiresReload: true,
+		requiresReload: false,
+	});
+	
+	// Prompt setting for handleLowerFormulasOnLevelUp
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "promptLowerFormulasOnLevelUp", {
+		name: "Level Up: Prompt setting for lower level forumulas",
+		hint: "'Auto': Automatically removes lower level formulas, 'Ask for All': ask once for all, 'Ask for Each': Ask for each formula",
+		scope: "world",
+		config: true,
+		type: String,
+		choices: {
+			auto_lower: "Auto",
+			ask_all_lower: "Ask for All",
+			ask_each_lower: "Ask for Each"
+		},
+		default: "ask_all_lower",
+		requiresReload: false,
 	});
 	
 	// Who is asked by default to add/remove formulas
@@ -322,7 +337,7 @@ Hooks.once("init", () => {
 			actor_owner: "Owner"
 		},
 		default: "actor_owner",
-		requiresReload: true,
+		requiresReload: false,
 	});
 	
 	// add list of new formulas learned to chat
@@ -333,7 +348,7 @@ Hooks.once("init", () => {
 		config: true,
 		type: Boolean,
 		default: true,
-		requiresReload: true,
+		requiresReload: false,
 	});
 	
 	// Disable addNewFormulasToChat if addFormulasOnLevelUp is set to 'disabled'
@@ -370,10 +385,10 @@ Hooks.once("init", () => {
 		});
 	});
 
-	
 /*
 	Vial Search 
 */
+	// Enable Vial Search
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
 		name: "Vial search reminder",
 		hint: "When at least 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
@@ -383,7 +398,18 @@ Hooks.once("init", () => {
 		default: true,  
 		requiresReload: true,
 	});
-
+	
+	// Suppress "Max Vials" Message
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "maxVialsMessage", {
+		name: "Display when alchemist has max vials already",
+		hint: "Enable/Disable max vials messages in chat.",
+		scope: "world", 
+		config: true,    
+		type: Boolean,   
+		default: false,  
+		requiresReload: false,
+	});
+	
 /* 
 	Searchable Formulas
 */

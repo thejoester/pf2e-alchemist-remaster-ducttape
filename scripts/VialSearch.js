@@ -150,11 +150,13 @@ Hooks.once('init', () => {
 					);
 					await message.update({ content: updatedContent });
 				} else {
-					// Send chat message visible to all players
-					ChatMessage.create({
-						content: `${actor.name} already has the maximum number of versatile vials.`,
-						speaker: { alias: "Game Master" }
-					});
+					if (getSetting('maxVialsMessage')) { // Check settings if we are sending messages
+						// Send chat message visible to all players
+						ChatMessage.create({
+							content: `${actor.name} already has the maximum number of versatile vials.`,
+							speaker: { alias: "Game Master" }
+						});
+					}
 				}	
 			}
 		});
