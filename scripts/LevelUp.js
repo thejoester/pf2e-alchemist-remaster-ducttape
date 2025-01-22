@@ -10,13 +10,26 @@ let promptLowerFormulasOnLevelUp = "ask_each_lower";
 
 Hooks.once('ready', async () => {
 	
-	const compendiumName = "pf2e.equipment-srd"; // Target specific compendium
+	// Always index `pf2e.equipment-srd`
+    const compendiumName = "pf2e.equipment-srd";
     const compendium = game.packs.get(compendiumName);
     if (compendium) {
-        await compendium.getIndex(); // Rebuild the index to include slug
+        await compendium.getIndex(); // Index with the updated fields
         debugLog(`Rebuilt index for compendium: ${compendium.metadata.label} (${compendiumName})`);
     } else {
         debugLog(3, `Compendium '${compendiumName}' not found.`);
+    }
+
+    // Index user-added compendiums
+    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
+    for (const userCompendium of userDefinedCompendiums) {
+        const userPack = game.packs.get(userCompendium);
+        if (userPack) {
+            await userPack.getIndex(); // Index the user-defined compendium
+            debugLog(`Rebuilt index for user compendium: ${userPack.metadata.label} (${userCompendium})`);
+        } else {
+            debugLog(2, `User-defined compendium '${userCompendium}' not found.`);
+        }
     }
 	
 	getAlchemistLevels();
@@ -83,17 +96,12 @@ Hooks.once('init', () => {
 async function grantAlchemistFormulas(actor, newLevel) {
     debugLog(`Checking for new formulas for ${actor.name} for level ${newLevel}.`);
 
-    const compendiumName = 'pf2e.equipment-srd';
-    const compendium = game.packs.get(compendiumName);
-    if (!compendium) {
-        ui.notifications.error(`Compendium '${compendiumName}' not found.`);
-        debugLog(3, `Compendium '${compendiumName}' not found.`);
-        return;
-    }
+    const systemCompendium = 'pf2e.equipment-srd';
+    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
 
     // Extract the UUIDs from the actor's known formulas
     const knownFormulaUUIDs = actor.system.crafting.formulas.map(f => (typeof f.uuid === 'string' ? f.uuid : null)).filter(Boolean);
-    debugLog(`Known formula UUIDs for ${actor.name}:\n ${knownFormulaUUIDs.join(' \n')}`);
+    debugLog(`Known formula UUIDs for ${actor.name}:${knownFormulaUUIDs.join('\n')}`);
 
     // Extract base slugs from the known UUIDs
     const knownBaseSlugs = await Promise.all(
@@ -117,65 +125,79 @@ async function grantAlchemistFormulas(actor, newLevel) {
         return;
     }
 
-	const index = compendium.index; // Use the prebuilt index
-	debugLog("Compendium index (prebuilt):", index);
+    const itemsToCheck = []; // Collect items from all compendiums
 
-    const filteredIndex = index.filter(entry => {
-        const baseSlug = extractBaseSlug(entry.system.slug);
-        return deduplicatedBaseSlugs.includes(baseSlug);
-    });
-    debugLog("Filtered index:", filteredIndex);
+    // 1. Process system compendium
+    const processCompendium = async (compendiumKey) => {
+        const pack = game.packs.get(compendiumKey);
+        if (!pack) {
+            debugLog(2, `Compendium '${compendiumKey}' not found.`);
+            return;
+        }
 
-    // Fetch the full documents for relevant entries
-    let fetchedItems = ""; // Placeholder for list of fetched items
-    const relevantItems = await Promise.all(
-        filteredIndex.map(async (entry) => {
-            try {
-                const item = await compendium.getDocument(entry._id);
-                fetchedItems += `${item.name}\n`;
-                return item;
-            } catch (error) {
-                debugLog(3, `Error fetching item for entry ${entry.name}: ${error.message}`);
-                return null;
-            }
-        })
-    );
-    debugLog(`Fetched items:\n${fetchedItems}`);
+        const index = pack.index; // Use the prebuilt index
+        debugLog(`Compendium index for ${compendiumKey}:`, index);
 
-    const relevantItemsFiltered = relevantItems.filter(Boolean);
-    debugLog("Relevant items:", relevantItemsFiltered);
+        const filteredIndex = index.filter(entry => {
+            const baseSlug = extractBaseSlug(entry.system.slug);
+            return deduplicatedBaseSlugs.includes(baseSlug);
+        });
+        debugLog(`Filtered index for ${compendiumKey}:`, filteredIndex);
 
-    // Get previous level from actor flag
+        // Fetch the full documents for relevant entries
+        let fetchedItems = ""; // Placeholder for list of fetched items
+        const relevantItems = await Promise.all(
+            filteredIndex.map(async (entry) => {
+                try {
+                    const item = await pack.getDocument(entry._id);
+                    fetchedItems += `${item.name}\n`;
+                    return item;
+                } catch (error) {
+                    debugLog(3, `Error fetching item for entry ${entry.name}: ${error.message}`);
+                    return null;
+                }
+            })
+        );
+        debugLog(`Fetched items from ${compendiumKey}:${fetchedItems}`);
+        itemsToCheck.push(...relevantItems.filter(Boolean));
+    };
+
+    await processCompendium(systemCompendium);
+
+    // 2. Process user-defined compendiums
+    for (const compendiumKey of userDefinedCompendiums) {
+        await processCompendium(compendiumKey);
+    }
+
+    // 3. Filter items by level, traits, and rarity
     const previousLevel = actor.getFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel') || 1;
     debugLog(`Previous level for ${actor.name}: ${previousLevel}`);
 
-    // Filter items by level, traits, and rarity
-    const filteredItems = relevantItemsFiltered.filter(item => {
+    const filteredItems = itemsToCheck.filter(item => {
         const isAlchemical = item.system.traits?.value?.includes('alchemical');
         const isCommon = item.system.traits?.rarity === 'common';
         const levelCheck = item.system.level.value <= newLevel && item.system.level.value > previousLevel;
         return isAlchemical && isCommon && levelCheck;
     });
 
-    debugLog("Filtered items:", filteredItems);
+    debugLog(`Filtered items for ${actor.name}:`, filteredItems);
 
-    const relevantUUIDs = filteredItems.map(item => `Compendium.${compendiumName}.Item.${item.id}`);
-    debugLog(`Relevant UUIDs:\n${relevantUUIDs.join('\n')}`);
-
-    const newFormulaUUIDs = relevantUUIDs.filter(uuid => !knownFormulaUUIDs.includes(uuid));
-    debugLog(`New formula UUIDs:\n${newFormulaUUIDs.join('\n')}`);
+    const newFormulaUUIDs = filteredItems.map(item => item.uuid);
+    debugLog(`New formula UUIDs:
+${newFormulaUUIDs.join('\n')}`);
 
     if (newFormulaUUIDs.length === 0) {
         debugLog(`No new formulas to add for ${actor.name}.`);
         return;
     }
 
-    debugLog(`Adding the following new formulas to ${actor.name}:\n${newFormulaUUIDs.join('\n')}`);
-    
-	// Collect added formulas for the chat message
+    debugLog(`Adding the following new formulas to ${actor.name}:
+${newFormulaUUIDs.join('\n')}`);
+
+    // Collect added formulas for the chat message
     let addedFormulas = [];
-  
-	// check setting to see if we asking for each formula
+
+    // Check setting to see if we are asking for each formula
     if (addFormulasSetting === "ask_each") {
         for (const uuid of newFormulaUUIDs) {
             const item = await fromUuid(uuid);
@@ -186,43 +208,43 @@ async function grantAlchemistFormulas(actor, newLevel) {
                 const newFormulaObject = { uuid };
                 const updatedFormulaObjects = [...actor.system.crafting.formulas, newFormulaObject];
                 try {
-                  await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+                    await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
                 } catch (error) {
-                  debugLog(`Error updating formulas for ${actor.name}: ${error.message}`);
+                    debugLog(`Error updating formulas for ${actor.name}: ${error.message}`);
                 }
                 debugLog(`${actor.name} has learned the formula for ${item.name}.`);
-				addedFormulas.push(item.name);		
+                addedFormulas.push(item.name);
             } else {
                 debugLog(`User declined to add formula ${item.name} to ${actor.name}.`);
             }
         }
-		// Send new formula list to chat
-		newFormulasChatMsg(actor.name,addedFormulas.join('<br>'),addedFormulas.length);
+        // Send new formula list to chat
+        newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
     } else if (addFormulasSetting === "ask_all") { // If we are asking for all at once
-		const formulasToPrompt = [];
-		for (const uuid of newFormulaUUIDs) {
-			const item = await fromUuid(uuid);
-			if (!item) continue;
-			formulasToPrompt.push({ uuid, name: item.name, level: item.system.level.value });
-		}
-		if (formulasToPrompt.length > 0) { // Make sure list is not empty
-			const formulaNames = formulasToPrompt.map(f => f.name);
+        const formulasToPrompt = [];
+        for (const uuid of newFormulaUUIDs) {
+            const item = await fromUuid(uuid);
+            if (!item) continue;
+            formulasToPrompt.push({ uuid, name: item.name, level: item.system.level.value });
+        }
+        if (formulasToPrompt.length > 0) { // Make sure list is not empty
+            const formulaNames = formulasToPrompt.map(f => f.name);
             // Add the formula names to the list
             addedFormulas.push(...formulaNames);
-			
-			// Show dialog with all formulas to add 
-			const confirmed = await showFormulaListDialog(actor, formulasToPrompt); 
-			if (confirmed) { // If player clicked "yes"
-				const newFormulaObjects = formulasToPrompt.map(f => ({ uuid: f.uuid }));
-				const updatedFormulaObjects = [...actor.system.crafting.formulas, ...newFormulaObjects];
-				await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
-				debugLog(`${actor.name} has learned ${formulasToPrompt.length} new formulas.`);
-				// Send new formula list to chat
-				newFormulasChatMsg(actor.name,addedFormulas.join('<br>'),addedFormulas.length);
-			} else {
-				debugLog(`User declined to add formulas to ${actor.name}.`);
-			}
-		}
+
+            // Show dialog with all formulas to add
+            const confirmed = await showFormulaListDialog(actor, formulasToPrompt);
+            if (confirmed) { // If player clicked "yes"
+                const newFormulaObjects = formulasToPrompt.map(f => ({ uuid: f.uuid }));
+                const updatedFormulaObjects = [...actor.system.crafting.formulas, ...newFormulaObjects];
+                await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+                debugLog(`${actor.name} has learned ${formulasToPrompt.length} new formulas.`);
+                // Send new formula list to chat
+                newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
+            } else {
+                debugLog(`User declined to add formulas to ${actor.name}.`);
+            }
+        }
     } else if (addFormulasSetting === "auto") {
         const newFormulaObjects = newFormulaUUIDs.map(uuid => ({ uuid }));
         const updatedFormulaObjects = [...actor.system.crafting.formulas, ...newFormulaObjects];
@@ -237,14 +259,13 @@ async function grantAlchemistFormulas(actor, newLevel) {
             }));
             // Add the formula names to the list
             addedFormulas.push(...formulaNames);
-			// Send new formula list to chat
-			newFormulasChatMsg(actor.name,addedFormulas.join('<br>'),addedFormulas.length);
+            // Send new formula list to chat
+            newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
         } catch (error) {
             debugLog(3, `Error updating formulas for ${actor.name}: ${error.message}`);
         }
     }
 }
-
 
 /*
 	Function to extract base name ignoring parenthisis and contents within, 
@@ -441,7 +462,7 @@ async function showFormulaDialog(actor, formula, level, isRemoving = false) {
     return new Promise((resolve) => {
         const title = isRemoving ? "Remove Formula" : "New Formula Discovered";
         const content = isRemoving
-            ? `<p>${actor.name} has the formula for <strong>${formula.name}</strong> (Level ${level}). Do you want to remove it?</p>`
+            ? `<p>${actor.name} has a higher version of formula <strong>${formula.name}</strong> (Level ${level}). Do you want to remove it?</p>`
             : `<p>${actor.name} has unlocked the formula for <strong>${formula.name}</strong> (Level ${level}). Do you want to add it?</p>`;
 
         new Dialog({

@@ -1,6 +1,8 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 
 let isArchetype = false;
+const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.5OFfH8W00oz6TeA3";
+const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
 
 // Hook for combat turn change to remove temp items on start of turn
 Hooks.on("combatTurnChange", async (combat, prior, current) => {
@@ -21,7 +23,7 @@ Hooks.on("combatTurnChange", async (combat, prior, current) => {
 			if (!alchemistCheck.qualifies) {
 				debugLog(`Prior combatant ${priorActor.name} is not an alchemist`);
 			} else {
-				debugLog(`End of ${priorActor.name}'s turn, deleting Quick Vials.`);
+				debugLog(`End of ${priorActor.name}'s turn, deleting Quick Vials and poisoned items.`);
 				await deleteTempItems(priorActor, true); // Delete Quick Vials
 			}
 		}
@@ -217,23 +219,26 @@ Hooks.on("ready", () => {
   // Attach function to the global window object
   window.qaCraftAttack = qaCraftAttack;
 });
+	
 	/*
 		Function to clear temporary items from inventory
 	*/
-	async function deleteTempItems(actor, quickVial = false){
-		debugLog(`Deleting temp items for ${actor.name}, Quick Vials = ${quickVial}`);
+	async function deleteTempItems(actor, endTurn = false){
+		debugLog(`Deleting temp items for ${actor.name}, Quick Vials = ${endTurn}`);
 		
 		let quickAlchemyItems = [];
 		// See if we are deleting Quick Vials (at enf of alchemist turn)
-		 if (quickVial) {
+		 if (endTurn) {
 			// Get Quick Vial Items (ensure slug exists)
 			quickAlchemyItems = Array.from(actor.items.values()).filter(item =>
-				item.system.slug && item.system.slug.startsWith("quick-vial")
+				(item.system.slug && item.system.slug.startsWith("quick-vial")) || 
+				(item.name && item.name.includes("(*Poisoned)"))
 			);
+			debugLog(`quickAlchemyItems: `,quickAlchemyItems);
 		} else {
 			// Get consumables created with Quick Alchemy (ensure name exists)
 			quickAlchemyItems = Array.from(actor.items.values()).filter(item =>
-				item.name && item.name.endsWith("(*Temporary)")
+				item.name && (item.name.endsWith("(*Temporary)") || item.name.includes("(*Poisoned)"))
 			);
 		}
 		
@@ -549,6 +554,7 @@ Hooks.on("ready", () => {
 			const newQuantity = existingItem.system.quantity + 1;
 			await existingItem.update({ "system.quantity": newQuantity });
 			debugLog(`Increased quantity of ${existingItem.name} to ${newQuantity}.`);
+			sendConsumableUseMessage(existingItem.uuid);
 			return;
 		} else {	
 		
@@ -595,8 +601,10 @@ Hooks.on("ready", () => {
 
 				// Add the item to the actor's inventory
 				const createdItem = await selectedActor.createEmbeddedDocuments("Item", [modifiedItem]);
-				debugLog(`Crafted ${createdItem[0].name}.`);
-				return healingSlug;
+				debugLog(`Crafted `, createdItem);
+				const createdItemUuid = createdItem[0].uuid; //`Actor.${selectedActor.id}.Item.${createdItem[0].id}`;
+				debugLog(`createdItemUuid: ${createdItemUuid}`);
+				sendConsumableUseMessage(createdItemUuid);
 			} catch (error) {
 				debugLog(3, "Error retrieving Healing Quick Vial from compendium:", error);
 			}
@@ -611,7 +619,7 @@ Hooks.on("ready", () => {
 		end of the turn and ensured that when attacking it is 
 		using the same item.
 	*/
-	async function craftVial(selectedItem, selectedActor) {
+	async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
 		debugLog(`Selected Item: ${selectedItem?.name || "No Name"}`);
 		debugLog(`Selected Actor: ${selectedActor?.name || "No Name"}`);
 		
@@ -625,93 +633,6 @@ Hooks.on("ready", () => {
 		
 		// Get actor size to use for new item size
 		const actorSize = await getActorSize(selectedActor);
-		
-		// If actor has chirurgeon feat
-		if (hasFeat(selectedActor, "chirurgeon")) {
-			// Prompt the user to craft a healing Quick Vial
-			const userConfirmed = await new Promise((resolve) => {
-				new Dialog({
-					title: "Chirurgeon",
-					content: `<p>Do you want to craft a healing Quick Vial?</p>`,
-					buttons: {
-						yes: {
-							label: "Yes",
-							callback: () => resolve(true)
-						},
-						no: {
-							label: "No",
-							callback: () => resolve(false)
-						}
-					},
-					default: "no"
-				}).render(true);
-			});
-			
-			// If the user confirms, proceed with crafting
-			if (userConfirmed) {
-				newItemSlug = await craftHealingVial(selectedItem, selectedActor);
-				return newItemSlug;
-			}
-		}
-		
-		//	If actor has bomber feat we will prompt to select damage type.
-		let selectedType = "acid" // Default type to acid
-		let specialIngredient = "none"; 
-		if (hasFeat(selectedActor,"bomber")){
-			debugLog(`feat 'bomber' detected.`);
-			selectedType = await new Promise((resolve) => {
-				new Dialog({
-					title: "Field Vials (Bomber)",
-					content: `
-						<form>
-						  <div class="form-group">
-							<label for="damage-type">Select a Damage Type:</label>
-							<select id="damage-type">
-							  <option value="acid">Acid</option>
-							  <option value="cold">Cold</option>
-							  <option value="electricity">Electricity</option>
-							  <option value="fire">Fire</option>
-							</select>
-						  </div>
-						</form>
-					  `,
-					buttons: {
-						ok: {
-							label: "OK",
-							callback: (html) => resolve(html.find("#damage-type").val())
-						},
-					}
-				}).render(true);
-			});	
-			
-			// Check if using Advanced Vials (Bomber)
-			if (hasFeat(selectedActor, "advanced-vials-bomber")) {
-				specialIngredient = await new Promise((resolve) => {
-					new Dialog({
-						title: "Advanced Vials (Bomber)",
-						content: `
-							<form>
-							  <div class="form-group">
-								<label for="special-ingredient">Select special ingredient:</label>
-								<select id="special-ingredient">
-								  <option value="none">- None -</option>
-								  <option value="adamantine">Adamantine</option>
-								  <option value="cold-iron">Cold Iron</option>
-								  <option value="dawnsilver">Dawnsilver</option>
-								</select>
-							  </div>
-							</form>
-						  `,
-						buttons: {
-							ok: {
-								label: "Add",
-								callback: (html) => resolve(html.find("#special-ingredient").val())
-							},
-						}
-					}).render(true);
-				});
-			}
-		} 
 		
 		// Check if the item exists in inventory, has an asterisk, and is infused
 		const itemExists = selectedActor.items.find((item) => 
@@ -744,6 +665,7 @@ Hooks.on("ready", () => {
 				// Update the item's damage type
 				if (modifiedItem.system.damage) {
 					modifiedItem.system.damage.damageType = selectedType;
+					modifiedItem.system.damage.critDamageType = selectedType;
 				} else {
 					debugLog("Item does not have a damage property to update.");
 				}					
@@ -771,7 +693,7 @@ Hooks.on("ready", () => {
 					modifiedItem.system.size = actorSize; // Adjust size if necessary
 				}
 			}
-			
+						
 			// Adjust Quick Vial Level
 			// Determine the actor's level
 			const actorLevel = selectedActor.system.details.level.value;
@@ -1088,8 +1010,8 @@ Hooks.on("ready", () => {
 	/*
 		Helper function for craftButton() and craftAttackButton()
 	*/
-	async function handleCrafting(uuid, actor, quickVial = false, doubleBrew = false, attack = false){
-	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${doubleBrew}, ${attack}) called.`);
+	async function handleCrafting(uuid, actor, quickVial = false, doubleBrew = false, attack = false, selectedType = "acid", specialIngredient ="none"){
+	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${doubleBrew}, ${attack}, ${selectedType}, ${specialIngredient}) called.`);
 		// Make sure uuid was passed
 		if (uuid === "none") {
 			debugLog("No item selected for crafting.");
@@ -1102,9 +1024,9 @@ Hooks.on("ready", () => {
 		// Check if crafting Quick Vial
 		let newItemSlug = "";
 		if (quickVial) {
-			newItemSlug = await craftVial(selectedItem, actor);
+			newItemSlug = await craftVial(selectedItem, actor, selectedType, specialIngredient);
 		} else {
-			newItemSlug = await craftItem(selectedItem, actor);
+			newItemSlug = await craftItem(selectedItem, actor, selectedType, specialIngredient);
 		}
 		debugLog(`newItemSlug: ${newItemSlug}`);
 		
@@ -1161,13 +1083,15 @@ Hooks.on("ready", () => {
 			await sendMsg(temporaryItem.type, formattedUuid, actor);
 		} else if (attack) {
 			if (getSetting("sendAtkToChat")) await sendMsg(temporaryItem.type, formattedUuid, actor);
+			debugLog(`temporaryItem.id: ${temporaryItem.id} | temporaryItem.slug: ${temporaryItem.slug}`);
 			game.pf2e.rollActionMacro({
-				actorUUID: actor.uuid,
+				actor: actor,
 				type: "strike",
+				item: temporaryItem,
 				itemId: temporaryItem.id,
 				slug: temporaryItem.slug,
 			});
-			
+					
 		} else {
 			// Send message to chat based on item type
 			await sendMsg(temporaryItem.type, formattedUuid, actor);
@@ -1177,52 +1101,56 @@ Hooks.on("ready", () => {
 	/*
 		Function to process craft button
 	*/
-	async function craftButton(actor, itemUuid, dbItemUuid, itemType){
+	async function craftButton(actor, itemUuid, dbItemUuid, itemType, selectedType = "acid", specialIngredient = "none"){
 		const selectedUuid = itemUuid;
 		const dbSelectedUuid = dbItemUuid;
-		debugLog(`Item Selection: ${selectedUuid} | Double Brew Selection: ${dbSelectedUuid}`);
+		debugLog(`craftButton() - Item Selection: ${selectedUuid}`);
+		debugLog(`craftButton() - itemType: ${itemType} | selectedType: ${selectedType} | specialIngredient: ${specialIngredient}`);
+		debugLog(`craftButton() - Double Brew Selection: ${dbSelectedUuid}`);
 		
 		// Check if we are making Quick Vial
 		if (itemType === 'vial'){
-			debugLog(`handleCrafting=> uuid: ${selectedUuid} | itemTye: ${itemType} | actor: `, actor);
-			await handleCrafting(selectedUuid, actor, true, false, false);
-			debugLog(`Double Brew: handleCrafting=> uuid: ${dbSelectedUuid} | actor: `, actor);
+			debugLog(`handleCrafting=> uuid: ${selectedUuid} | itemTye: ${itemType} | actor: ${actor.name} | selectedType: ${selectedType}`);
+			await handleCrafting(selectedUuid, actor, true, false, false, selectedType);
+			debugLog(`Double Brew: handleCrafting=> uuid: ${dbSelectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
 			if (dbSelectedUuid == selectedUuid) { // We are creating another Quick Vial
-				await handleCrafting(dbSelectedUuid, actor, true, true, false);
+				await handleCrafting(dbSelectedUuid, actor, true, true, false, selectedType);
 			} else {
-				await handleCrafting(dbSelectedUuid, actor, false, true, false);
+				await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType);
 			}
 		} else {
-			debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: `, actor);
-			await handleCrafting(selectedUuid, actor, false, false, false);
-			debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: `, actor);
-			await handleCrafting(dbSelectedUuid, actor, false, true, false);
+			debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
+			await handleCrafting(selectedUuid, actor, false, false, false, selectedType, specialIngredient);
+			debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
+			await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType, specialIngredient);
 		}
 	}
 
 	/*
 		Function to process craft and attack button
 	*/
-	async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType){
+	async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType, selectedType = "acid", specialIngredient ="none"){
 		const selectedUuid = itemUuid; 
 		const dbSelectedUuid = dbItemUuid;
-		debugLog(`actor name: ${actor.name} | Item Selection: ${selectedUuid} | Item Type: ${itemType} | Double Brew Selection: ${dbSelectedUuid}`);
+		debugLog(`craftAttackButton() - Item Selection: ${selectedUuid}`);
+		debugLog(`craftAttackButton() - itemType: ${itemType} | selectedType: ${selectedType} | specialIngredient: ${specialIngredient}`);
+		debugLog(`craftAttackButton() - Double Brew Selection: ${dbSelectedUuid}`);
 		
 		// Check if we are making Quick Vial
 		if (itemType === 'vial'){
-			debugLog(`handleCrafting=> uuid: ${selectedUuid} | itemTye: ${itemType} | actor: `, actor);
-			await handleCrafting(selectedUuid, actor, true, false, true);
-			debugLog(`Double Brew: handleCrafting=> uuid: ${dbSelectedUuid} | actor: `, actor);
+			debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
+			await handleCrafting(selectedUuid, actor, true, false, true, selectedType, specialIngredient);
+			debugLog(`Double Brew: handleCrafting=> uuid: ${dbSelectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
 			if (dbSelectedUuid == selectedUuid) { // We are creating another Quick Vial
-				await handleCrafting(dbSelectedUuid, actor, true, true, false);
+				await handleCrafting(dbSelectedUuid, actor, true, true, false, selectedType, specialIngredient);
 			} else {
-				await handleCrafting(dbSelectedUuid, actor, false, true, false);
+				await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType, specialIngredient);
 			}
 		} else {
-			debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: `, actor);
-			await handleCrafting(selectedUuid, actor, false, false, true);
-			debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: `, actor);
-			await handleCrafting(dbSelectedUuid, actor, false, true, false);
+			debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
+			await handleCrafting(selectedUuid, actor, false, false, true, selectedType, specialIngredient);
+			debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
+			await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType, specialIngredient);
 		}
 	}
 	
@@ -1230,6 +1158,15 @@ Hooks.on("ready", () => {
 		Function to display crafting dialog
 	*/
 	async function displayCraftingDialog(actor, itemType) {
+		
+		// Make Sure target is selected
+		const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
+		if (!target) {
+			ui.notifications.error("Please target a token first.");
+			qaDialog(actor);
+			return;
+		}
+		
 		debugLog(`displayCraftingDialog() actor: ${actor.name} | itemType: ${itemType}`);
 		// Check if actor has double brew feat
 		const doubleBrewFeat = hasFeat(actor,"double-brew");
@@ -1238,30 +1175,326 @@ Hooks.on("ready", () => {
 		let selectedUuid = "";
 		let dbSelectedUuid = "";
 		let craftItemButtons = {};
+		let newItemSlug = "";
+		let selectedType = "acid"; // default to acid
+		let specialIngredient = "none";
+		// Get uuid of vial dependant on if actor is toxicologist
+		let uuid = hasFeat(actor, "toxicologist") ? poisonVialId || acidVialId : acidVialId;
 		
-		/*
-			If we are creating a Quick vial, we will add one 
-			to inventory, Then check if we have Double Brew Feat 
-			otherwise ask display list of item type selected
-		*/
+		// Check type of item 
 		if (itemType === 'vial') {
 			
-			// Get Quick Vial item from compendium
+			// Get uuid of Quick Vial item from module compendium
 			const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
 			if (!compendium) {
 				debugLog(3,"Compendium not found.");
 				return;
 			}
-			const uuid = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.5OFfH8W00oz6TeA3";
 			
 			// get item details from uuid
 			const item = await fromUuid(uuid);
-
 			if (!item) {
 				debugLog(3, `No item found for quick vial using UUID: ${uuid}`);
 				return;
 			}
 			debugLog(`actor: ${actor.name} |itemType: ${itemType} | uuid: ${uuid} | item name: ${item.name}`);
+			
+			/*
+				Helper function to determine damage type based on target 
+				resistances, immunities, and weaknesses
+			*/
+			async function getBestDamageType(target) {
+				// Ensure the target and syntheticActor exist
+				if (!target?.document?.delta?.syntheticActor?.system?.attributes) {
+					console.log("Target or synthetic actor attributes not found.");
+					return "poison"; // Default to poison
+				}
+
+				// Extract the syntheticActor and its attributes
+				const attributes = target.document.delta.syntheticActor.system.attributes;
+
+				// Helper function to get the value from arrays of resistances and weaknesses
+				const getValue = (arr, type) => arr.find(entry => entry.type === type)?.value || 0;
+
+				// Calculate damage type effectiveness
+				const poisonModifier = getValue(attributes.weaknesses || [], "poison") - getValue(attributes.resistances || [], "poison");
+				const acidModifier = getValue(attributes.weaknesses || [], "acid") - getValue(attributes.resistances || [], "acid");
+				let bestDamageType = "poison"; // Default to poison
+
+				// Check immunities
+				const immunities = attributes.immunities || [];
+				if (immunities.some(imm => imm.type === "poison")) {
+					bestDamageType = "acid";
+					if (game.user.isGM) debugLog("Target is immune to poison. Selecting acid damage.");
+				} else if (immunities.some(imm => imm.type === "acid")) {
+					bestDamageType = "poison";
+					if (game.user.isGM) debugLog("Target is immune to acid. Selecting poison damage.");
+				} else if (acidModifier > poisonModifier) {
+					bestDamageType = "acid";
+					if (game.user.isGM) debugLog(`Acid is more effective: Poison Modifier = ${poisonModifier}, Acid Modifier = ${acidModifier}`);
+				} else {
+					bestDamageType = "poison";
+					if (game.user.isGM) debugLog(`Poison is more effective: Poison Modifier = ${poisonModifier}, Acid Modifier = ${acidModifier}`);
+				}
+				debugLog(`Best damage type determined: ${bestDamageType}`);
+				return bestDamageType;
+			}
+			
+			// If actor has chirurgeon feat
+			if (hasFeat(actor, "chirurgeon")) {
+				// Prompt the user to craft a healing Quick Vial
+				const userConfirmed = await new Promise((resolve) => {
+					new Dialog({
+						title: "Chirurgeon",
+						content: `<p>Do you want to craft a healing Quick Vial?</p>`,
+						buttons: {
+							yes: {
+								label: "Yes",
+								callback: () => resolve(true)
+							},
+							no: {
+								label: "No",
+								callback: () => resolve(false)
+							}
+						},
+						default: "no"
+					}).render(true);
+				});
+				
+				// If the user confirms, proceed with crafting
+				if (userConfirmed) {
+					newItemSlug = await craftHealingVial(item, actor);
+					return;
+				}
+			}
+			
+			//	Check if actor has bomber Feat		
+			if (hasFeat(actor,"bomber")){
+				debugLog(`feat 'bomber' detected.`);
+				selectedType = await new Promise((resolve) => {
+					new Dialog({
+						title: "Field Vials (Bomber)",
+						content: `
+							<form>
+							  <div class="form-group">
+								<label for="damage-type">Select a Damage Type:</label>
+								<select id="damage-type">
+								  <option value="acid">Acid</option>
+								  <option value="cold">Cold</option>
+								  <option value="electricity">Electricity</option>
+								  <option value="fire">Fire</option>
+								</select>
+							  </div>
+							</form>
+						  `,
+						buttons: {
+							ok: {
+								label: "OK",
+								callback: (html) => resolve(html.find("#damage-type").val())
+							},
+						}
+					}).render(true);
+				});	
+				
+				// Check if using Advanced Vials (Bomber)
+				if (hasFeat(actor, "advanced-vials-bomber")) {
+					specialIngredient = await new Promise((resolve) => {
+						new Dialog({
+							title: "Advanced Vials (Bomber)",
+							content: `
+								<form>
+								  <div class="form-group">
+									<label for="special-ingredient">Select special ingredient:</label>
+									<select id="special-ingredient">
+									  <option value="none">- None -</option>
+									  <option value="adamantine">Adamantine</option>
+									  <option value="cold-iron">Cold Iron</option>
+									  <option value="dawnsilver">Dawnsilver</option>
+									</select>
+								  </div>
+								</form>
+							  `,
+							buttons: {
+								ok: {
+									label: "Add",
+									callback: (html) => resolve(html.find("#special-ingredient").val())
+								},
+							}
+						}).render(true);
+					});
+				}
+			}
+			
+			// Check if the actor has the Toxicologist feat
+			if (hasFeat(actor, "toxicologist")) {
+				selectedType = "poison"; // change default to poison
+				debugLog(`Toxicologist feat detected! vial damage type changed to ${selectedType}`);
+				
+				/*
+					Helper Function to create injury poison
+				*/
+				async function craftInjuryPoison(actor, selectedType) {
+					
+					// Get list of weapons and ammunition, exclude bombs or vials
+					const weapons = actor.items.filter(i => 
+						(i.type === "weapon") &&
+						!["bomb", "vial"].includes(i.system.category) &&
+						// !i.system.traits?.value?.includes("alchemical") &&
+						["piercing", "slashing"].includes(i.system.damage?.damageType)
+					);
+
+					if (weapons.length === 0) {
+						debugLog("No valid weapons available to apply poison.");
+						return;
+					}
+					
+					// Let the player select a weapon
+					const selectedWeapon = await new Promise((resolve) => {
+						new Dialog({
+							title: "Injury Poison",
+							content: `
+								<form>
+									<div class="form-group">
+										<label for="weapon">Select a weapon:</label>
+										<select id="weapon">
+											${weapons.map(w => `<option value="${w.id}">${w.name}</option>`).join("")}
+										</select>
+									</div>
+									<br>
+								</form>
+							`,
+							buttons: {
+								attack: {
+									icon: `<img src="systems/pf2e/icons/actions/ThreeActions.webp" width="24" height="24" style="vertical-align:middle;" />`,
+									label: "Craft, Apply & Attack",
+									callback: (html) => resolve(weapons.find(w => w.id === html.find("#weapon").val())),
+								},
+								back: {
+									icon: "<i class='fas fa-arrow-left'></i> ",
+									label: "Back",
+									callback: () => displayCraftingDialog(actor, itemType)
+								}
+							}
+						}).render(true);
+					});
+
+					if (!selectedWeapon) {
+						debugLog("No weapon selected for poison application.");
+						return;
+					}
+					
+					// Get Player level to determin stats
+					const playerLevel = actor.level || 1; 
+					// Calculate initial damage dice (how many dice)
+					const initialDamageDice = playerLevel >= 18 ? 4 : playerLevel >= 12 ? 3 : playerLevel >= 4 ? 2 : 1;
+					// Calculate persistent damage based on actor level
+					const persistentDamage = playerLevel >= 18 ? 4 : playerLevel >= 12 ? 3 : playerLevel >= 4 ? 2 : 1;
+
+					// Create a temporary copy of the weapon with poison damage added
+					const tempWeapon = duplicate(selectedWeapon);
+					tempWeapon.name = `${selectedWeapon.name} (*Poisoned)`;
+
+					// Check for feat advanced-vials-toxicologist to add persistent damage
+					if (hasFeat(actor, "advanced-vials-toxicologist")) {
+						// Append poison and persistent damages
+						tempWeapon.system.damage.persistent = {
+							type: selectedType,
+							number: persistentDamage,
+						};
+					}
+					
+					// Add Poison Damage
+					tempWeapon.system.property1 = {
+						value: "Quick Vial Poison",
+						damageType: selectedType, 
+						dice: initialDamageDice,
+						die: "d6",
+						critDamageType: selectedType,
+						critDice: initialDamageDice * 2,
+						critDie: "d6",
+					};
+										
+					tempWeapon.system.reload = {
+						consume: true,
+					};
+										
+					// Mark the temporary weapon as temporary
+					tempWeapon.flags = tempWeapon.flags || {};
+					tempWeapon.flags.pf2e = tempWeapon.flags.pf2e || {};
+					tempWeapon.flags.pf2e.temporary = true;
+					tempWeapon.flags.pf2e.sourceWeapon = selectedWeapon.id;
+					tempWeapon.system.slug += "-temp";
+					tempWeapon.system.traits?.value.push("infused", "poison", "injury");
+					tempWeapon.system.traits.value = tempWeapon.system.traits.value.filter(trait => trait !== "acid");
+					
+					// Add the temporary weapon to the actor
+					const createdWeapon = await actor.createEmbeddedDocuments("Item", [tempWeapon]);
+					
+					if (createdWeapon.length > 0) {
+						debugLog(`Created temporary poisoned weapon: ${createdWeapon[0].name}`);
+						try {
+							// Call the rollActionMacro method for the temporary weapon
+							game.pf2e.rollActionMacro({
+								actorUUID: `Actor.${actor.id}`,
+								type: "strike",
+								itemId: createdWeapon[0].id,
+								item: createdWeapon[0],
+								slug: tempWeapon.system.slug,
+							});
+						} catch (err) {
+							console.error("Error performing attack roll with temporary weapon:", err);
+							ui.notifications.error("Failed to perform the attack roll with the temporary poisoned weapon.");
+						}
+					} else {
+						debugLog("Failed to create temporary poisoned weapon.");
+					}
+					
+				}
+				
+				// Prompt for injury poison or Quick Vial bomb
+				const isInjuryPoison = await new Promise((resolve) => {
+					new Dialog({
+						title: "Toxicologist Options",
+						content: `
+							<p>Do you want to apply the vial as an injury poison or use it as a Quick Vial bomb?</p>
+						`,
+						buttons: {
+							yes: {
+								label: "Injury Poison",
+								callback: () => resolve(true),
+							},
+							no: {
+								label: "Quick Vial Bomb",
+								callback: () => resolve(false),
+							},
+							back: {
+								icon: "<i class='fas fa-arrow-left'></i> ",
+								label: "Back",
+								callback: () => qaDialog(actor)
+							}
+						},
+						default: "no"
+					}).render(true);
+				});
+				
+				// See if we are changing damage type 
+				selectedType = await getBestDamageType(target); // Default to poison
+				uuid = selectedType === "poison" ? poisonVialId : selectedType === "acid" ? acidVialId : poisonVialId;
+
+				debugLog(`selectedType: ${selectedType} | uuid: ${uuid}`);
+				
+				if (isInjuryPoison) {
+					debugLog("Creating vial as an injury poison.");
+					
+					// Check for Advanced Vials feat
+					const hasAdvancedVials = hasFeat(actor, "advanced-vials-toxicologist");
+					debugLog("Advanced Vials feat detected!.");
+					 
+					craftInjuryPoison(actor, selectedType);
+					return;
+				} 
+			}
+			debugLog(`uuid: ${uuid}`);
 			// Build HTML Content
 			content = `<form>
 				<div>
@@ -1299,6 +1532,7 @@ Hooks.on("ready", () => {
 
 				}
 			}
+			
 			// Build Vial Buttons
 			craftItemButtons['craftAttack'] = {
 				icon: "<i class='fas fa-bomb'></i>",
@@ -1318,19 +1552,21 @@ Hooks.on("ready", () => {
 						return;
 					}
 					
+					// See if we are changing damage type if alchemist is Toxicologist
+					if (hasFeat(actor, "toxicologist")) selectedType = await getBestDamageType(target); // Default to poison
+					
 					selectedUuid = html.find("#item-selection").val();
 					dbSelectedUuid = html.find("#db-item-selection").val();
-					
 					debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
 					
+					// Set to "none" if no item selected
 					if (!selectedUuid){
 						selectedUuid = "none";
 					}
 					if (!dbSelectedUuid){
 						dbSelectedUuid = "none";
 					}
-					
-					craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType, selectedType, specialIngredient);
 				}
 			},
 			craftItemButtons['craft'] = {
@@ -1341,7 +1577,7 @@ Hooks.on("ready", () => {
 						ui.notifications.error("Actor not found.");
 						return;
 					}
-
+					
 					// Perform actions with the actor
 					selectedUuid = html.find("#item-selection").val();
 					dbSelectedUuid = html.find("#db-item-selection").val();
@@ -1352,7 +1588,7 @@ Hooks.on("ready", () => {
 					if (!dbSelectedUuid){
 						dbSelectedUuid = "none";
 					}
-					craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					craftButton(actor, selectedUuid, dbSelectedUuid, itemType, selectedType, specialIngredient);
 				}
 			};
 			craftItemButtons['back'] = {
@@ -1387,10 +1623,14 @@ Hooks.on("ready", () => {
 					width: 450    // Set desired width
 			});
 			craftingDialog.render(true);
-			
-		} else { // We are crafting Weapon or Consumable
+		
+		/*
+			We are crafting Weapon or Consumable
+		*/
+		} else { 
 				
-			let options = "";
+			let options = ""; 
+			// Get list of filtered entries
 			const { filteredEntries } = await processFilteredFormulasWithProgress(actor,itemType);
 			options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 			
@@ -1445,7 +1685,7 @@ Hooks.on("ready", () => {
 				}
 			}
 		
-			// Build Buttons
+			// Weapon Butons
 			if (itemType === 'weapon'){
 				craftItemButtons['craftAttack'] = {
 					icon: "<i class='fas fa-bomb'></i>",
@@ -1506,6 +1746,8 @@ Hooks.on("ready", () => {
 					label: " Back",
 					callback: () => qaDialog(actor)
 				};
+				
+			// Consumable Buttons
 			} else if (itemType === 'consumable'){
 				craftItemButtons['craft'] = {
 					icon: "<i class='fas fa-hammer'></i>",
@@ -1536,6 +1778,7 @@ Hooks.on("ready", () => {
 				};
 			} 
 			
+			// Show dialog
 			const craftingDialog = new Dialog({
 				title: "Quick Alchemy",
 				content: content,
@@ -1612,8 +1855,6 @@ Hooks.on("ready", () => {
 			content = `<p>What type of item do you wish to craft with Quick Alchemy?</p>`;
 		}
 		
-		debugLog(`dbbuttons object:`, dbbuttons);
-		
 		const quickAlchemyDialog = new Dialog({
 			title: "Select Item Type",
 			content: content,
@@ -1627,17 +1868,28 @@ Hooks.on("ready", () => {
 		Main crafting function
 	*/
 	async function qaCraftAttack() {
+		
+		// Check if a token is selected, if not default to game.user.character
+		// If both do not exist display message to select token
+		let actor;
 		const token = canvas.tokens.controlled[0];
-		if (!token) {
-			ui.notifications.error("Please select a token first.");
+		if (token) {
+			actor = token.actor;
+		} else {
+			// No token selected, fallback to the user's selected character
+			actor = game.user.character;
+		}
+		if (!actor) {
+			// Neither a token nor a selected character exists
+			ui.notifications.error("Please select a token or assign a character first.");
 			return;
 		}
-		const actor = token.actor;
 		
 		// Make sure selected token is an alchemist or has archetype
 		const alchemistCheck = isAlchemist(actor);
 		if (!alchemistCheck.qualifies) {
 			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
+			ui.notifications.warn("Please select an Alchemist character.");
 			return;
 		} 
 		
@@ -1650,5 +1902,3 @@ Hooks.on("ready", () => {
 		qaDialog(actor);
 
 	}
-
-

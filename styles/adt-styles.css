@@ -44,3 +44,11 @@
     height: 30px;
     font-size: 12px;
 }
+
+.valid {
+  color: green;
+}
+
+.invalid {
+  color: red;
+}

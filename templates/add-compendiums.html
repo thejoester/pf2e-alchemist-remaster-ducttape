@@ -1,0 +1,46 @@
+<form>
+    <div class="form-group">
+        <label for=\"compendium-input\">Compendium:</label>
+        <div class="flexrow">
+            <input id="compendium-input" type="text" placeholder="Enter compendium name" style="flex: 2;">
+            <button id="add-compendium-btn" type="button" class="button" style="flex: 0.5;">Add</button>
+        </div>
+    </div>
+	<p style=\"font-size: smaller; color: gray;\"><a href='https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki/Adding-homebrew-compendiums' target='_blank'>Learn more</a></p>
+
+    <hr>
+
+    <div class="form-group">
+        <label>Compendiums to be added:</label>
+        <ul>
+            {{#each tempCompendiums}}
+            <li class="flexrow">
+                <span class="{{#if valid}}valid{{else}}invalid{{/if}}" style="flex: 1;">{{name}}</span>
+                <button class="delete-compendium" data-index="{{@index}}" type="button" style="flex: 0.5;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+
+    <div class="form-group">
+		<label>Saved Compendiums:</label>
+		<ul>
+			{{#each savedCompendiums}}
+			<li class="flexrow">
+				<span style="flex: 1;">{{this}}</span>
+				<button class="delete-saved-compendium" data-name="{{this}}" type="button" style="flex: 0.2;">
+					<i class="fas fa-trash"></i>
+				</button>
+			</li>
+			{{/each}}
+		</ul>
+	</div>
+
+    <hr>
+
+    <div class="form-group">
+        <button id="save-compendiums-btn" type="button" class="button">Save</button>
+    </div>
+</form>

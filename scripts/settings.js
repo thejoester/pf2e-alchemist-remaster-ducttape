@@ -172,6 +172,108 @@ function adjustCollapseSettingBasedOnWorkbench() {
     }
 }
 
+/*
+	AddCompendiumsApp class object
+*/
+window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
+    static get defaultOptions() {
+        return mergeObject(super.defaultOptions, {
+            title: 'Manage Homebrew Compendiums',
+            template: 'modules/pf2e-alchemist-remaster-ducttape/templates/add-compendiums.html',
+            width: 600,
+            height: 'auto',
+            closeOnSubmit: false
+        });
+    }
+
+    getData() {
+        const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
+        return {
+            savedCompendiums,
+            tempCompendiums: this.tempCompendiums || []
+        };
+    }
+
+    activateListeners(html) {
+        super.activateListeners(html);
+
+        // Add a compendium to the temporary list
+        html.find('#add-compendium-btn').click(() => {
+            const input = html.find('#compendium-input').val().trim();
+            if (!input) return;
+
+            const pack = game.packs.get(input);
+            if (this.tempCompendiums?.some(comp => comp.name === input)) {
+                ui.notifications.warn(`Compendium "${input}" is already in the list.`);
+                return;
+            }
+
+            if (!pack || pack.documentName !== 'Item') {
+                ui.notifications.error(`Compendium "${input}" is not valid or does not contain items.`);
+                return;
+            }
+            this.tempCompendiums = [...(this.tempCompendiums || []), { name: input, valid: !!pack }];
+            this.render();
+        });
+
+        // Remove a compendium from the temporary list
+        html.find('.delete-compendium').click((event) => {
+            const index = parseInt(event.currentTarget.dataset.index);
+            this.tempCompendiums.splice(index, 1);
+            this.render();
+        });
+
+        // Remove a saved compendium
+        html.find('.delete-saved-compendium').click(async (event) => {
+            const compendiumToDelete = event.currentTarget.dataset.name;
+            const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
+            const updatedCompendiums = savedCompendiums.filter(c => c !== compendiumToDelete);
+
+            await game.settings.set('pf2e-alchemist-remaster-ducttape', 'compendiums', updatedCompendiums);
+            ui.notifications.info(`Compendium "${compendiumToDelete}" removed.`);
+            this.render();
+        });
+
+        // Save compendiums when the Save button is clicked
+        html.find('#save-compendiums-btn').click(async () => {
+            const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
+            const uniqueCompendiums = new Map(); // Use Map to avoid duplicates
+
+            let invalidEntries = [];
+            for (const { name, valid } of this.tempCompendiums || []) {
+                if (valid) uniqueCompendiums.set(name, true);
+                else invalidEntries.push(name);
+            }
+
+            if (invalidEntries.length > 0) {
+                new Dialog({
+                    title: 'Invalid or Duplicate Entries',
+                    content: `The following compendiums were not valid or were duplicates and were not saved:<br>${invalidEntries.join('<br>')}`,
+                    buttons: {
+                        ok: {
+                            icon: '<i class="fas fa-check"></i>',
+                            label: 'OK'
+                        }
+                    }
+                }).render(true);
+            }
+
+            // Save valid entries
+            await game.settings.set(
+                'pf2e-alchemist-remaster-ducttape',
+                'compendiums',
+                [...new Set([...savedCompendiums, ...uniqueCompendiums.keys()])]
+            );
+            ui.notifications.info('Compendiums saved successfully.');
+            this.tempCompendiums = [];
+            this.close();
+        });
+    }
+
+    async _updateObject(event, formData) {
+        // No action needed since save is handled manually
+    }
+};
 
 Hooks.once("init", () => {
 	
@@ -349,6 +451,24 @@ Hooks.once("init", () => {
 		type: Boolean,
 		default: true,
 		requiresReload: false,
+	});
+	
+	game.settings.register('pf2e-alchemist-remaster-ducttape', 'compendiums', {
+		name: 'Compendiums to Check',
+		hint: 'List of compendiums to search for higher-level items when characters level up.',
+		scope: 'world',
+		config: false,
+		type: Array,
+		default: []
+	});
+
+	game.settings.registerMenu('pf2e-alchemist-remaster-ducttape', 'addCompendiumsMenu', {
+		name: 'Add Compendiums',
+		label: 'Add Hombebrew Item Compendiums', // This will be the button text
+		hint: 'Manage the list of compendiums checked during level up.',
+		icon: 'fas fa-plus-circle', // Icon for the button
+		type: AddCompendiumsApp, // The FormApplication class to open
+		restricted: true // Only accessible by GMs
 	});
 	
 	// Disable addNewFormulasToChat if addFormulasOnLevelUp is set to 'disabled'

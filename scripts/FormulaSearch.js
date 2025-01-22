@@ -5,47 +5,51 @@ console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","colo
 	function to inject the search input into the Formulas tab.
 */
 function addFormulaSearch(html) {
-	debugLog(`addFormulaSearch() called`);
-    const formulasTab = html.find(".known-formulas.item-container[data-container-type='knownFormulas']"); // Locate the Formulas tab by its data-tab attribute
-    //if (!formulasTab.length) return;
+    debugLog(`addFormulaSearch() called`);
 
-    // Create the search bar HTML
+    // Updated selector for the known formulas tab
+    const formulasTab = html.find(".major.item-container.known-formulas[data-container-type='knownFormulas']");
+    if (!formulasTab.length) {
+        debugLog("Formulas tab not found. Ensure the selector matches.");
+        return;
+    }
+
+    // Updated HTML for the search bar
     const searchBarHtml = `
         <div class="search-bar-container">
-			<input type="text" id="formula-search" placeholder="Search Formulas..." />
-			<button id="clear-search" class="clear-btn">Clear</button>
+            <input type="text" id="formula-search" placeholder="Search Formulas..." />
+            <button id="clear-search" class="clear-btn">Clear</button>
         </div>
     `;
-	
-	
-    // Insert the search bar before the action header
-    formulasTab.find(".action-header").before(searchBarHtml);
 
-	// Add the event listener for the search bar
-    const clearButton = html.find("#clear-search"); // Define the clear button here
+    // Insert the search bar at the beginning of the known formulas section
+    formulasTab.prepend(searchBarHtml);
 
-    // Add the event listener for the search bar
+    // Define the search input and clear button
     const searchInput = html.find("#formula-search");
+    const clearButton = html.find("#clear-search");
+
+    // Define formula items
+    const formulas = formulasTab.find(".formula-item");
+
+    // Add input event listener to filter formulas
     searchInput.on("input", (event) => {
         const query = event.target.value.toLowerCase();
-        const formulas = formulasTab.find(".item");
-        
+
         formulas.each((_, formula) => {
-            const formulaName = $(formula).find(".item-name").text().toLowerCase();
+            const formulaName = $(formula).find(".item-name h4 a").text().toLowerCase();
             if (formulaName.includes(query)) {
                 $(formula).show();
             } else {
                 $(formula).hide();
             }
         });
-		
-		// Clear search functionality
-		clearButton.on("click", () => {
-			// Clear the input field
-			searchInput.val("");
-			// Show all formulas
-			formulasTab.find(".item").show();
-		});
+    });
+
+    // Add click event listener for the clear button
+    clearButton.on("click", () => {
+        searchInput.val(""); // Clear the input field
+        formulas.show();     // Show all formulas
     });
 }
 

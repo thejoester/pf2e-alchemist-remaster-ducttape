@@ -1,8 +1,19 @@
 # Changelog
 
+## [2.6.0] - 
+### Added
+- **Quick Alchemy:** Added support for Toxicologist (Field Benefit, Field Vials, and Advanced Vials)!
+  - Quick Vial damage type defaults to poison. It will check for best damage type of target (poison or acid) based on resistances, immunities, and weaknesses. 
+  - When selecting "Quick Vial" it will prompt to craft Injury Poison, then apply and attack (3 actions).
+    - This prompts to select weapon/ammo to apply to, creates a temp copy with modified damage and damage types and deletes it after attack. 
+- **Level Up:** Added ability to add homebrew item compendiums in settings.
+### Fixed
+- **Formula Search:** Fixed Formula Search bar not showing on Crafting tab due to change in character sheet html in pf2e Release v6.8.2.
+- **Quick Alchemy:** Reworked flow for creating Quick Vial. 
+
 ## [2.5.13] - 2025-01-17
 ### Fixed
-- **Level Up:** ([Issue #15](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/15) When adding and removing formulas on level up, module does so by slug not by name. This should resolve any issues for different languages. 
+- **Level Up:** ([Issue #15](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/15)) When adding and removing formulas on level up, module does so by slug not by name. This should resolve any issues for different languages. 
 ### Added
 - **Vial Search:** Added setting to enable/disable chat message when alchemist has max vials already. Default to disabled. 
 - **Level Up:** Added setting how to handle removing lower level formulas:
