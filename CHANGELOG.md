@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.6.0] - 
+## [2.6.0] - 2025-01-22
 ### Added
 - **Quick Alchemy:** Added support for Toxicologist (Field Benefit, Field Vials, and Advanced Vials)!
   - Quick Vial damage type defaults to poison. It will check for best damage type of target (poison or acid) based on resistances, immunities, and weaknesses. 
