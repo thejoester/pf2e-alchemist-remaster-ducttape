@@ -1,7 +1,12 @@
 # Changelog
 
+## [2.6.3] - 2025-01-22
+### Fixed
+- **Quick Alchemy:** Changed how items are created as to not conflict with other modules. 
+  - Items created with macro will no longer have a unique temp slug, instead using a custom tag and publication information. 
+
 ## [2.6.2] - 2025-01-22
-###  Fixed
+### Fixed
 - /templates directory was not included in .zip package. 
 
 ## [2.6.0] - 2025-01-22

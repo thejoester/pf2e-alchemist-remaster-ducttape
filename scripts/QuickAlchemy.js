@@ -536,18 +536,21 @@ Hooks.on("ready", () => {
 	
 	/* 	
 		Function to craft "Healing Quick Vial" from the module compendium  
-		and add "(*Temporary)" to the end of the name and "-temp" to the 
-		end of the slug.
+		and add "(*Temporary)" to the end of the name and custom flag
 	*/
 	async function craftHealingVial(selectedItem, selectedActor) {
 		// Define the slug for the healing quick vial
-		const healingSlug = "healing-quick-vial-temp";
+		const healingSlug = "healing-quick-vial";
 		const alchemyMode = getSetting("enableSizeBasedAlchemy", "disabled");
 		
 		// Get actor size to use for new item size
 		const actorSize = await getActorSize(selectedActor);
+		
 		// Check if the item already exists in the actor's inventory
-		const existingItem = selectedActor.items.find(item => item.slug === healingSlug);
+		const existingItem = selectedActor.items.find(item => 
+			item.slug === healingSlug && 
+			item.system.ductTaped === true
+		);
 
 		if (existingItem) {
 			// Item exists, increase its quantity
@@ -579,6 +582,12 @@ Hooks.on("ready", () => {
 
 				// Clone the item to make modifications
 				const modifiedItem = healingItem.toObject();
+				
+				// Add custom module tags
+				modifiedItem.system.ductTaped = true; 
+				modifiedItem.system.publication.authors = "TheJoester";
+				modifiedItem.system.publication.license = "ORC";
+				modifiedItem.system.publication.title = "PF2e Alchemist Remaster Duct Tape"; 
 
 				// Adjust Quick Vial Level
 				const actorLevel = selectedActor.system.details.level.value;
@@ -613,11 +622,10 @@ Hooks.on("ready", () => {
 	
 	/* 	
 		Function to craft Quick Vial using Quick Alchemy and add  
-		"(*Temporary)" to the end of the name and "-temp" to
-		the end of the slug of any item created with this 
-		Quick Alchmy macro so that it can be removed at the 
-		end of the turn and ensured that when attacking it is 
-		using the same item.
+		"(*Temporary)" to the end of the name and custom tag to 
+		any item created with this Quick Alchmy macro so that it 
+		can be removed at the end of the turn and ensured that 
+		when attacking it is using the same item.
 	*/
 	async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
 		debugLog(`Selected Item: ${selectedItem?.name || "No Name"}`);
@@ -636,7 +644,7 @@ Hooks.on("ready", () => {
 		
 		// Check if the item exists in inventory, has an asterisk, and is infused
 		const itemExists = selectedActor.items.find((item) => 
-			item.slug === `quick-vial-${selectedType}-temp` && 
+			item.system.ductTaped === true &&
 			item.name.endsWith(`(${selectedType})(*Temporary)`) && 
 			item.system.traits?.value?.includes("infused")
 		);
@@ -677,9 +685,16 @@ Hooks.on("ready", () => {
 				modifiedItem.system.material.type = specialIngredient;
 			}
 			
-			// Append "-temp" to slug for easy identification
-			modifiedItem.system.slug = `quick-vial-${selectedType}-temp`;
+			// Add custom module tags
+			modifiedItem.system.ductTaped = true; 
+			modifiedItem.system.publication.authors = "TheJoester";
+			modifiedItem.system.publication.license = "ORC";
+			modifiedItem.system.publication.title = "PF2e Alchemist Remaster Duct Tape module";
+			modifiedItem.system.publication.remaster = true;
+			
+			// Get slug for returning
 			newItemSlug = modifiedItem.system.slug;
+			
 			// Append "(*Temporary)" to the name for visual identification
 			if (!modifiedItem.name.endsWith(`(${selectedType})(*Temporary)`)) {
 				modifiedItem.name = `Quick Vial (${selectedType})(*Temporary)`;
@@ -711,8 +726,8 @@ Hooks.on("ready", () => {
 	
 	/* 	
 		Function to craft item using Quick Alchemy and add  
-		"(*Temporary)" to the end of the name and "-temp" to
-		the end of the slug of any item created with this 
+		"(*Temporary)" to the end of the name and a custom
+		tag "ductTapped" to any item created with this 
 		Quick Alchmy macro so that it can be removed at the 
 		end of the turn and ensured that when attacking it is 
 		using the same item.
@@ -733,7 +748,8 @@ Hooks.on("ready", () => {
 
 		// Check if the item exists in inventory, has an asterisk, and is infused
 		const itemExists = selectedActor.items.find((item) => 
-			item.slug === `${selectedItem?.slug}-temp` && 
+			item.slug === selectedItem?.slug &&
+			item.system.ductTaped === true &&
 			item.name.endsWith("(*Temporary)") && 
 			item.system.traits?.value?.includes("infused")
 		);
@@ -745,9 +761,14 @@ Hooks.on("ready", () => {
 		} else {
 			// Duplicate and modify the item, adding custom flags
 			const modifiedItem = foundry.utils.duplicate(selectedItem);
-			modifiedItem.system.traits.value.push("infused"); // Add infused trait
-			// Append "-temp" to slug for easy identification
-			modifiedItem.system.slug = `${selectedItem.slug}-temp`;
+			// Add custom module tags
+			modifiedItem.system.ductTaped = true; 
+			modifiedItem.system.publication.authors = "TheJoester";
+			modifiedItem.system.publication.license = "ORC";
+			modifiedItem.system.publication.title = "PF2e Alchemist Remaster Duct Tape module";
+			modifiedItem.system.publication.remaster = true;
+			// Add Infused trait
+			modifiedItem.system.traits.value.push("infused");
 			// Append "(*Temporary)" to the name for visual identification
 			if (!modifiedItem.name.endsWith("(*Temporary)")) {
 				modifiedItem.name += " (*Temporary)";
@@ -766,7 +787,7 @@ Hooks.on("ready", () => {
 			const createdItem = await selectedActor.createEmbeddedDocuments("Item", [modifiedItem]);
 			debugLog(`Created item with Quick Alchemy: `, createdItem);
 		}
-		return `${selectedItem?.slug}-temp`;
+		return selectedItem?.slug;
 	}
 	
 	/*
@@ -779,12 +800,11 @@ Hooks.on("ready", () => {
 			return 0; // Return 0 instead of undefined for better consistency
 		}
 
-		// Filter and count versatile vials
-		const versatileVials = actor.items.filter(item => item.slug === "versatile-vial");
-		const tempVersatileVials = actor.items.filter(item => item.slug === "versatile-vial-temp");
-
-		// Combine counts using reduce
-		const totalVialCount = versatileVials.reduce((count, vial) => count + (vial.system.quantity || 0), 0) + tempVersatileVials.reduce((count, vial) => count + (vial.system.quantity || 0), 0);
+		// Get count of versatile-vial items
+		const totalVialCount = actor.items
+			.filter(item => item.slug === "versatile-vial")
+			.reduce((count, vial) => count + (vial.system.quantity || 0), 0)
+		;
 
 		return totalVialCount;
 	}
@@ -1159,15 +1179,8 @@ Hooks.on("ready", () => {
 	*/
 	async function displayCraftingDialog(actor, itemType) {
 		
-		// Make Sure target is selected
-		const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
-		if (!target) {
-			ui.notifications.error("Please target a token first.");
-			qaDialog(actor);
-			return;
-		}
-		
 		debugLog(`displayCraftingDialog() actor: ${actor.name} | itemType: ${itemType}`);
+		
 		// Check if actor has double brew feat
 		const doubleBrewFeat = hasFeat(actor,"double-brew");
 		debugLog(`doubleBrewFeat: ${doubleBrewFeat}`);
@@ -1183,6 +1196,15 @@ Hooks.on("ready", () => {
 		
 		// Check type of item 
 		if (itemType === 'vial') {
+			
+			// Make Sure target is selected
+			const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
+			if (!target) {
+				ui.notifications.error("Please target a token first.");
+				qaDialog(actor);
+				return;
+			}
+			
 			
 			// Get uuid of Quick Vial item from module compendium
 			const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
@@ -1423,7 +1445,14 @@ Hooks.on("ready", () => {
 					tempWeapon.flags.pf2e = tempWeapon.flags.pf2e || {};
 					tempWeapon.flags.pf2e.temporary = true;
 					tempWeapon.flags.pf2e.sourceWeapon = selectedWeapon.id;
-					tempWeapon.system.slug += "-temp";
+					
+					// Add custom module tags
+					tempWeapon.system.ductTaped = true; 
+					tempWeapon.system.publication.authors = "TheJoester";
+					tempWeapon.system.publication.license = "ORC";
+					tempWeapon.system.publication.title = "PF2e Alchemist Remaster Duct Tape module";
+					tempWeapon.system.publication.remaster = true;
+					
 					tempWeapon.system.traits?.value.push("infused", "poison", "injury");
 					tempWeapon.system.traits.value = tempWeapon.system.traits.value.filter(trait => trait !== "acid");
 					
