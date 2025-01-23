@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.6.1] - 2025-01-22
+## [2.6.2] - 2025-01-22
 ###  Fixed
 - /templates directory was not included in .zip package. 
 
