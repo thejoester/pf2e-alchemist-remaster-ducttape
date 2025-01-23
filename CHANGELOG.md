@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.6.1] - 2025-01-22
+###  Fixed
+- /templates directory was not included in .zip package. 
+
 ## [2.6.0] - 2025-01-22
 ### Added
 - **Quick Alchemy:** Added support for Toxicologist (Field Benefit, Field Vials, and Advanced Vials)!
