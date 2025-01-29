@@ -628,7 +628,7 @@ Hooks.on("ready", () => {
 		when attacking it is using the same item.
 	*/
 	async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
-		debugLog(`Selected Item: ${selectedItem?.name || "No Name"}`);
+		debugLog(`Selected Vial: ${selectedItem?.name || "No Name"}`);
 		debugLog(`Selected Actor: ${selectedActor?.name || "No Name"}`);
 		
 		if (!selectedItem || !selectedActor) {
@@ -649,7 +649,7 @@ Hooks.on("ready", () => {
 			item.system.traits?.value?.includes("infused")
 		);
 		
-		if (itemExists) {
+		if (itemExists) { // Item exists increase quantity
 			newItemSlug = itemExists.slug;
 			// Item exists, increase quantity of existing infused item
 			const newQty = itemExists.system.quantity + 1;
@@ -1031,7 +1031,7 @@ Hooks.on("ready", () => {
 		Helper function for craftButton() and craftAttackButton()
 	*/
 	async function handleCrafting(uuid, actor, quickVial = false, doubleBrew = false, attack = false, selectedType = "acid", specialIngredient ="none"){
-	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${doubleBrew}, ${attack}, ${selectedType}, ${specialIngredient}) called.`);
+	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${quickVial}, ${doubleBrew}, ${attack}, ${selectedType}, ${specialIngredient}) called.`);
 		// Make sure uuid was passed
 		if (uuid === "none") {
 			debugLog("No item selected for crafting.");
@@ -1205,15 +1205,14 @@ Hooks.on("ready", () => {
 				return;
 			}
 			
-			
-			// Get uuid of Quick Vial item from module compendium
+			// Make sure module compendium is available 
 			const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
 			if (!compendium) {
 				debugLog(3,"Compendium not found.");
 				return;
 			}
 			
-			// get item details from uuid
+			// Get vial item from uuid of Quick Vial item from module compendium
 			const item = await fromUuid(uuid);
 			if (!item) {
 				debugLog(3, `No item found for quick vial using UUID: ${uuid}`);
@@ -1523,6 +1522,7 @@ Hooks.on("ready", () => {
 					return;
 				} 
 			}
+			
 			debugLog(`uuid: ${uuid}`);
 			// Build HTML Content
 			content = `<form>

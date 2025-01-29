@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.4] - 2025-01-28
+### Fixed
+- **Quick Alchemy:** Fixed bug where Toxicologist was not getting proficency on poisoned vials.
+- **Quick Alchemy:** Fixed splash damage for Toxicologist Quick Vial.
+
 ## [2.6.3] - 2025-01-22
 ### Fixed
 - **Quick Alchemy:** Changed how items are created as to not conflict with other modules. 
