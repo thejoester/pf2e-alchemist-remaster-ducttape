@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.6.5] - 2025-
+## [2.6.5] - 2025-01-29
 ### Fixed
 - **Level Up:** Fixed bug where when leveling up duplicate formulas could be added to actor crafting. 
 
