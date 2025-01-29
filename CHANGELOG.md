@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.6.5] - 2025-
+### Fixed
+- **Level Up:** Fixed bug where when leveling up duplicate formulas could be added to actor crafting. 
+
 ## [2.6.4] - 2025-01-28
 ### Fixed
 - **Quick Alchemy:** Fixed bug where Toxicologist was not getting proficency on poisoned vials.

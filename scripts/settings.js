@@ -123,10 +123,10 @@ export function isAlchemist(actor) {
     // Check if the actor's class matches the localized Alchemist class name
     const isAlchemistClass = actor?.class?.system?.slug === 'alchemist';
 	
-	debugLog(`isAlchemistClass: ${isAlchemistClass} | ${actor?.class?.system?.slug}`);
-
     // Check if the actor has the localized Alchemist Dedication feat
     const hasAlchemistDedication = hasFeat(actor, "alchemist-dedication");
+
+	debugLog(`${actor.name} is Alchemist: ${isAlchemistClass} | Alchemist Dedication: ${hasAlchemistDedication}`);
 
     // If the actor qualifies, get the Alchemist Class DC
     if (isAlchemistClass || hasAlchemistDedication) {
