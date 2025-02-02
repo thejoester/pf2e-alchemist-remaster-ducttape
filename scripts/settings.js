@@ -304,7 +304,6 @@ Hooks.once("init", () => {
 	// Quick Alchemy: remove temporary items at end of turn
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtTurnChange", {
 		name: "Quick Alchemy: remove temporary items at start of turn?",
-		hint: "If enabled, will automatically remove items crafted with quick alchemy at the start of character turn (per RAW).",
 		scope: "world",
 		config: true,
 		default: true,
@@ -315,7 +314,16 @@ Hooks.once("init", () => {
 	// Quick Alchemy: remove temporary items at end of combat
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtEndCombat", {
 		name: "Quick Alchemy: remove temporary items at end of combat?",
-		hint: "If enabled, will automatically remove items crafted with quick alchemy at the end of combat.",
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+		requiresReload: false,
+	});
+	
+	// Quick Alchemy: Send chat message when removing temp quick alchemy items
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "createRemovedTempItemsMsg", {
+		name: "Quick Alchemy: Send chat message when removing temp quick alchemy items?",
 		scope: "world",
 		config: true,
 		default: true,

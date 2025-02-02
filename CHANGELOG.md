@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.6] - 2025-02-01 
+### Fixed 
+- **Quick Alchemy:** Fixed bug causing several chat messages to be sent at beginning/end of Alchemist's turn about removing temporary items.  
+### Added
+- **Settings:** Added option to disable chat message when temporary items are removed at start/end of Alchemist turn.
+
 ## [2.6.5] - 2025-01-29
 ### Fixed
 - **Level Up:** Fixed bug where when leveling up duplicate formulas could be added to actor crafting. 

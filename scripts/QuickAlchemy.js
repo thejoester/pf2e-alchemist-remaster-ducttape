@@ -10,72 +10,81 @@ Hooks.on("combatTurnChange", async (combat, prior, current) => {
 	// Get Setting to see if we are removing Quick Vials at start of turn
 	if (getSetting("removeTempItemsAtTurnChange", true)) {
 		
-		//get previous combatant - check for Quick Vials
-		const priorCombatant = combat.combatants.get(prior.combatantId)
-		if (!priorCombatant) {
-			debugLog("prior combatant not found during combatTurnChange.");
-		} else {
-			const priorActor = priorCombatant.actor;
-			if (!priorActor || priorActor.type !== 'character'){
-				debugLog("No valid prior combatant found during combatTurnChange.");
-			}
-			const alchemistCheck = isAlchemist(priorActor);
-			if (!alchemistCheck.qualifies) {
-				debugLog(`Prior combatant ${priorActor.name} is not an alchemist`);
+		//only run as GM
+		if (game.user.isGM) {
+			
+			//get previous combatant - check for Quick Vials
+			const priorCombatant = combat.combatants.get(prior.combatantId)
+			if (!priorCombatant) {
+				debugLog("prior combatant not found during combatTurnChange.");
 			} else {
-				debugLog(`End of ${priorActor.name}'s turn, deleting Quick Vials and poisoned items.`);
-				await deleteTempItems(priorActor, true); // Delete Quick Vials
+				const priorActor = priorCombatant.actor;
+				if (!priorActor || priorActor.type !== 'character'){
+					debugLog("No valid prior combatant found during combatTurnChange.");
+				}
+				const alchemistCheck = isAlchemist(priorActor);
+				if (!alchemistCheck.qualifies) {
+					debugLog(`Prior combatant ${priorActor.name} is not an alchemist`);
+				} else {
+					debugLog(`End of ${priorActor.name}'s turn, deleting Quick Vials and poisoned items.`);
+					await deleteTempItems(priorActor, true); // Delete Quick Vials
+				}
 			}
-		}
-		
-		// Get the combatant whose turn it is
-		const currentCombatant = combat.combatants.get(current.combatantId);
-		
-		// Make sure there is a current combatant
-		if (!currentCombatant) {
-			debugLog(2, "No valid current combatant found during combatTurnChange.");
-			return;
-		}
-		//Get current combatant actor
-		const currentActor = currentCombatant.actor;
-		// Make sure the actor exists and is a character
-		if (!currentActor || currentActor.type !== 'character' ){
-			debugLog(1, "No valid actor for current combatant found during combatTurnChange.");
-			return;
-		}
-		debugLog(1, `${currentActor.name}'s turn.`);
-		// Ensure current combatant is alchemist
-		const alchemistCheck = isAlchemist(currentActor);
-		if (alchemistCheck.qualifies) {
-			// Delete temp items
-			await deleteTempItems(currentActor);
+			
+			// Get the combatant whose turn it is
+			const currentCombatant = combat.combatants.get(current.combatantId);
+			
+			// Make sure there is a current combatant
+			if (!currentCombatant) {
+				debugLog(2, "No valid current combatant found during combatTurnChange.");
+				return;
+			}
+			//Get current combatant actor
+			const currentActor = currentCombatant.actor;
+			// Make sure the actor exists and is a character
+			if (!currentActor || currentActor.type !== 'character' ){
+				debugLog(1, "No valid actor for current combatant found during combatTurnChange.");
+				return;
+			}
+			debugLog(1, `${currentActor.name}'s turn.`);
+			// Ensure current combatant is alchemist
+			const alchemistCheck = isAlchemist(currentActor);
+			if (alchemistCheck.qualifies) {
+				// Delete temp items
+				await deleteTempItems(currentActor);
+			}
 		}
     }
 });
 
 // Hook for combat end to remove temp items
 Hooks.on("deleteCombat", async (combat) => {
-    // Get Setting to see if we are removing items at start of turn
-	if (getSetting("removeTempItemsAtEndCombat", true)) {
-		// Make surre combat object exists
-		if (!combat) {
-			debugLog(2, "No combat found during deleteCombat hook.");
-			return;
-		}
+	
+	//only run as GM
+	if (game.user.isGM) {
 
-		debugLog(1, `Combat ended. Cleaning up items for combatants in Combat ID: ${combat.id}`);
-
-		// Iterate through all combatants in the combat encounter
-		for (const combatant of combat.combatants) {
-			const actor = combatant.actor;
-			// Make sure they exist and are a character
-			if (!actor || actor.type !== 'character') {
-				debugLog(1, `Actor associated with combatant ${combatant.name} not valid`);
-				continue;
+		// Get Setting to see if we are removing items at start of turn
+		if (getSetting("removeTempItemsAtEndCombat", true)) {
+			// Make surre combat object exists
+			if (!combat) {
+				debugLog(2, "No combat found during deleteCombat hook.");
+				return;
 			}
-			// Perform cleanup of temporary Quick Alchemy items created during combat
-			await deleteTempItems(actor);
-			await deleteTempItems(actor, true);
+
+			debugLog(1, `Combat ended. Cleaning up items for combatants in Combat ID: ${combat.id}`);
+
+			// Iterate through all combatants in the combat encounter
+			for (const combatant of combat.combatants) {
+				const actor = combatant.actor;
+				// Make sure they exist and are a character
+				if (!actor || actor.type !== 'character') {
+					debugLog(1, `Actor associated with combatant ${combatant.name} not valid`);
+					continue;
+				}
+				// Perform cleanup of temporary Quick Alchemy items created during combat
+				await deleteTempItems(actor);
+				await deleteTempItems(actor, true);
+			}
 		}
 	}
 });
@@ -255,15 +264,18 @@ Hooks.on("ready", () => {
 
 		// Send a single chat message summarizing removed items
 		if (removedItems.length > 0) {
-			const messageContent = `
-				<p>The following temporary items created with Quick Alchemy were removed from ${actor.name}'s inventory:</p>
-				<ul>${removedItems.map(name => `<li>${name}</li>`).join('')}</ul>
-			`;
-			ChatMessage.create({
-				user: game.user.id,
-				speaker: { alias: "Quick Alchemy" },
-				content: messageContent
-			});
+			if (getSetting("createRemovedTempItemsMsg")){
+			
+				const messageContent = `
+					<p>The following temporary items created with Quick Alchemy were removed from ${actor.name}'s inventory:</p>
+					<ul>${removedItems.map(name => `<li>${name}</li>`).join('')}</ul>
+				`;
+				ChatMessage.create({
+					user: game.user.id,
+					speaker: { alias: `Quick Alchemy` },
+					content: messageContent
+				});
+			}
 		}
 	}
 	
