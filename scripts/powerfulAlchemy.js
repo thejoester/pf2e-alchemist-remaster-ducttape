@@ -75,8 +75,14 @@ Hooks.on("ready", () => {
 			
 			// Check for strings to replace in item description
 			const replacements = [
-				{ pattern: /@Check\[\w+\|dc:(\d+)\]/g, replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistCheck.dc}`) }, // If using @check in description
-				{ pattern: /DC is (\d+)/g, replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistCheck.dc}`) } // Example "DC is 17"
+				{ 
+					pattern: /@Check\[(?!flat)\w+\|dc:(\d+)\]/g, 
+					replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistCheck.dc}`)
+				}, // Match @Check that is NOT flat (negative lookahead prevents matching "@Check[flat|dc:X]")
+				{ 
+					pattern: /DC is (\d+)/g, 
+					replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistCheck.dc}`)
+				} // Example "DC is 17", but ensure this won't affect flat checks if written differently
 			];
 			
 			// Make replacements
@@ -98,6 +104,25 @@ Hooks.on("ready", () => {
 					speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
 				});
 			}
+			
+			// Find and update the Rule Element for Notes
+			let updatedRules = item.system.rules.map(rule => {
+				if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
+					debugLog(`Updating Note Rule Element for ${item.name}`);
+					return {
+						...rule,
+						text: updatedDescription // Use the updated description in the rule element
+					};
+				}
+				return rule;
+			});
+
+			// Only update if there's a change
+			if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
+				await item.update({ "system.rules": updatedRules });
+				debugLog(`Updated Note Rule Element for ${item.name} to use new description.`);
+			}
+			
 		});
 	}
 });

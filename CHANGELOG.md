@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.7] - 2025-02-01
+### Fixed
+- **Powerful Alchemy:** Fixed issue where it was updating Flat DC when it should't. 
+- **Powerful Alchemy:** Fixed issue where certain items like Skunk Bomb pull descrption from the system item will display wrong DC when rolling damage. 
+
 ## [2.6.6] - 2025-02-01 
 ### Fixed 
 - **Quick Alchemy:** Fixed bug causing several chat messages to be sent at beginning/end of Alchemist's turn about removing temporary items.  
