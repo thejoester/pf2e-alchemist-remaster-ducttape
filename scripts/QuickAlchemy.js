@@ -1,7 +1,7 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
 
 let isArchetype = false;
-const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.5OFfH8W00oz6TeA3";
+const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
 const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
 
 // Hook for combat turn change to remove temp items on start of turn

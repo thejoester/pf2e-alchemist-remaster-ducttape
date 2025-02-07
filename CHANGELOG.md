@@ -1,9 +1,13 @@
 # Changelog
 
+## [2.6.8] - 2025-02-07
+### Fixed
+- **Quick Alchemy:** quick vials were using rule elements from the base versatile vials, but was causing them to have +1 item bonus too high at all levels. 
+
 ## [2.6.7] - 2025-02-01
 ### Fixed
-- **Powerful Alchemy:** Fixed issue where it was updating Flat DC when it should't. 
-- **Powerful Alchemy:** Fixed issue where certain items like Skunk Bomb pull descrption from the system item will display wrong DC when rolling damage. 
+- **Powerful Alchemy:** Fixed issue where it was updating Flat DC when it shouldn't. 
+- **Powerful Alchemy:** Fixed issue where certain items like Skunk Bomb pull description from the system item will display wrong DC when rolling damage. 
 
 ## [2.6.6] - 2025-02-01 
 ### Fixed 

@@ -219,42 +219,34 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	
 });
 
-/**
- * Custom function to get the max number of versatile vials actor should have in inventory
- * @param {Actor} actor 
- * @returns {number} maximum count of versatile vials
- */
+/*
+	function to get the max number of versatile vials actor should have in inventory
+	@param {Actor} actor 
+	@returns {number} maximum count of versatile vials
+*/
 function getMaxVials(actor){
   const maxVials = 2 + actor.system.abilities.int.mod; // 2 + INT modifier
   debugLog(`Actor ${actor.name} max vials calculated as: ${maxVials}`);
   return maxVials;
 }
 
-/**
- * Custom function to get the current count of versatile vials in an actor's inventory
- * @param {Actor} actor 
- * @returns {number} Current count of versatile vials
- */
+/*
+	function to get the current count of versatile vials in an actor's inventory
+	@param {Actor} actor 
+	@returns {number} Current count of versatile vials
+*/
 function getCurrentVials(actor) {
     const versatileVials = actor.items.filter((item) => item.slug?.toLowerCase() === "versatile-vial");
     const vialCount = versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
     return vialCount;
 }
 
-/**
- * Custom function to add versatile vials to the actor's inventory
- * @param {Actor} actor 
- * @param {number} count - Number of vials to add
- */
+/*
+	Custom function to add versatile vials to the actor's inventory
+	@param {number} count - Number of vials to add
+*/
 export async function addVialsToActor(actor, count) {
 	
-	/**
-		To avoid language issues, and more issues by accepting unchecked input, 
-		we will just add by direct uuid which should not change unless the item 
-		is replaced in the PF2e system. 
-	
-	*/
-
 	// Determine the actor's level
 	const actorLevel = actor.system.details.level.value;
 	// Determine the highest crafting tier based on actor's level
