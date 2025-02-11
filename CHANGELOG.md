@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.6.9] - 2025-02-11
+### Fixed
+- **Quick Alchemy:** fixed splash damage calculation in Quick Vials. 
+
 ## [2.6.8] - 2025-02-07
 ### Fixed
 - **Quick Alchemy:** quick vials were using rule elements from the base versatile vials, but was causing them to have +1 item bonus too high at all levels. 
