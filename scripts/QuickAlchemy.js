@@ -820,8 +820,7 @@ Hooks.on("ready", () => {
 
 		return totalVialCount;
 	}
-
-
+	
 	/*
 		Function to consume a versatile vial when crafting with quick alchemy
 	*/
@@ -832,7 +831,7 @@ Hooks.on("ready", () => {
 		}
 		
 		// If we are crafting a veratile vial, Quick Vial, or Healing Vial do not consume, return true
-		if (slug.startsWith("versatile-vial") || slug.startsWith("quick-vial") || slug.startsWith("healing-quick-vial")){
+		if (slug.startsWith("quick-vial") || slug.startsWith("healing-quick-vial")){
 			debugLog(`Crafted item with slug ${slug} without consuming vial`);
 			return true;
 		}
@@ -1200,6 +1199,7 @@ Hooks.on("ready", () => {
 		let selectedUuid = "";
 		let dbSelectedUuid = "";
 		let craftItemButtons = {};
+		let consumeVialButtons = {};
 		let newItemSlug = "";
 		let selectedType = "acid"; // default to acid
 		let specialIngredient = "none";
@@ -1533,6 +1533,73 @@ Hooks.on("ready", () => {
 					craftInjuryPoison(actor, selectedType);
 					return;
 				} 
+			}
+			
+			// Check if actor has mutagenist feat
+			if (hasFeat(actor, "advanced-vials-mutagenist")) {
+				
+				async function applyEffectFromCompendium(actor) {
+					// Define the exact effect UUID
+					const effectUUID = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.0Zpa9OfNcTUlNc2t";
+
+					// Get the effect document from the compendium
+					const effect = await fromUuid(effectUUID);
+
+					if (!effect) {
+						ui.notifications.error(`Failed to retrieve effect from compendium.`);
+						return;
+					}
+
+					// Apply the effect to the actor
+					const newEffect = duplicate(effect.toObject());
+					await actor.createEmbeddedDocuments("Item", [newEffect]);
+
+					debugLog(`Applied effect "${newEffect.name}" to ${actor.name}`);
+					ui.notifications.info(`Applied "${newEffect.name}" to ${actor.name}`);
+				}
+
+				// Setup dialog
+				let promptConsumeVial = await new Promise((resolve) => {
+					// Add Quick Vial button first
+					consumeVialButtons['qv'] = {
+						icon: "<span class='pf2-icon'>D</span>",
+						label: "Quick Vial",
+						callback: async () => {
+							await applyEffectFromCompendium(actor);
+							return;
+						}
+					};
+
+					// If we have versatile vials, add it before "No"
+					if (getVersatileVialCount(actor) >= 1) { 
+						consumeVialButtons['vv'] = {
+							icon: "<span class='pf2-icon'>A</span>",
+							label: "Versatile Vial",
+							callback: async () => {
+								// Consume Versatile Vial
+								let selectedSlug = "none";
+								await consumeVersatileVial(actor, selectedSlug); 
+								await applyEffectFromCompendium(actor);
+								return; 
+							}
+						};
+					}
+
+					// Add No button last
+					consumeVialButtons['no'] = {
+						icon: "<i class='fas fa-times'></i>",
+						label: "No",
+						callback: () => resolve(null),
+					};
+
+					new Dialog({
+						title: "Mutagenist Options",
+						content: `<p>Do you want to consume a vial?</p>`,
+						buttons: consumeVialButtons,
+						default: "qv"
+					}).render(true);
+				});
+				
 			}
 			
 			debugLog(`uuid: ${uuid}`);
