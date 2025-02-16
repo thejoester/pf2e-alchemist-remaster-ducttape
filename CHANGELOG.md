@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.10] - 2025-02-16
+### Added
+- **Quick Alchemy:** Added support for Mutagenist Advanced Vials feature. 
+  - Field Benefit, Field Vials, Field Discovery, and Greater Field Discovery are all either handled by the system or not needing module support. 
+
 ## [2.6.9] - 2025-02-11
 ### Fixed
 - **Quick Alchemy:** fixed splash damage calculation in Quick Vials. 
