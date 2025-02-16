@@ -1,7 +1,7 @@
 # Changelog
 
 ## [2.6.11] - 2025-02-16
-### Added
+### Fixed
 - **Quick Alchemy:** Fixed error in effect for resistance. 
 
 ## [2.6.10] - 2025-02-16
