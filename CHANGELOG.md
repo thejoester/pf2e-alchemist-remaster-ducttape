@@ -1,7 +1,7 @@
 # Changelog
 
 ## [2.7.1] - 2025-02-25
-## Fixed
+### Fixed
 - **Localization:** Fixed the localization so that it is specific to this module and will not conflict with other translations. 
 
 ## [2.7.0] - 2025-02-24
