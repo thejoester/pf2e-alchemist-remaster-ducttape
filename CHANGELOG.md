@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.1] - 2025-02-25
+## Fixed
+- **Localization:** Fixed the localization so that it is specific to this module and will not conflict with other translations. 
+
 ## [2.7.0] - 2025-02-24
 ### Added
 - Added localization to module. At this time only english is supported. If you would like to help contribute additional languages please visit my [github page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape). 
