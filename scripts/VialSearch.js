@@ -1,4 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { LOCALIZED_TEXT } from "./localization.js";
 
 // See if VialSearch option enabled, default to false
 let vialSearchReminder = false;
@@ -126,8 +127,8 @@ Hooks.once('init', () => {
 					
 					
 					const messageContent = `
-                        <p>${actor.name} has spent ${explorationBlocks * 10} minutes in exploration mode. Would you like to add ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
-                        <button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">Add Vials</button>
+                        <p>${LOCALIZED_TEXT.VIALSEARCH_MESSAGE(actor.name,explorationBlocks * 10,foundVials)} (${LOCALIZED_TEXT.VIALSEARCH_MAX}: ${maxVials}, ${LOCALIZED_TEXT.VIALSEARCH_CURRENT}: ${currentVials})</p>
+						<button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">${LOCALIZED_TEXT.VIALSEARCH_ADD_VIALS}</button>
                     `;
 
                     // Make sure to only send to owner of actor
@@ -135,10 +136,7 @@ Hooks.once('init', () => {
 					
 					// Compose chat message
                     const message = await ChatMessage.create({
-                        content: `
-                            <p>${actor.name} has spent ${explorationBlocks * 10} minutes in exploration mode. Would you like to add ${foundVials} versatile vials? (Maximum: ${maxVials}, Current: ${currentVials})</p>
-                            <button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">Add Vials</button>
-                        `,
+                        content: messageContent,
                         speaker: { alias: "Game Master" },
                         whisper: playerIds
                     });
@@ -153,7 +151,7 @@ Hooks.once('init', () => {
 					if (getSetting('maxVialsMessage')) { // Check settings if we are sending messages
 						// Send chat message visible to all players
 						ChatMessage.create({
-							content: `${actor.name} already has the maximum number of versatile vials.`,
+							content: `${actor.name} ${LOCALIZED_TEXT.VIALSEARCH_HAS_MAX_VIALS}`,
 							speaker: { alias: "Game Master" }
 						});
 					}
@@ -169,7 +167,7 @@ $(document).on('click', '.add-vials-button', async (event) => {
     const actorId = button.dataset.actorId;
 	const vialsToAdd = parseInt(button.dataset.foundVials, 10);
 	if (isNaN(vialsToAdd)) {
-		console.error('Error: foundVials is not a valid number');
+		debugLog(3,'Error: foundVials is not a valid number');
 		return;
 	}
     const actor = game.actors.get(actorId);
@@ -180,7 +178,7 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	
     // Check if the player has owner permission on the actor
     if (!actor.testUserPermission(game.user, 'OWNER')) {
-        ui.notifications.warn('You do not have permission to modify this actor.');
+        ui.notifications.warn(LOCALIZED_TEXT.NOTIF_NO_PERMS);
         return;
     }
 
@@ -191,11 +189,11 @@ $(document).on('click', '.add-vials-button', async (event) => {
 		
         // Send chat message visible to all players
         ChatMessage.create({
-            content: `${actor.name} found ${vialsToAdd} versatile vial(s).`,
+            content: LOCALIZED_TEXT.VIALSEARCH_CHAT_FOUND_VIALS(actor.name,vialsToAdd),
             speaker: { alias: "Game Master" }
         });
     } else {
-        ui.notifications.warn(`${actor.name} already has the maximum number of versatile vials.`);
+        ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ALREADY_MAX_VIALS(actor.name));
     }
 	
 	// Once clicked - delete button from chat mesasage
@@ -204,11 +202,11 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	debugLog(`MessageId: ${messageId} | message: ${message}`);
     
 	if (!messageId) {
-        console.error('Message ID not found on button. Ensure data-message-id is set correctly.');
+        debugLog('Message ID not found on button. Ensure data-message-id is set correctly.');
         return;
     }
 	if (!message) {
-        console.error(`Message not found for ID: ${messageId}`);
+        debugLog(`Message not found for ID: ${messageId}`);
         return;
     }
 	

@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.0] - 2025-02-24
+### Added
+- Added localization to module. At this time only english is supported. If you would like to help contribute additional languages please visit my [github page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape). 
+
 ## [2.6.11] - 2025-02-16
 ### Fixed
 - **Quick Alchemy:** Fixed error in effect for resistance. 

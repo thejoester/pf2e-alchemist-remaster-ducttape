@@ -1,3 +1,4 @@
+import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
 /*
 	Function for debugging
@@ -153,7 +154,7 @@ function adjustCollapseSettingBasedOnWorkbench() {
     if (!isWorkbenchInstalled) return; // Not installed - exit early
 	
 	if (!game.settings.settings.has(workbenchSettingKey)) {// settings key not found
-        console.log(`Workbench setting '${workbenchSettingKey}' not found.`);
+        console.log(LOCALIZED_TEXT.SETTING_WORKBENCH_NOT_FOUND);
         return;
     }
     const currentWorkbenchSetting = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
@@ -165,9 +166,7 @@ function adjustCollapseSettingBasedOnWorkbench() {
     if (currentWorkbenchSetting === "collapsedDefault" || currentWorkbenchSetting === "nonCollapsedDefault") {
         if (game.settings.get("pf2e-alchemist-remaster-ducttape", "collapseChatDesc") === true) {
             game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
-            console.log(
-                "PF2e Alchemist Remaster Duct Tape | xdy-pf2e-workbench is managing collapsibility."
-            );
+            console.log("PF2e Alchemist Remaster Duct Tape | xdy-pf2e-workbench is managing collapsibility.");
         }
     }
 }
@@ -178,7 +177,7 @@ function adjustCollapseSettingBasedOnWorkbench() {
 window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
-            title: 'Manage Homebrew Compendiums',
+            title: LOCALIZED_TEXT.SETTING_MANAGE_HOMEBREW_COMPENDIUM,
             template: 'modules/pf2e-alchemist-remaster-ducttape/templates/add-compendiums.html',
             width: 600,
             height: 'auto',
@@ -204,12 +203,12 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
 
             const pack = game.packs.get(input);
             if (this.tempCompendiums?.some(comp => comp.name === input)) {
-                ui.notifications.warn(`Compendium "${input}" is already in the list.`);
+                ui.notifications.warn(LOCALIZED_TEXT.SETTING_COMPENDIUM_ALREADY_IN_LIST(input));
                 return;
             }
 
             if (!pack || pack.documentName !== 'Item') {
-                ui.notifications.error(`Compendium "${input}" is not valid or does not contain items.`);
+                ui.notifications.error(LOCALIZED_TEXT.SETTING_COMPENDIUM_INVALID(input));
                 return;
             }
             this.tempCompendiums = [...(this.tempCompendiums || []), { name: input, valid: !!pack }];
@@ -230,7 +229,7 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
             const updatedCompendiums = savedCompendiums.filter(c => c !== compendiumToDelete);
 
             await game.settings.set('pf2e-alchemist-remaster-ducttape', 'compendiums', updatedCompendiums);
-            ui.notifications.info(`Compendium "${compendiumToDelete}" removed.`);
+            ui.notifications.info(LOCALIZED_TEXT.SETTING_COMPENDIUM_REMOVED(compendiumToDelete));
             this.render();
         });
 
@@ -248,11 +247,11 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
             if (invalidEntries.length > 0) {
                 new Dialog({
                     title: 'Invalid or Duplicate Entries',
-                    content: `The following compendiums were not valid or were duplicates and were not saved:<br>${invalidEntries.join('<br>')}`,
+                    content: `${LOCALIZED_TEXT.SETTING_COMPENDIUM_LIST_INVALID}<br>${invalidEntries.join('<br>')}`,
                     buttons: {
                         ok: {
                             icon: '<i class="fas fa-check"></i>',
-                            label: 'OK'
+                            label: LOCALIZED_TEXT.OK
                         }
                     }
                 }).render(true);
@@ -264,7 +263,7 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
                 'compendiums',
                 [...new Set([...savedCompendiums, ...uniqueCompendiums.keys()])]
             );
-            ui.notifications.info('Compendiums saved successfully.');
+            ui.notifications.info(LOCALIZED_TEXT.SETTING_SAVED);
             this.tempCompendiums = [];
             this.close();
         });
@@ -280,17 +279,17 @@ Hooks.once("init", () => {
 /*	
 	Saved Data Settings
 */
+	// Tracks the last processed time for exploration mode
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
         name: 'Last Processed Time',
-        hint: 'Tracks the last processed time for exploration mode.',
         scope: 'world',
         config: false,
         type: Number,
         default: 0
     });
+	// Tracks the last recorded world time to calculate elapsed time
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'previousTime', {
 		name: 'Previous World Time',
-		hint: 'Tracks the last recorded world time to calculate elapsed time.',
 		scope: 'world',
 		config: false,
 		type: Number,
@@ -303,7 +302,7 @@ Hooks.once("init", () => {
 	
 	// Quick Alchemy: remove temporary items at end of turn
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtTurnChange", {
-		name: "Quick Alchemy: remove temporary items at start of turn?",
+		name: LOCALIZED_TEXT.SETTING_REMOVE_TEMP_START_TURN,
 		scope: "world",
 		config: true,
 		default: true,
@@ -313,7 +312,7 @@ Hooks.once("init", () => {
 	
 	// Quick Alchemy: remove temporary items at end of combat
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtEndCombat", {
-		name: "Quick Alchemy: remove temporary items at end of combat?",
+		name: LOCALIZED_TEXT.SETTING_REMOVE_TEMP_END_COMBAT,
 		scope: "world",
 		config: true,
 		default: true,
@@ -323,7 +322,7 @@ Hooks.once("init", () => {
 	
 	// Quick Alchemy: Send chat message when removing temp quick alchemy items
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "createRemovedTempItemsMsg", {
-		name: "Quick Alchemy: Send chat message when removing temp quick alchemy items?",
+		name: LOCALIZED_TEXT.SETTING_SEND_CHAT_REMOVE_TEMP,
 		scope: "world",
 		config: true,
 		default: true,
@@ -333,8 +332,8 @@ Hooks.once("init", () => {
 	
 	// Send attack messages to chat
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "sendAtkToChat", {
-		name: "Quick Alchemy: Send all crafted items to chat?",
-		hint: 'If enabled, will send an item card to chat for all items made with Quick Alchemy, even the items made choosing "Craft and attack".',
+		name: LOCALIZED_TEXT.SETTING_SEND_CRAFTED_ITEM_TO_CHAT,
+		hint: LOCALIZED_TEXT.SETTING_SEND_CRAFTED_ITEM_TO_CHAT_HINT,
 		scope: "world",
 		config: true,    
 		default: false,  
@@ -344,15 +343,15 @@ Hooks.once("init", () => {
 	
 	// Sized Based Alchemy Settings
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy", {
-		name: "Quick Alchemy: Enable size-based alchemy?",
-		hint: "Adjust the size of items created by Quick Alchemy to match the creature's size.",
+		name: LOCALIZED_TEXT.SETTING_SIZEBASED_ALCHEMY,
+		hint: LOCALIZED_TEXT.SETTING_SIZEBASED_ALCHEMY_HINT,
 		scope: "world",
 		config: true,
 		type: String,
 		choices: {
-			disabled: "Disabled",
-			tinyOnly: "Tiny Only",
-			allSizes: "All Sizes"
+			disabled: LOCALIZED_TEXT.DISABLED,
+			tinyOnly: LOCALIZED_TEXT.TINY_ONLY,
+			allSizes: LOCALIZED_TEXT.ALL_SIZES
 		},
 		default: "tinyOnly",
 		onChange: (value) => {
@@ -366,8 +365,8 @@ Hooks.once("init", () => {
 */
 	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Powerful Alchemy settings...","color: aqua; font-weight: bold;");
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy", {
-		name: "Enable Powerful Alchemy",
-		hint: "Enables the auto-update of created items using Class DC.",
+		name: LOCALIZED_TEXT.SETTING_ENABLE_POWERFUL_ALCHEMY,
+		hint: LOCALIZED_TEXT.SETTING_ENABLE_POWERFUL_ALCHEMY_HINT,
 		scope: "world",
 		config: true,
 		type: Boolean,
@@ -383,19 +382,16 @@ Hooks.once("init", () => {
 */
 	// Add higher level versions of known formulas on level up?
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
-		name: "Level Up: Add higher level version of known formulas upon level up.",
-		hint: `If enabled, when leveled up will add higher level version of known formulas. 
-		Ask for each = will prompt for each formula; 
-		Ask for all = will prompt for all formulas at once; 
-		Auto = will automatically add formulas.`,
+		name: LOCALIZED_TEXT.SETTING_LEVELUP_ADD_HIGHER,
+		hint: LOCALIZED_TEXT.SETTING_LEVELUP_ADD_HIGHER_HINT,
 		scope: "world",
 		config: true,
 		type: String,
 		choices: {
-			disabled: "Disabled",
-			ask_all: "Ask for all",
-			ask_each: "Ask for each",
-			auto: "Auto"
+			disabled: LOCALIZED_TEXT.DISABLED,
+			ask_all: LOCALIZED_TEXT.ASK_ALL,
+			ask_each: LOCALIZED_TEXT.ASK_EACH,
+			auto: LOCALIZED_TEXT.AUTO
 		},
 		default: "ask_all",
 		requiresReload: false,
@@ -403,17 +399,15 @@ Hooks.once("init", () => {
 	
 	// How to handle lower level formulas
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp", {
-		name: "Level Up: Lower level formula handling:",
-		hint: `Upon level up, will check for available lower level formulas, or remove them to keep your formula list small. 
-		Add lower level versions = Will add lower level versions of known formulas; 
-		Remove lower level versions (default) = Will Remove lower level formulas if a higher level is known.`,
+		name: LOCALIZED_TEXT.SETTING_LEVELUP_HANDLE_LOWER_LEVEL,
+		hint: LOCALIZED_TEXT.SETTING_LEVELUP_HANDLE_LOWER_LEVEL_HINT,
 		scope: "world",
 		config: true,
 		type: String,
 		choices: {
-			disabled: "Disabled.",
-			add_lower: "Add lower level versions.",
-			remove_lower: "Remove lower level versions."
+			disabled: LOCALIZED_TEXT.DISABLED,
+			add_lower: LOCALIZED_TEXT.ADD_LOWER,
+			remove_lower: LOCALIZED_TEXT.REMOVE_LOWER
 		},
 		default: "remove_lower",
 		requiresReload: false,
@@ -421,15 +415,15 @@ Hooks.once("init", () => {
 	
 	// Prompt setting for handleLowerFormulasOnLevelUp
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "promptLowerFormulasOnLevelUp", {
-		name: "Level Up: Prompt setting for lower level forumulas",
-		hint: "'Auto': Automatically removes lower level formulas, 'Ask for All': ask once for all, 'Ask for Each': Ask for each formula",
+		name: LOCALIZED_TEXT.SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL,
+		hint: LOCALIZED_TEXT.SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL_HINT,
 		scope: "world",
 		config: true,
 		type: String,
 		choices: {
-			auto_lower: "Auto",
-			ask_all_lower: "Ask for All",
-			ask_each_lower: "Ask for Each"
+			auto_lower: LOCALIZED_TEXT.AUTO,
+			ask_all_lower: LOCALIZED_TEXT.ASK_ALL,
+			ask_each_lower: LOCALIZED_TEXT.ASK_EACH
 		},
 		default: "ask_all_lower",
 		requiresReload: false,
@@ -437,14 +431,14 @@ Hooks.once("init", () => {
 	
 	// Who is asked by default to add/remove formulas
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
-		name: "Level Up: Permission level to add/remove formulas to actor:",
-		hint: "(If actor owner is not logged in, GM will be prompted)",
+		name: LOCALIZED_TEXT.SETTING_LEVELUP_PERMISSION_LEVEL,
+		hint: LOCALIZED_TEXT.SETTING_LEVELUP_PERMISSION_LEVEL_HINT,
 		scope: "world",
 		config: true,
 		type: String,
 		choices: {
-			gm_only: "GM",
-			actor_owner: "Owner"
+			gm_only: LOCALIZED_TEXT.GM,
+			actor_owner: LOCALIZED_TEXT.OWNER
 		},
 		default: "actor_owner",
 		requiresReload: false,
@@ -452,7 +446,7 @@ Hooks.once("init", () => {
 	
 	// add list of new formulas learned to chat
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
-		name: "Level Up: Add the list of new/removed formulas upon level up to chat.",
+		name: LOCALIZED_TEXT.SETTING_LEVELUP_SEND_NEW_REMOVED_TO_CHAT,
 		hint: "",
 		scope: "world",
 		config: true,
@@ -471,9 +465,9 @@ Hooks.once("init", () => {
 	});
 
 	game.settings.registerMenu('pf2e-alchemist-remaster-ducttape', 'addCompendiumsMenu', {
-		name: 'Add Compendiums',
-		label: 'Add Hombebrew Item Compendiums', // This will be the button text
-		hint: 'Manage the list of compendiums checked during level up.',
+		name: LOCALIZED_TEXT.SETTING_ADD_COMPENDIUM,
+		label: LOCALIZED_TEXT.SETTING_ADD_COMPENDIUM_LABEL, // This will be the button text
+		hint: LOCALIZED_TEXT.SETTING_ADD_COMPENDIUM_HINT,
 		icon: 'fas fa-plus-circle', // Icon for the button
 		type: AddCompendiumsApp, // The FormApplication class to open
 		restricted: true // Only accessible by GMs
@@ -518,8 +512,8 @@ Hooks.once("init", () => {
 */
 	// Enable Vial Search
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
-		name: "Vial search reminder",
-		hint: "When at least 10 minutes in game time pass out of combat, prompt alchemist to add vials.",
+		name: LOCALIZED_TEXT.SETTING_VIAL_SEARCH_REMINDER,
+		hint: LOCALIZED_TEXT.SETTING_VIAL_SEARCH_REMINDER_HINT,
 		scope: "world", 
 		config: true,    
 		type: Boolean,   
@@ -529,8 +523,8 @@ Hooks.once("init", () => {
 	
 	// Suppress "Max Vials" Message
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "maxVialsMessage", {
-		name: "Display when alchemist has max vials already",
-		hint: "Enable/Disable max vials messages in chat.",
+		name: LOCALIZED_TEXT.SETTING_DISPLAY_MAX_VIAL,
+		hint: LOCALIZED_TEXT.SETTING_DISPLAY_MAX_VIAL_HINT,
 		scope: "world", 
 		config: true,    
 		type: Boolean,   
@@ -542,8 +536,8 @@ Hooks.once("init", () => {
 	Searchable Formulas
 */
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
-		name: "Enable Formula Search",
-		hint: "Enables the search/filter for formulas on character sheet.",
+		name: LOCALIZED_TEXT.SETTING_ENABLE_FORMULA_SEARCH,
+		hint: LOCALIZED_TEXT.SETTING_ENABLE_FORMULA_SEARCH_HINT,
 		scope: "client", 
 		config: true, 
 		type: Boolean, 
@@ -558,8 +552,8 @@ Hooks.once("init", () => {
 	Collapse Item Description in chat
 */
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
-		name: "Collapse item description in chat",
-		hint: "Shortens chat messages with long item descriptions, click the Eye icon to expand.",
+		name: LOCALIZED_TEXT.SETTING_COLLAPSE_ITEM_DESC_CHAT,
+		hint: LOCALIZED_TEXT.SETTING_COLLAPSE_ITEM_DESC_CHAT_HINT,
 		scope: "world", 
 		config: true, 
 		type: Boolean,
@@ -590,7 +584,7 @@ Hooks.once("init", () => {
 				if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
 					thisSettingInput.prop("disabled", true);
 					thisSettingInput.parent().append(
-						`<p class="notes" style="color: red;">This setting is disabled because xdy-pf2e-workbench is managing collapsible content.</p>`
+						`<p class="notes" style="color: red;">${LOCALIZED_TEXT.SETTING_DISABLED_WORKBENCH}</p>`
 					);
 				} else if (workbenchSettingValue === "noCollapse") {
 					thisSettingInput.prop("disabled", false);
@@ -607,7 +601,7 @@ Hooks.once("init", () => {
 						thisSettingInput.prop("disabled", true);
 						thisSettingInput.parent().find(".notes").remove(); // Remove old notes
 						thisSettingInput.parent().append(
-							`<p class="notes" style="color: red;">This setting is disabled because xdy-pf2e-workbench is managing collapsible content.</p>`
+							`<p class="notes" style="color: red;">${LOCALIZED_TEXT.SETTING_DISABLED_WORKBENCH}</p>`
 						);
 						game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
 					} else if (selectedValue === "noCollapse") {
@@ -624,16 +618,16 @@ Hooks.once("init", () => {
 */
 	// Register debugLevel setting
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "debugLevel", {
-		name: "Debug Level",
-		hint: "Set the debug level for logging. None disables all logging, All includes info, warnings, and errors.",
+		name: LOCALIZED_TEXT.SETTING_DEBUG_LEVEL,
+		hint: LOCALIZED_TEXT.SETTING_DEBUG_LEVEL_HINT,
 		scope: "world",
 		config: true,
 		type: String,
 		choices: {
-			"none": "None",
-			"error": "Errors",
-			"warn": "Warnings",
-			"all": "All"
+			"none": LOCALIZED_TEXT.SETTING_DEBUG_NONE,
+			"error": LOCALIZED_TEXT.SETTING_DEBUG_ERROR,
+			"warn": LOCALIZED_TEXT.SETTING_DEBUG_WARN,
+			"all": LOCALIZED_TEXT.SETTING_DEBUG_ALL
 		},
 		default: "none", // Default to no logging
 		requiresReload: false

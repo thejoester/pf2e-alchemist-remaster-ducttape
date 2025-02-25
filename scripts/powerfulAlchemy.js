@@ -1,4 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { LOCALIZED_TEXT } from "./localization.js";
 
 /**
 	Update item description based on regex pattern and replacement logic. 
@@ -100,7 +101,7 @@ Hooks.on("ready", () => {
 				const itemName = item.name;
 				ChatMessage.create({
 					author: game.user?.id,    // User ID to send the mesactorge as the system
-					content: `<h3>Powerful Alchemy:</h3><p>${itemName} updated using Class DC ${alchemistCheck.dc}!</p>`,
+					content: `<h3>Powerful Alchemy:</h3><p>${itemName} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistCheck.dc}!</p>`,
 					speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
 				});
 			}

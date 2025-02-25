@@ -1,4 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
 // Settings placeholders
@@ -384,7 +385,7 @@ async function removeLowerLevelFormulas(actor) {
     if (addNewFormulasToChat && removedFormulas.length > 0) {
         const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
         ChatMessage.create({
-            content: `<strong>${actor.name}</strong> has removed the following lower-level formulas:<br><br>${removedFormulaNames}`
+            content: `<strong>${actor.name}</strong> ${LOCALIZED_TEXT.LEVELUP_REMOVEDLOWER_CHAT_MSG}:<br><br>${removedFormulaNames}`
         });
     }
 }
@@ -450,7 +451,7 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	if (addNewFormulasToChat && newFormulaCount > 0) { // if option enabled and there was formulas added, display in chat
       try {
           ChatMessage.create({ 
-              content: `<strong>${actorName}</strong> has learned the following new formulas:<br><br> ${newFormulas}`
+              content: `<strong>${actorName}</strong> ${LOCALIZED_TEXT.LEVELUP_ADDED_CHAT_MSG}:<br><br> ${newFormulas}`
           });
       } catch (error) {
           debugLog(`Failed to send chat message for ${actorName}: ${error.message}`);
@@ -472,15 +473,15 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
 
         const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
         const formulaListHTML = sortedFormulas.map(f => 
-            `<li>Level ${f.level}: <strong>${f.name}</strong></li>`
+            `<li>${LOCALIZED_TEXT.LEVELUP_LEVEL} ${f.level}: <strong>${f.name}</strong></li>`
         ).join('');
 
-        const title = isRemoving ? "Remove Lower-Level Formulas" : "New Formulas Discovered";
+        const title = isRemoving ? LOCALIZED_TEXT.LEVELUP_REMOVE_LOWERLEVEL_FORMULAS : LOCALIZED_TEXT.LEVELUP_NEW_FORMULAS_DISCOVERED;
         const content = isRemoving
-            ? `<p>${actor.name} has the following lower-level formulas that are being replaced:</p>
-                <ul>${formulaListHTML}</ul><p>Do you want to remove these formulas?</p>`
-            : `<p>${actor.name} has unlocked new formulas:</p>
-                <ul>${formulaListHTML}</ul><p>Do you want to add these formulas?</p>`;
+            ? `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_LOWER_LEVEL_BEING_REPLACED}:</p>
+                <ul>${formulaListHTML}</ul><p>${LOCALIZED_TEXT.LEVELUP_PROMPT_REMOVE_FORMULAS}</p>`
+            : `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_UNLOCKED_FORMULAS}:</p>
+                <ul>${formulaListHTML}</ul><p>${LOCALIZED_TEXT.LEVELUP_PROMPT_ADD_FORMULAS}</p>`;
 
         new Dialog({
             title,
@@ -488,12 +489,12 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-check"></i>',
-                    label: "Yes",
+                    label: LOCALIZED_TEXT.BTN_YES,
                     callback: () => resolve(true)
                 },
                 no: {
                     icon: '<i class="fas fa-times"></i>',
-                    label: "No",
+                    label: LOCALIZED_TEXT.BTN_NO,
                     callback: () => resolve(false)
                 }
             },
@@ -507,10 +508,10 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
 */
 async function showFormulaDialog(actor, formula, level, isRemoving = false) {
     return new Promise((resolve) => {
-        const title = isRemoving ? "Remove Formula" : "New Formula Discovered";
+        const title = isRemoving ? LOCALIZED_TEXT.LEVELUP_REMOVE_LOWERLEVEL_FORMULAS : LOCALIZED_TEXT.LEVELUP_NEW_FORMULAS_DISCOVERED;
         const content = isRemoving
-            ? `<p>${actor.name} has a higher version of formula <strong>${formula.name}</strong> (Level ${level}). Do you want to remove it?</p>`
-            : `<p>${actor.name} has unlocked the formula for <strong>${formula.name}</strong> (Level ${level}). Do you want to add it?</p>`;
+            ? `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_HIGHER_VERSION} <strong>${formula.name}</strong> (${LOCALIZED_TEXT.LEVELUP_LEVEL} ${level}). ${LOCALIZED_TEXT.LEVELUP_PROMPT_REMOVE_FORMULA}</p>`
+            : `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_UNLOCKED_FORMULA} <strong>${formula.name}</strong> (${LOCALIZED_TEXT.LEVELUP_LEVEL} ${level}). ${LOCALIZED_TEXT.LEVELUP_PROMPT_ADD_FORMULA}</p>`;
 
         new Dialog({
             title,
@@ -518,12 +519,12 @@ async function showFormulaDialog(actor, formula, level, isRemoving = false) {
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-check"></i>',
-                    label: "Yes",
+                    label: LOCALIZED_TEXT.BTN_YES,
                     callback: () => resolve(true)
                 },
                 no: {
                     icon: '<i class="fas fa-times"></i>',
-                    label: "No",
+                    label: LOCALIZED_TEXT.BTN_NO,
                     callback: () => resolve(false)
                 }
             },
