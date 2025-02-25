@@ -34,7 +34,7 @@ jobs:
           download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/pf2e-alchemist-remaster-ducttape.zip
 
       - name: Create Module Archive
-        run: zip -r pf2e-alchemist-remaster-ducttape.zip module.json README.md LICENSE.md CHANGELOG.md assets/ packs/ scripts/ styles/ templates/
+        run: zip -r pf2e-alchemist-remaster-ducttape.zip module.json README.md LICENSE.md CHANGELOG.md assets/ packs/ scripts/ styles/ templates/ lang/
 
       - uses: release-flow/keep-a-changelog-action@v3
         id: changelog
