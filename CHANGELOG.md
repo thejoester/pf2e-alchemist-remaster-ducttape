@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.2] - 2025-02-25
+### Fixed 
+- **Localization:** Fixed issues in settings for localization. 
+- **Localization:** Made some additions and corrections to localization. If you are working on any translations you can [view the latest changes to en.json here](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/commit/a84683c76fa9176430dfda7c92827a032c6b1183#diff-1d56632a2d162f99c901e53b79a6224e984c14501bca3188a85dbb4b4c5e6da1).
+
 ## [2.7.1] - 2025-02-25
 ### Fixed
 - **Localization:** Fixed the localization so that it is specific to this module and will not conflict with other translations. 

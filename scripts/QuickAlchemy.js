@@ -47,7 +47,7 @@ Hooks.on("combatTurnChange", async (combat, prior, current) => {
 				debugLog(1, LOCALIZED_TEXT.DEBUG_PRIOR_COMBATANT_NOT_FOUND);
 				return;
 			}
-			debugLog(1, LOCALIZED_TEXT.DEBUG_CURRENT_ACTOR_TURN(currentActor.name));
+			debugLog(1, `${LOCALIZED_TEXT.DEBUG_CURRENT_ACTOR_TURN(currentActor.name)}`);
 			// Ensure current combatant is alchemist
 			const alchemistCheck = isAlchemist(currentActor);
 			if (alchemistCheck.qualifies) {

@@ -96,6 +96,8 @@
 		"SETTING_DEBUG_ERROR":"Errors",
 		"SETTING_DEBUG_WARN":"Warnings",
 		"SETTING_DEBUG_ALL":"All",
+		"SETTING_COMPENDIUM_CHECK":"Compendiums to Check",
+		"SETTING_COMPENDIUM_CHECK_HINT":"List of compendiums to search for higher-level items when characters level up.",
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Select Item Type",
 		"QUICK_ALCHEMY_PROMPT_TYPE":"What type of item do you wish to craft with Quick Alchemy?",
 		"QUICK_ALCHEMY_NO_PRIOR_COMBATANT": "No valid prior combatant found during combatTurnChange.",
