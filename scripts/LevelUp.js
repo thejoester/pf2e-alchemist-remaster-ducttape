@@ -1,4 +1,4 @@
-import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
@@ -534,23 +534,6 @@ async function showFormulaDialog(actor, formula, level, isRemoving = false) {
 }
 
 /*
-  Function to check if actor has any active logged in owners
-*/
-function hasActiveOwners(actor) {
-    // Get owners with ownership level 3 ('Owner')
-    const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
-
-    // Filter for logged-in owners who are not GMs
-    const loggedInOwners = game.users.contents.filter(user => owners.includes(user.id) && user.active && !user.isGM);
-
-    // Debug output
-    debugLog(`Owners: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
-
-    // Return whether any non-GM logged-in owners exist
-    return loggedInOwners.length > 0;
-}
-
-/*
   Function to handle permissions
 */
 function canManageFormulas(actor) {
@@ -591,27 +574,29 @@ function canManageFormulas(actor) {
 	Function to get all Alchemists current level at start
 */
 async function getAlchemistLevels(){
-	// Avoid sending multiple messages for the same actor
-	const processedActorIds = new Set();
+	if (game.user.isGM) {
+		// Avoid sending multiple messages for the same actor
+		const processedActorIds = new Set();
 
-	// Loop through all actors and find Alchemists
-	for (const actor of game.actors.party.members) {
-		// Make sure selected token is an alchemist or has archetype
-		const alchemistCheck = isAlchemist(actor);
-		if (!alchemistCheck.qualifies) {
-			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
-		} else {
+		// Loop through all actors and find Alchemists
+		for (const actor of game.actors.party.members) {
+			// Make sure selected token is an alchemist or has archetype
+			const alchemistCheck = isAlchemist(actor);
+			if (!alchemistCheck.qualifies) {
+				debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
+			} else {
 
-			// Avoid processing the same actor multiple times
-			if (processedActorIds.has(actor.id)) continue;
-			processedActorIds.add(actor.id);
-			
-			// Clean up duplicate formulas
-            await removeDuplicateFormulas(actor);
-			
-			// Set previous level flag as current level
-			await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel', actor.system.details.level.value);	
-			debugLog(`Previous level flag set for ${actor.name} = ${actor.system.details.level.value}`);
+				// Avoid processing the same actor multiple times
+				if (processedActorIds.has(actor.id)) continue;
+				processedActorIds.add(actor.id);
+				
+				// Clean up duplicate formulas
+				await removeDuplicateFormulas(actor);
+				
+				// Set previous level flag as current level
+				await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel', actor.system.details.level.value);	
+				debugLog(`Previous level flag set for ${actor.name} = ${actor.system.details.level.value}`);
+			}
 		}
 	}
 }

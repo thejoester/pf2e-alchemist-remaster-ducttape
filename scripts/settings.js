@@ -143,6 +143,24 @@ export function isAlchemist(actor) {
     return { qualifies: false, dc: 0, isArchetype: false };
 }
 
+/*
+  Function to check if actor has any active logged in owners
+*/
+export function hasActiveOwners(actor) {
+    // Get owners with ownership level 3 ('Owner')
+    const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
+
+    // Filter for logged-in owners who are not GMs
+    const loggedInOwners = game.users.contents.filter(user => owners.includes(user.id) && user.active && !user.isGM);
+
+    // Debug output
+    debugLog(`Owners: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
+
+    // Return whether any non-GM logged-in owners exist
+    return loggedInOwners.length > 0;
+}
+
+
 /* 
 	Function to dynamically manage collapseChatDesc setting based on Workbench's setting
 */

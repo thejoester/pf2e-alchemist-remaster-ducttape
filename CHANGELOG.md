@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.3] - 2025-03-08
+### Added
+- **Quick Alchemy:** Added support for [Debilitating Bomb](https://2e.aonprd.com/Feats.aspx?ID=5778)
+- **Localization:** Added Brazilian portuguese translation. Credit: [Charlinho](https://github.com/Chrystian-Carvalho)!
+- **Localization:** Added Polish translation. Credit: [Lioheart](https://github.com/Lioheart)
+### Fixed
+- **Quick Alchemy:** fixed UI permissions error for other players when certain events happened for Alchemist character.
+
 ## [2.7.2] - 2025-02-25
 ### Fixed 
 - **Localization:** Fixed issues in settings for localization. 
