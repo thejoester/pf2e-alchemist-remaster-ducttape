@@ -14,11 +14,14 @@ function updateDescription(description, regexPattern, replacementFn) {
 }
 
 Hooks.on("ready", () => {
+
+
+  
   console.log("%cPF2e Alchemist Remaster Duct Tape: AlchemistFeats.js loaded","color: aqua; font-weight: bold;");
 		
 	Hooks.on("createItem", async (item) => {
 		debugLog(`Item ${item.name} Created!`);
-		
+				
 		// Get the actor from the item's parent (the actor who owns the item)
 		const actor = item.parent;
 		if (!actor) {
@@ -68,100 +71,93 @@ Hooks.on("ready", () => {
 		if (paEnabled) {
 			debugLog("PowerfulAlchemy enabled.");
 			if (hasFeat(actor, "powerful-alchemy")) {
-				applyPowerfulAlchemy(item,actor);
+				await applyPowerfulAlchemy(item,actor,alchemistCheck.dc);
 			}else{
 				debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 			}
 		}
+		
 		/*
 			*** DEBILITATING BOMB *** 
 			Check if the actor has Debilitating Bomb - if not return with mesactorge in log	
 		*/
 		if (hasFeat(actor, "debilitating-bomb")) {
-			applyDebilitatingBomb(actor, item, alchemistCheck.dc);
+			await applyDebilitatingBomb(actor, item, alchemistCheck.dc);
 		}else{
-			debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
-		}
-		
-		
-		
+			debugLog(`Actor (${actor.name}) does not have Debilitating Bomb, ignoring!`);
+		}		
 	});
 });
-
 
 /*
 	Function to apply Powerful Alchemy effects to item created by Alchemist
 */
-async function applyPowerfulAlchemy(item,actor){
-	
-	// Ensure the item has the 'alchemical' trait
-	if (!item || !item.system.traits.value.includes("alchemical")) {
-	  debugLog(`Item (${item.name}) does not have the 'alchemical' trait or item is undefined.`);
-	  return;
-	}
-	
-	// Ensure Quick Alchemy was used to create item - it will have the "infused" trait
-	if (!item || !item.system.traits.value.includes("infused")) {
-	  debugLog(`Item (${item.name}) does not have the 'infused' trait or item is undefined.`);
-	  return;
-	}
+async function applyPowerfulAlchemy(item,actor,alchemistDC){
+	// Delay to allow item to finish embedding (avoids Foundry V12 timing issues)
+	setTimeout(async () => {
+		try {
+			if (!item || !item.system?.traits?.value?.includes("alchemical")) {
+				debugLog(`Item (${item?.name}) does not have the 'alchemical' trait or item is undefined.`);
+				return;
+			}
 
-	// Log infused item was created
-	debugLog(`Infused item created! Item: `, item);
-				
-	// Get current description of item
-	let description = item.system.description.value;
-	
-	// Check for strings to replace in item description
-	const replacements = [
-		{ 
-			pattern: /@Check\[(?!flat)\w+\|dc:(\d+)\]/g, 
-			replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistCheck.dc}`)
-		}, // Match @Check that is NOT flat (negative lookahead prevents matching "@Check[flat|dc:X]")
-		{ 
-			pattern: /DC is (\d+)/g, 
-			replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistCheck.dc}`)
-		} // Example "DC is 17", but ensure this won't affect flat checks if written differently
-	];
-	
-	// Make replacements
-	let updatedDescription = description;
-	for (const { pattern, replaceFn } of replacements) {
-		updatedDescription = updateDescription(updatedDescription, pattern, replaceFn);
-	}
-	
-	// Update the item with the new description
-	if (updatedDescription !== description) {
-		await item.update({"system.description.value": updatedDescription});
-		debugLog("Description was updated to Class DC!");
-		
-		// Send Mesactorge to Chat
-		const itemName = item.name;
-		ChatMessage.create({
-			author: game.user?.id,    // User ID to send the mesactorge as the system
-			content: `<h3>Powerful Alchemy:</h3><p>${itemName} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistCheck.dc}!</p>`,
-			speaker: { alias: "Powerful Alchemy" }  // Optional: sets the speaker to "System"
-		});
-	}
-	
-	// Find and update the Rule Element for Notes
-	let updatedRules = item.system.rules.map(rule => {
-		if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
-			debugLog(`Updating Note Rule Element for ${item.name}`);
-			return {
-				...rule,
-				text: updatedDescription // Use the updated description in the rule element
-			};
+			if (!item.system.traits.value.includes("infused")) {
+				debugLog(`Item (${item.name}) does not have the 'infused' trait.`);
+				return;
+			}
+
+			debugLog(`Infused item created! Item: `, item);
+
+			let description = item.system.description.value;
+
+			const replacements = [
+				{
+					pattern: /@Check\[(?!flat)\w+\|dc:(\d+)\]/g,
+					replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistDC}`)
+				},
+				{
+					pattern: /DC is (\d+)/g,
+					replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistDC}`)
+				}
+			];
+
+			let updatedDescription = description;
+			for (const { pattern, replaceFn } of replacements) {
+				updatedDescription = updatedDescription.replace(pattern, replaceFn);
+			}
+
+			if (updatedDescription !== description) {
+				await item.update({ "system.description.value": updatedDescription });
+				debugLog(`Description was updated to Class DC: ${alchemistDC}`);
+
+				await ChatMessage.create({
+					author: game.user?.id,
+					content: `<h3>Powerful Alchemy:</h3><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistDC}!</p>`,
+					speaker: { alias: "Powerful Alchemy" }
+				});
+			}
+
+			// Update any matching Note rule elements with the new description
+			let updatedRules = item.system.rules.map(rule => {
+				if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
+					debugLog(`Updating Note Rule Element for ${item.name}`);
+					return {
+						...rule,
+						text: updatedDescription
+					};
+				}
+				return rule;
+			});
+
+			if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
+				await item.update({ "system.rules": updatedRules });
+				debugLog(`Updated Note Rule Element for ${item.name} to use new description.`);
+			}
+		} catch (err) {
+			debugLog(`Error in applyPowerfulAlchemy: ${err.message}`);
+			console.error(err); // Optional: for debugging during development
 		}
-		return rule;
-	});
-
-	// Only update if there's a change
-	if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
-		await item.update({ "system.rules": updatedRules });
-		debugLog(`Updated Note Rule Element for ${item.name} to use new description.`);
-	}
-	
+	}, 100);
 }
 
 async function applyDebilitatingBomb(actor, item, dc){
@@ -177,11 +173,31 @@ async function applyDebilitatingBomb(actor, item, dc){
 	  return;
 	}
 	
-	// Get current description of item
+	// Ensure description exists and is a string
 	let description = item.system.description.value;
-	
-	// Add Debilitating Bomb text
-	let updatedDescription = `${description}<ul class="notes">\n<li class="roll-note" data-item-id="tP1GniYnspjaJWuz"><strong>Debilitating Bomb</strong> The target must succed at a @Check[fortitude|dc:${dc}], or suffer one of the following effects: dazzled, deafened, off-guard, or take a -5 foot status penalty to Speeds. @UUID[Compendium.pf2e.feat-effects.Item.VTJ8D23sOIfApEt3]{Effect: Debilitating Bomb}</li>\n</ul>`;
-	await item.update({"system.description.value": updatedDescription});
-	debugLog("Description was updated with Debilitating Bomb text!");
+	if (typeof description !== "string") {
+		debugLog("Debilitating Bomb: Item description is not a string:", description);
+		return;
+	}
+
+	// Construct Debilitating Bomb note block (wrap in <p> for HTML safety)
+	const noteBlock = `
+		<p>
+		<ul class="notes">
+			<li class="roll-note" data-item-id="${item.id}">
+				<strong>Debilitating Bomb</strong> The target must succeed at a @Check[fortitude|dc:${dc}], or suffer one of the following effects: dazzled, deafened, off-guard, or take a -5 foot status penalty to Speeds. @UUID[Compendium.pf2e.feat-effects.Item.VTJ8D23sOIfApEt3]{Effect: Debilitating Bomb}
+			</li>
+		</ul>
+		</p>`.trim();
+
+	const updatedDescription = noteBlock + description;
+
+	// Try updating item
+	try {
+		await item.update({ "system.description.value": updatedDescription });
+		debugLog(`Debilitating Bomb: Description updated for item "${item.name}"`);
+	} catch (err) {
+		debugLog("Debilitating Bomb: Failed to update item description:", err);
+		console.error(err);
+	}
 }

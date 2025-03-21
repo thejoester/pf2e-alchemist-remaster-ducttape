@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.4] - 2025-03-21
+### Fixed
+- **Quick Alchemy:** Fixed error in code preventing Powerful Alchemy from functioning properly.
+
 ## [2.7.3] - 2025-03-08
 ### Added
 - **Quick Alchemy:** Added support for [Debilitating Bomb](https://2e.aonprd.com/Feats.aspx?ID=5778)

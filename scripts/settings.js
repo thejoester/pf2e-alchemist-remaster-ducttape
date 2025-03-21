@@ -110,6 +110,7 @@ export function getSetting(settingName, returnIfError = false) {
 /*
 	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
 */
+
 export function hasFeat(actor, slug) {
 	return actor.itemTypes.feat.some((feat) => feat.slug === slug);
 }

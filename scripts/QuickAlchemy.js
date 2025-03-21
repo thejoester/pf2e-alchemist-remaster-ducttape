@@ -375,7 +375,7 @@ Hooks.on("ready", () => {
 	*/
 	async function sendVialAttackMessage(itemUuid,actor) {
 		// Log the UUID for debugging purposes
-	debugLog(LOCALIZED_TEXT.DEBUG_ATTEMPT_FETCH_ITEM_UUID(itemUuid));
+		debugLog(LOCALIZED_TEXT.DEBUG_ATTEMPT_FETCH_ITEM_UUID(itemUuid));
 
 		// Fetch the item (weapon) from the provided full UUID
 		const item = await fromUuid(itemUuid);
@@ -1086,6 +1086,9 @@ Hooks.on("ready", () => {
 		const sendMsg = async (itemType, uuid, actor) => {
 			debugLog(`sendMsg => itemType: ${itemType} | newUuid: ${newUuid} | actor: ${actor.name}`);
 			
+			// Do not send if setting is disabled
+			const msgSetting = getSetting("sendAtkToChat");
+			if (!msgSetting) return;
 			
 			switch (itemType) {
 				case 'weapon':
