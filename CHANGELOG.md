@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.5] - 2025-03-26
+### Fixed
+- **Powerful Alchemy:** Fixed bug that prevented certain save text in description from being updated properly, such as [Energy Mutagen (Major)](https://2e.aonprd.com/Equipment.aspx?ID=1962).
+
 ## [2.7.4] - 2025-03-21
 ### Fixed
 - **Quick Alchemy:** Fixed error in code preventing Powerful Alchemy from functioning properly.

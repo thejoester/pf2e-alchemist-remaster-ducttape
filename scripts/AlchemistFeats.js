@@ -112,7 +112,7 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 
 			const replacements = [
 				{
-					pattern: /@Check\[(?!flat)\w+\|dc:(\d+)\]/g,
+					pattern: /@Check\[(?!flat)\w+\|dc:(\d+)(?:\|[^\]]+)?\]/g,
 					replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistDC}`)
 				},
 				{
