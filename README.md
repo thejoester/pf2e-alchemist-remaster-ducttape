@@ -1,4 +1,5 @@
-# PF2e Alchemist Remaster Duct Tape
+# ![PF2e Alchemist Remoaster Duct Tape](https://github.com/user-attachments/assets/dd5ba908-48d8-4aed-9145-9fc017eb0a2e)
+
 
 > [!IMPORTANT]
 > PF2e system has been updated with the Player Core 2 Alchemist features. This module still functions and provides added functionality and quality of life features aimed to streamline playing Alchemist.
