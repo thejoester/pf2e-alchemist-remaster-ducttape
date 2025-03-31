@@ -4,13 +4,17 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 	Function for debugging
 */
 export function debugLog(intLogType, stringLogMsg, objObject = null) {
+	
+	// Get Timestamps
+	const now = new Date();
+	const timestamp = now.toTimeString().split(' ')[0]; // "HH:MM:SS"
+	
 	// Handle the case where the first argument is a string
 	if (typeof intLogType === "string") {
 		objObject = stringLogMsg; // Shift arguments
 		stringLogMsg = intLogType;
 		intLogType = 1; // Default log type to 'all'
 	}
-
 	const debugLevel = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugLevel");
 
 	// Map debugLevel setting to numeric value for comparison
@@ -36,7 +40,7 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 			const [, filePath, lineNumber] = fileInfoMatch;
 			const fileName = filePath.split("/").pop(); // Extract just the file name
 			// Ensure the file is one of the allowed files
-			const allowedFiles = ["FormulaSearch.js", "LevelUp.js", "PowerfulAlchemy.js", "QuickAlchemy.js", "settings.js", "VialSearch.js"];
+			const allowedFiles = ["FormulaSearch.js", "LevelUp.js", "AlchemistFeats.js", "QuickAlchemy.js", "settings.js", "VialSearch.js"];
 			if (allowedFiles.includes(fileName)) {
 				fileInfo = `${fileName}:${lineNumber}`;
 				break;
@@ -50,30 +54,30 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	if (objObject) {
 		switch (intLogType) {
 			case 1: // Info/Log (all)
-				console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
 				break;
 			case 2: // Warning
-				console.log(`%cP2Fe Alchemist Duct Tape | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;", objObject);
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;", objObject);
 				break;
 			case 3: // Critical/Error
-				console.log(`%cP2Fe Alchemist Duct Tape | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;", objObject);
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;", objObject);
 				break;
 			default:
-				console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
 		}
 	} else {
 		switch (intLogType) {
 			case 1: // Info/Log (all)
-				console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
 				break;
 			case 2: // Warning
-				console.log(`%cP2Fe Alchemist Duct Tape | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;");
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;");
 				break;
 			case 3: // Critical/Error
-				console.log(`%cP2Fe Alchemist Duct Tape | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;");
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;");
 				break;
 			default:
-				console.log(`%cP2Fe Alchemist Duct Tape | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
+				console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
 		}
 	}
 }
@@ -440,7 +444,7 @@ Hooks.once("init", () => {
 		config: true,
 		type: String,
 		choices: {
-			auto_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.AUTO"),
+			// auto_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.AUTO"),
 			ask_all_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ASK_ALL"),
 			ask_each_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ASK_EACH")
 		},

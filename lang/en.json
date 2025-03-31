@@ -40,6 +40,7 @@
 		"BTN_YES":"Yes",
 		"BTN_NO":"No",
 		"BTN_USE":"Use",
+		"BTN_CANCEL":"Cancel",
 		"BTN_ROLL_ATK":"Roll Attack",
 		"NOTIF_ALREADY_MAX_VIALS":"{actorname} already has the maximum number of versatile vials.",
 		"NOTIF_SELECT_TOKEN_FIRST":"Please select a token or assign a character first.",
@@ -98,7 +99,8 @@
 		"SETTING_DEBUG_ALL":"All",
 		"SETTING_COMPENDIUM_CHECK":"Compendiums to Check",
 		"SETTING_COMPENDIUM_CHECK_HINT":"List of compendiums to search for higher-level items when characters level up.",
-		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Select Item Type",
+		"QUICK_ALCHEMY":" Quick Alchemy",
+		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Quick Alchemy: Select Item Type",
 		"QUICK_ALCHEMY_PROMPT_TYPE":"What type of item do you wish to craft with Quick Alchemy?",
 		"QUICK_ALCHEMY_NO_PRIOR_COMBATANT": "No valid prior combatant found during combatTurnChange.",
 		"QUICK_ALCHEMY_PLEASE_TARGET":"Please target a token for the attack.",
@@ -220,6 +222,15 @@
 		"DEBUG_ADV_VIAL_TOX_FEAT":"Advanced Vials Toxicologist feat detected!",
 		"DEBUG_ADV_VIAL_MUT_FEAT":"Advanced Vials Mutagenist feat detected!",
 		"DEBUG_FAIL_EFFECT_COMPENDIUM":"Failed to retrieve effect from compendium.",
-		"DEBUG_VV_COUNT":"Versatile Vial count for"
+		"DEBUG_VV_COUNT":"Versatile Vial count for",
+		"MACRO_ADD_FORMULAS":"Add new formulas?",
+		"MACRO_REMOVE_FORMULAS":"Remove lower level formulas?",
+		"MACRO_PROMPT_STYLE":"Prompt Style:",
+		"MACRO_START_LEVEL":"Start at Level:",
+		"MACRO_ADD_TITLE":"Add Alchemist Formulas",
+		"MACRO_REMOVE_TITLE":"Remove Lower Level Alchemist Formulas",
+		"MACRO_WAIT_TITLE":"Please Wait...",
+		"MACRO_CHECKING_NEW_FORMULAS":"Checking for new Alchemist Formulas...<br><br>This may take a while. It is okay to close this window.",
+		"MACRO_CHECKING_LOWER_FORMULAS":"Checking for lower level Alchemist formulas to clean up...<br><br>This may take a while. It is okay to close this window."
 	}
 }

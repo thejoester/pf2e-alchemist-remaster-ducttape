@@ -840,7 +840,7 @@ Hooks.on("ready", () => {
 		// Consume versatile vial
 		if (regularVial && regularVial.system.quantity >= count) {
 			await regularVial.update({ "system.quantity": regularVial.system.quantity - count });
-		debugLog(`${LOCALIZED_TEXT.DEBUG_CONSUMED_NUM_VV(count)} ${regularVial.name}`);
+			debugLog(`${LOCALIZED_TEXT.DEBUG_CONSUMED_NUM_VV(count)} ${regularVial.name}`);
 			return true;
 		}
 
@@ -857,26 +857,34 @@ Hooks.on("ready", () => {
 		// Get known formulas
 		const formulas = actor?.system.crafting?.formulas || [];
 		const formulaCount = formulas.length;
-		
+
 		if (!formulaCount) {
 			debugLog(`${LOCALIZED_TEXT.DEBUG_NO_FORMULA_FOUND_TYPE} ${type || 'all'}`);
 			return;
 		}
-		
+
 		// Prepare progress bar dialog
 		let progress = 0;
 		const total = formulas.length;
 
-		const progressDialog = new Dialog({
-		title: "Quick Alchemy",
-		content: `
-			<div>
-			<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
-			<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
-			</div>
+		const progressDialog = new foundry.applications.api.DialogV2({
+			window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+			content: `
+				<div>
+					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
+					<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
+				</div>
 			`,
-		buttons: {},
-		close: () => {},
+			buttons: [
+				{
+					action: "noop",
+					label: LOCALIZED_TEXT.OK,
+					icon: "",
+					callback: () => {},
+					disabled: true
+				}
+			],
+			close: () => {}
 		});
 		progressDialog.render(true);
 
@@ -920,7 +928,7 @@ Hooks.on("ready", () => {
 
 		// Close progress dialog
 		progressDialog.close();
-		
+
 		// Sort entries by name
 		const sortEntries = async (entriesToSort) => {
 			entriesToSort.sort((a, b) => {
@@ -932,19 +940,19 @@ Hooks.on("ready", () => {
 				const levelB = b.system.level?.value || 0;
 				return levelB - levelA; // Otherwise, sort by item level descending
 			});
-		return { entriesToSort };
-		}
-		
+			return { entriesToSort };
+		};
+
 		sortEntries(weaponEntries);
 		sortEntries(consumableEntries);
-		
+
 		// Generate sorted options
 		const weaponOptions = weaponEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		const consumableOptions = consumableEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-		
+
 		// Close progress dialog - just in case
 		progressDialog.close();
-		
+
 		// Return categorized entries
 		return { weaponOptions, consumableOptions };
 	}
@@ -953,17 +961,16 @@ Hooks.on("ready", () => {
 		Function to process FILTERED formulas with a progress bar
 	*/
 	async function processFilteredFormulasWithProgress(actor, type) {
-		
-		if (!type){
+		if (!type) {
 			debugLog(3, LOCALIZED_TEXT.DEBUG_NO_TYPE_PASSED);
 			return { filteredEntries: [] };
 		}
 		debugLog(`${LOCALIZED_TEXT.DEBUG_FILTERING_BY_TYPE}: ${type}`);
-		
+
 		// Get known formulas
 		const formulas = actor?.system.crafting?.formulas || [];
 		const formulaCount = formulas.length;
-		
+
 		if (!formulas.length) {
 			debugLog(`${LOCALIZED_TEXT.DEBUG_NO_FORMULA_ACTOR}: ${actor.name}`);
 			return { filteredEntries: [] };
@@ -973,22 +980,30 @@ Hooks.on("ready", () => {
 		let progress = 0;
 		const total = formulas.length;
 
-		const progressDialog = new Dialog({
-		title: "Quick Alchemy",
-		content: `
-			<div>
-			<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
-			<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
-			</div>
+		const progressDialog = new foundry.applications.api.DialogV2({
+			window: { title: "Quick Alchemy" },
+			content: `
+				<div>
+					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
+					<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
+				</div>
 			`,
-		buttons: {},
-		close: () => {},
+			buttons: [
+				{
+					action: "noop",
+					label: LOCALIZED_TEXT.OK,
+					icon: "",
+					callback: () => {},
+					disabled: true
+				}
+			],
+			close: () => {}
 		});
 		progressDialog.render(true);
 
 		// Arrays to store entry objects
 		const filteredEntries = [];
-		
+
 		// Gather entries in respective arrays
 		let listProcessedFormulas = "";
 		for (let [index, formula] of formulas.entries()) {
@@ -1003,23 +1018,25 @@ Hooks.on("ready", () => {
 			if (entry != null) {
 				listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} | `;
 				if (entry.slug === "versatile-vial") {
-					//do nothing
+					// do nothing
 					listProcessedFormulas = `${listProcessedFormulas} skipping`;
 				} else if (entry.type === type) {
 					filteredEntries.push(entry);
 					listProcessedFormulas = `${listProcessedFormulas} added to filteredEntries`;
-				} 
+				}
 			} else { // entry is null
 				listProcessedFormulas = `${listProcessedFormulas} entry ${formula.uuid} is null`;
 			}
 			listProcessedFormulas = `${listProcessedFormulas}\n`;
 		}
 		debugLog(`Processed Formulas:\n${listProcessedFormulas}`);
+
 		// Close progress dialog
 		progressDialog.close();
 
 		// Return categorized entries
 		debugLog(`Returning filteredEntries: `, filteredEntries);
+
 		// Sort entries by name then level ignoring text in parenthesis 
 		filteredEntries.sort((a, b) => {
 			const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim(); // Remove text in parentheses
@@ -1030,8 +1047,9 @@ Hooks.on("ready", () => {
 			const levelB = b.system.level?.value || 0;
 			return levelB - levelA; // Otherwise, sort by item level descending
 		});
+
 		return { filteredEntries };
-		
+
 		// Close progress dialog - just in case
 		progressDialog.close();
 	}
@@ -1276,89 +1294,71 @@ Hooks.on("ready", () => {
 			
 			// If actor has chirurgeon feat
 			if (hasFeat(actor, "chirurgeon")) {
-				// Prompt the user to craft a healing Quick Vial
-				const userConfirmed = await new Promise((resolve) => {
-					new Dialog({
-						title: LOCALIZED_TEXT.QUICK_ALCHEMY_CHIRURGEON,
+				const userConfirmed = await foundry.applications.api.DialogV2.confirm({
 						content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_CRAFT_HEALING_VIAL}</p>`,
-						buttons: {
-							yes: {
-								label: LOCALIZED_TEXT.BTN_YES,
-								callback: () => resolve(true)
-							},
-							no: {
-								label: LOCALIZED_TEXT.BTN_NO,
-								callback: () => resolve(false)
-							}
-						},
-						default: "no"
-					}).render(true);
-				});
-				
-				// If the user confirms, proceed with crafting
-				if (userConfirmed) {
-					newItemSlug = await craftHealingVial(item, actor);
+						window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_CHIRURGEON },
+						rejectClose: false,
+						modal: true
+					});
+
+					if (userConfirmed) {
+						newItemSlug = await craftHealingVial(item, actor);
 					return;
 				}
 			}
 			
 			//	Check if actor has bomber Feat		
-			if (hasFeat(actor,"bomber")){
+			if (hasFeat(actor, "bomber")) {
 				debugLog(`feat 'bomber' detected.`);
-				selectedType = await new Promise((resolve) => {
-					new Dialog({
-						title: LOCALIZED_TEXT.QUICK_ALCHEMY_FIELD_VIAL_BOMBER,
+
+				// Prompt for damage type
+				selectedType = await foundry.applications.api.DialogV2.prompt({
+					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_FIELD_VIAL_BOMBER },
+					content: `
+						<form>
+							<div class="form-group" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
+								<label for="damage-type">${LOCALIZED_TEXT.DMG_TYPE}:</label>
+								<select id="damage-type" name="damage-type">
+									<option value="acid">${LOCALIZED_TEXT.ACID}</option>
+									<option value="cold">${LOCALIZED_TEXT.COLD}</option>
+									<option value="electricity">${LOCALIZED_TEXT.ELECTRICITY}</option>
+									<option value="fire">${LOCALIZED_TEXT.FIRE}</option>
+								</select>
+							</div>
+						</form>
+					`,
+					ok: {
+						label: LOCALIZED_TEXT.OK,
+						callback: (event, button, dialog) => button.form.elements["damage-type"].value
+					}
+				});
+
+				// Prompt for special ingredient
+				if (hasFeat(actor, "advanced-vials-bomber")) {
+					debugLog(`feat 'advanced-vials-bomber' detected.`);
+					specialIngredient = await foundry.applications.api.DialogV2.prompt({
+						window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_ADV_VIAL_BOMBER },
 						content: `
 							<form>
-							  <div class="form-group">
-								<label for="damage-type">${LOCALIZED_TEXT.DMG_TYPE}:</label>
-								<select id="damage-type">
-								  <option value="acid">${LOCALIZED_TEXT.ACID}</option>
-								  <option value="cold">${LOCALIZED_TEXT.COLD}</option>
-								  <option value="electricity">${LOCALIZED_TEXT.ELECTRICITY}</option>
-								  <option value="fire">${LOCALIZED_TEXT.FIRE}</option>
-								</select>
-							  </div>
-							</form>
-						  `,
-						buttons: {
-							ok: {
-								label: LOCALIZED_TEXT.OK,
-								callback: (html) => resolve(html.find("#damage-type").val())
-							},
-						}
-					}).render(true);
-				});	
-				
-				// Check if using Advanced Vials (Bomber)
-				if (hasFeat(actor, "advanced-vials-bomber")) {
-					specialIngredient = await new Promise((resolve) => {
-						new Dialog({
-							title: LOCALIZED_TEXT.QUICK_ALCHEMY_ADV_VIAL_BOMBER,
-							content: `
-								<form>
-								  <div class="form-group">
+								<div class="form-group" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
 									<label for="special-ingredient">${LOCALIZED_TEXT.SPECIAL_INGREDIENT}:</label>
-									<select id="special-ingredient">
-									  <option value="none">${LOCALIZED_TEXT.NONE}</option>
-									  <option value="adamantine">${LOCALIZED_TEXT.ADAMANTINE}</option>
-									  <option value="cold-iron">${LOCALIZED_TEXT.COLD_IRON}</option>
-									  <option value="dawnsilver">${LOCALIZED_TEXT.DAWNSILVER}</option>
+									<select id="special-ingredient" name="special-ingredient">
+										<option value="none">${LOCALIZED_TEXT.NONE}</option>
+										<option value="adamantine">${LOCALIZED_TEXT.ADAMANTINE}</option>
+										<option value="cold-iron">${LOCALIZED_TEXT.COLD_IRON}</option>
+										<option value="dawnsilver">${LOCALIZED_TEXT.DAWNSILVER}</option>
 									</select>
-								  </div>
-								</form>
-							  `,
-							buttons: {
-								ok: {
-									label: LOCALIZED_TEXT.ADD,
-									callback: (html) => resolve(html.find("#special-ingredient").val())
-								},
-							}
-						}).render(true);
+								</div>
+							</form>
+						`,
+						ok: {
+							label: LOCALIZED_TEXT.ADD,
+							callback: (event, button, dialog) => button.form.elements["special-ingredient"].value
+						}
 					});
 				}
 			}
-			
+	
 			// Check if the actor has the Toxicologist feat
 			if (hasFeat(actor, "toxicologist")) {
 				selectedType = "poison"; // change default to poison
@@ -1384,33 +1384,43 @@ Hooks.on("ready", () => {
 					
 					// Let the player select a weapon
 					const selectedWeapon = await new Promise((resolve) => {
-						new Dialog({
-							title: LOCALIZED_TEXT.INJURY_POISON,
+						new foundry.applications.api.DialogV2({
+							window: { title: LOCALIZED_TEXT.INJURY_POISON },
 							content: `
 								<form>
 									<div class="form-group">
 										<label for="weapon">${LOCALIZED_TEXT.SELECT_WEAPON}:</label>
-										<select id="weapon">
+										<select id="weapon" name="weapon">
 											${weapons.map(w => `<option value="${w.id}">${w.name}</option>`).join("")}
 										</select>
 									</div>
 									<br>
 								</form>
 							`,
-							buttons: {
-								attack: {
-									icon: `<img src="systems/pf2e/icons/actions/ThreeActions.webp" width="24" height="24" style="vertical-align:middle;" />`,
+							buttons: [
+								{
+									action: "attack",
 									label: LOCALIZED_TEXT.CRAFT_APPLY_ATTACK,
-									callback: (html) => resolve(weapons.find(w => w.id === html.find("#weapon").val())),
+									icon: `systems/pf2e/icons/actions/ThreeActions.webp`,
+									callback: (event, button, dialog) => {
+										const id = button.form.elements.weapon.value;
+										resolve(weapons.find(w => w.id === id));
+									}
 								},
-								back: {
-									icon: "<i class='fas fa-arrow-left'></i> ",
+								{
+									action: "back",
 									label: LOCALIZED_TEXT.BACK,
-									callback: () => displayCraftingDialog(actor, itemType)
+									icon: "fas fa-arrow-left",
+									callback: () => {
+										displayCraftingDialog(actor, itemType);
+										resolve(null);
+									}
 								}
-							}
+							],
+							default: "attack"
 						}).render(true);
 					});
+
 
 					if (!selectedWeapon) {
 						debugLog(LOCALIZED_TEXT.DEBUG_NO_WPN_SELECTED_POISON);
@@ -1494,26 +1504,30 @@ Hooks.on("ready", () => {
 				
 				// Prompt for injury poison or Quick Vial bomb
 				const isInjuryPoison = await new Promise((resolve) => {
-					new Dialog({
-						title: LOCALIZED_TEXT.QUICK_ALCHEMY_TOXICOLOGIST_OPTIONS,
-						content: `
-							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_APPLY_INJURY_POISON}</p>
-						`,
-						buttons: {
-							yes: {
+					new foundry.applications.api.DialogV2({
+						window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_TOXICOLOGIST_OPTIONS },
+						content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_APPLY_INJURY_POISON}</p>`,
+						buttons: [
+							{
+								action: "yes",
 								label: LOCALIZED_TEXT.INJURY_POISON,
-								callback: () => resolve(true),
+								callback: () => resolve(true)
 							},
-							no: {
+							{
+								action: "no",
 								label: LOCALIZED_TEXT.QUICK_VIAL_BOMB,
-								callback: () => resolve(false),
+								callback: () => resolve(false)
 							},
-							back: {
-								icon: "<i class='fas fa-arrow-left'></i> ",
+							{
+								action: "back",
 								label: LOCALIZED_TEXT.BACK,
-								callback: () => qaDialog(actor)
+								icon: "fas fa-arrow-left",
+								callback: () => {
+									qaDialog(actor);
+									resolve(null);
+								}
 							}
-						},
+						],
 						default: "no"
 					}).render(true);
 				});
@@ -1561,158 +1575,142 @@ Hooks.on("ready", () => {
 
 				// Setup dialog
 				let promptConsumeVial = await new Promise((resolve) => {
-					// Add Quick Vial button first
-					consumeVialButtons['qv'] = {
-						icon: "<span class='pf2-icon'>D</span>",
-						label: LOCALIZED_TEXT.QUICK_VIAL,
-						callback: async () => {
-							await applyEffectFromCompendium(actor);
-							return;
-						}
-					};
-
-					// If we have versatile vials, add it before "No"
-					if (getVersatileVialCount(actor) >= 1) { 
-						consumeVialButtons['vv'] = {
-							icon: "<span class='pf2-icon'>A</span>",
-							label: LOCALIZED_TEXT.VERSATILE_VIAL,
+					const buttons = [
+						{
+							action: "qv",
+							label: LOCALIZED_TEXT.QUICK_VIAL,
+							icon: "pf2-icon D",
 							callback: async () => {
-								// Consume Versatile Vial
-								let selectedSlug = "none";
-								await consumeVersatileVial(actor, selectedSlug); 
 								await applyEffectFromCompendium(actor);
-								return; 
+								resolve("qv");
 							}
-						};
+						}
+					];
+
+					if (getVersatileVialCount(actor) >= 1) {
+						buttons.push({
+							action: "vv",
+							label: LOCALIZED_TEXT.VERSATILE_VIAL,
+							icon: "pf2-icon A",
+							callback: async () => {
+								let selectedSlug = "none";
+								await consumeVersatileVial(actor, selectedSlug);
+								await applyEffectFromCompendium(actor);
+								resolve("vv");
+							}
+						});
 					}
 
-					// Add No button last
-					consumeVialButtons['no'] = {
-						icon: "<i class='fas fa-times'></i>",
+					buttons.push({
+						action: "no",
 						label: LOCALIZED_TEXT.BTN_NO,
-						callback: () => resolve(null),
-					};
+						icon: "fas fa-times",
+						callback: () => resolve(null)
+					});
 
-					new Dialog({
-						title: LOCALIZED_TEXT.QUICK_ALCHEMY_MUTAGENIST_OPTIONS,
+					new foundry.applications.api.DialogV2({
+						window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_MUTAGENIST_OPTIONS },
 						content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_CONSUME_VIAL}</p>`,
-						buttons: consumeVialButtons,
+						buttons,
 						default: "qv"
 					}).render(true);
 				});
+
 				
 			}
 			
 			debugLog(`uuid: ${uuid}`);
 			// Build HTML Content
-			content = `<form>
+			let content = `<form>
 				<div>
-					<select id="item-selection" style="display: none;">
-					<option value="${uuid}">Quick Vial</option>
+					<select id="item-selection" name="item-selection" style="display: none;">
+						<option value="${uuid}">Quick Vial</option>
 					</select>
-					</div>
-					</form>
-					`;
-			
-			//if actor has double brew feat, fisrt ask if we are using it
+				</div>
+			</form>`;
+
 			if (doubleBrewFeat) {
-				// Make sure we have enough Versatile Vials to craft second item
 				const vialCount = getVersatileVialCount(actor);
-				if (vialCount >= 2) { 
-					// Get known formulas
+				if (vialCount >= 2) {
 					const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
-					// HTML content to prompt which formula to create
-					content = `${content}
+					content += `
 						<form>
 							<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
 							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_QV_DB_PROMPT}</p>
 							<div>
 								<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
-								<select id="db-item-selection">
-								<option value="none">${LOCALIZED_TEXT.NONE}</option>
-								<option value="${uuid}">${LOCALIZED_TEXT.QUICK_VIAL}</option>
-								${weaponOptions}
-								${consumableOptions}
+								<select id="db-item-selection" name="db-item-selection">
+									<option value="none">${LOCALIZED_TEXT.NONE}</option>
+									<option value="${uuid}">${LOCALIZED_TEXT.QUICK_VIAL}</option>
+									${weaponOptions}
+									${consumableOptions}
 								</select>
-								</div>
-								</form>
-								<br/>
-								`;
-
+							</div>
+						</form><br/>`;
 				}
 			}
-			
-			// Build Vial Buttons
-			craftItemButtons['craftAttack'] = {
-				icon: "<i class='fas fa-bomb'></i>",
-				label: "Craft and Attack",
-				callback: async (html) => {
-					// Ensure we have an actor
-					if (!actor) {
-						debugLog(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
-						return;
+
+			const buttons = [
+				{
+					action: "craftAttack",
+					label: "Craft and Attack",
+					icon: "fas fa-bomb",
+					callback: async (event, button, dialog) => {
+						if (!actor) {
+							debugLog(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
+							return;
+						}
+
+						const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
+						if (!target) {
+							ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
+							displayCraftingDialog(actor, 'vial');
+							return;
+						}
+
+						if (hasFeat(actor, "toxicologist")) selectedType = await getBestDamageType(target);
+
+						selectedUuid = button.form.elements["item-selection"]?.value || "none";
+						dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+
+						debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+						craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType, selectedType, specialIngredient);
 					}
-					
-					// Ensure target exists
-					const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
-					if (!target) {
-						ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
-						displayCraftingDialog(actor, 'vial');
-						return;
+				},
+				{
+					action: "craft",
+					label: "Craft",
+					icon: "fas fa-hammer",
+					callback: async (event, button, dialog) => {
+						if (!actor) {
+							debugLog(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
+							return;
+						}
+
+						selectedUuid = button.form.elements["item-selection"]?.value || "none";
+						dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+
+						debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+						craftButton(actor, selectedUuid, dbSelectedUuid, itemType, selectedType, specialIngredient);
 					}
-					
-					// See if we are changing damage type if alchemist is Toxicologist
-					if (hasFeat(actor, "toxicologist")) selectedType = await getBestDamageType(target); // Default to poison
-					
-					selectedUuid = html.find("#item-selection").val();
-					dbSelectedUuid = html.find("#db-item-selection").val();
-					debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-					
-					// Set to "none" if no item selected
-					if (!selectedUuid){
-						selectedUuid = "none";
-					}
-					if (!dbSelectedUuid){
-						dbSelectedUuid = "none";
-					}
-					craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType, selectedType, specialIngredient);
+				},
+				{
+					action: "back",
+					label: LOCALIZED_TEXT.BACK,
+					icon: "fas fa-arrow-left",
+					callback: () => qaDialog(actor)
 				}
-			},
-			craftItemButtons['craft'] = {
-				icon: "<i class='fas fa-hammer'></i>",
-				label: "Craft",
-				callback: async (html) => {
-					if (!actor) {
-						debugLog(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
-						return;
-					}
-					
-					// Perform actions with the actor
-					selectedUuid = html.find("#item-selection").val();
-					dbSelectedUuid = html.find("#db-item-selection").val();
-					debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-					if (!selectedUuid){
-						selectedUuid = "none";
-					}
-					if (!dbSelectedUuid){
-						dbSelectedUuid = "none";
-					}
-					craftButton(actor, selectedUuid, dbSelectedUuid, itemType, selectedType, specialIngredient);
-				}
-			};
-			craftItemButtons['back'] = {
-				icon: "<i class='fas fa-arrow-left'></i>",
-				label: LOCALIZED_TEXT.BACK,
-				callback: () => qaDialog(actor)
-			};
-				
-			const craftingDialog = new Dialog({
-				title: "Quick Alchemy",
-				content: content,
-				buttons: craftItemButtons,
+			];
+
+			new foundry.applications.api.DialogV2({
+				window: {
+					title: "Quick Alchemy",
+					width: 450
+				},
+				content,
+				buttons,
 				default: "craftvial",
 				render: (html) => {
-					// Apply styles to specific buttons
 					html.find('button:contains("Craft")').css({
 						width: "100px",
 						height: "40px",
@@ -1728,83 +1726,82 @@ Hooks.on("ready", () => {
 						fontSize: "14px"
 					});
 				}
-			}, {
-					width: 450    // Set desired width
-			});
-			craftingDialog.render(true);
-		
+			}).render(true);
+
 		/*
 			We are crafting Weapon or Consumable
 		*/
 		} else { 
 				
-			let options = ""; 
+			let options = "";
 			// Get list of filtered entries
-			const { filteredEntries } = await processFilteredFormulasWithProgress(actor,itemType);
+			const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
 			options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-			
-			content = `
+
+			// Build main content with initial item selection
+			let content = `
 				<form>
-				<div>
-				<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
-				<select id="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
-				<br/><br/>
-				</div>
+					<div>
+						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
+						<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
+						<br/><br/>
+					</div>
 				</form>
-				`;
-				
-			// If actor has double brew feat	
+			`;
+
+			// If actor has double brew feat
 			if (doubleBrewFeat) {
 				// Check that actor has versatile vials
 				const vialCount = getVersatileVialCount(actor);
 				if (vialCount > 1) { // Make sure we have enough versatile vials
-				const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
-					content = `${content} 
+					const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
+					content += `
 						<form>
 							<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
 							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
 							<div>
 								<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
-								<select id="db-item-selection">
-								<option value="none">${LOCALIZED_TEXT.NONE}</option>
-								${weaponOptions}
-								${consumableOptions}
-								</select>
-								</div>
-								</form>
-								<br/>
-								`;
-				} else { // we will only prompt to make another vial
-				
-					if (!isArchetype){ // do not show for Archetype
-						content = `${content} 
-							<form>
-							<div>
-								<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-								<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
-									<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
-									<select id="db-item-selection">
+								<select id="db-item-selection" name="db-item-selection">
 									<option value="none">${LOCALIZED_TEXT.NONE}</option>
-									<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
+									${weaponOptions}
+									${consumableOptions}
+								</select>
+							</div>
+						</form><br/>
+					`;
+				} else { // we will only prompt to make another vial
+					if (!isArchetype) { // do not show for Archetype
+						content += `
+							<form>
+								<div>
+									<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
+									<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
+									<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
+									<select id="db-item-selection" name="db-item-selection">
+										<option value="none">${LOCALIZED_TEXT.NONE}</option>
+										<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
 									</select>
 								</div>
-							</form>
-							<br/>`;
+							</form><br/>
+						`;
 					}
 				}
 			}
-		
-			// Weapon Butons
-			if (itemType === 'weapon'){
-				craftItemButtons['craftAttack'] = {
-					icon: "<i class='fas fa-bomb'></i>",
+
+			const buttons = [];
+
+			// Weapon Buttons
+			if (itemType === 'weapon') {
+				buttons.push({
+					action: "craftAttack",
 					label: LOCALIZED_TEXT.CRAFT_ATTACK,
-					callback: async (html) => {
+					icon: "fas fa-bomb",
+					callback: async (event, button, dialog) => {
 						if (!actor) {
 							debugLog(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
 							return;
 						}
-						
+
 						// Ensure user has target
 						const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
 						if (!target) {
@@ -1812,86 +1809,53 @@ Hooks.on("ready", () => {
 							displayCraftingDialog(actor, 'weapon');
 							return;
 						}
-						
-						selectedUuid = html.find("#item-selection").val();
-						dbSelectedUuid = html.find("#db-item-selection").val();
-						
+
+						selectedUuid = button.form.elements["item-selection"]?.value || "none";
+						dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+
 						debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-						
-						if (!selectedUuid){
-							selectedUuid = "none";
-						}
-						if (!dbSelectedUuid){
-							dbSelectedUuid = "none";
-						}
-						
+
 						craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType);
 					}
-				},
-				craftItemButtons['craft'] = {
-					icon: "<i class='fas fa-hammer'></i>",
-					label: LOCALIZED_TEXT.CRAFT,
-					callback: async (html) => {
-						if (!actor) {
-							debugLog(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
-							return;
-						}
+				});
+			}
 
-						// Perform actions with the actor
-						selectedUuid = html.find("#item-selection").val();
-						dbSelectedUuid = html.find("#db-item-selection").val();
-						debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-						if (!selectedUuid){
-							selectedUuid = "none";
-						}
-						if (!dbSelectedUuid){
-							dbSelectedUuid = "none";
-						}
-						craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+			// Shared Craft Button
+			buttons.push({
+				action: "craft",
+				label: LOCALIZED_TEXT.CRAFT,
+				icon: "fas fa-hammer",
+				callback: async (event, button, dialog) => {
+					if (!actor) {
+						ui.notifications.error(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
+						return;
 					}
-				};
-				craftItemButtons['back'] = {
-					icon: "<i class='fas fa-arrow-left'></i>",
-					label: LOCALIZED_TEXT.BACK,
-					callback: () => qaDialog(actor)
-				};
-				
-			// Consumable Buttons
-			} else if (itemType === 'consumable'){
-				craftItemButtons['craft'] = {
-					icon: "<i class='fas fa-hammer'></i>",
-					label: LOCALIZED_TEXT.CRAFT,
-					callback: async (html) => {
-						if (!actor) {
-							ui.notifications.error(LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND);
-							return;
-						}
 
-						// Perform actions with the actor
-						selectedUuid = html.find("#item-selection").val();
-						dbSelectedUuid = html.find("#db-item-selection").val();
-						
-						if (!selectedUuid){
-							selectedUuid = "none";
-						}
-						if (!dbSelectedUuid){
-							dbSelectedUuid = "none";
-						}
-						craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
-					}
-				};
-				craftItemButtons['back'] = {
-					icon: "<i class='fas fa-arrow-left'></i>",
-					label: LOCALIZED_TEXT.BACK,
-					callback: () => qaDialog(actor)
-				};
-			} 
-			
+					// Perform actions with the actor
+					selectedUuid = button.form.elements["item-selection"]?.value || "none";
+					dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+
+					debugLog(`selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+					craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+				}
+			});
+
+			// Back button
+			buttons.push({
+				action: "back",
+				label: LOCALIZED_TEXT.BACK,
+				icon: "fas fa-arrow-left",
+				callback: () => qaDialog(actor)
+			});
+
 			// Show dialog
-			const craftingDialog = new Dialog({
-				title: "Quick Alchemy",
-				content: content,
-				buttons: craftItemButtons,
+			new foundry.applications.api.DialogV2({
+				window: {
+					title: "Quick Alchemy",
+					width: 450
+				},
+				content,
+				buttons,
 				default: "craft",
 				render: (html) => {
 					// Apply styles to specific buttons
@@ -1910,10 +1874,7 @@ Hooks.on("ready", () => {
 						fontSize: "14px"
 					});
 				}
-			}, {
-					width: 450    // Set desired width
-			});
-			craftingDialog.render(true);
+			}).render(true);
 		}
 	}
 	
@@ -1929,48 +1890,53 @@ Hooks.on("ready", () => {
 		*/
 		const vialCount = getVersatileVialCount(actor);
 		debugLog(`${LOCALIZED_TEXT.DEBUG_VV_COUNT} ${actor.name}: ${vialCount}`);
-		let dbbuttons = {};
+
 		let content = "";
-		
+		const buttons = [];
+
 		if (vialCount < 1) {
-			dbbuttons['OK'] = { 
-				icon: "<i class='fas fa-check'></i>",
-				label: LOCALIZED_TEXT.OK,
-				callback: () => quickAlchemyDialog.close()
-			};
-			dbbuttons['vial'] = {
-				icon: "<i class='fas fa-vial'></i>",
-				label: LOCALIZED_TEXT.QUICK_VIAL,
-				callback: () => displayCraftingDialog(actor, 'vial')
-			};
 			content = `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_VV}</p>`;
-			if (!isArchetype) content = `${content} ${LOCALIZED_TEXT.QUICK_ALCHEMY_10_MIN}<br/><br/>`;
-		} else {
-			dbbuttons['weapon'] = {
-				icon: "<i class='fas fa-bomb'></i>",
-				label: LOCALIZED_TEXT.WEAPON,
-				callback: () => displayCraftingDialog(actor, 'weapon')
-			};
-			dbbuttons['consumable'] = {
-				icon: "<i class='fas fa-flask'></i>",
-				label: LOCALIZED_TEXT.CONSUMABLE,
-				callback: () => displayCraftingDialog(actor, 'consumable')
-			};
-			dbbuttons['vial'] = {
-				icon: "<i class='fas fa-vial'></i>",
+			if (!isArchetype) content += `${LOCALIZED_TEXT.QUICK_ALCHEMY_10_MIN}<br/><br/>`;
+
+			buttons.push({
+				action: "ok",
+				label: LOCALIZED_TEXT.OK,
+				icon: "fas fa-check",
+				callback: () => {} // just closes
+			}, {
+				action: "vial",
 				label: LOCALIZED_TEXT.QUICK_VIAL,
+				icon: "fas fa-vial",
 				callback: () => displayCraftingDialog(actor, 'vial')
-			};
+			});
+
+		} else {
 			content = `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_TYPE}</p>`;
+
+			buttons.push({
+				action: "weapon",
+				label: LOCALIZED_TEXT.WEAPON,
+				icon: "fas fa-bomb",
+				callback: () => displayCraftingDialog(actor, 'weapon')
+			}, {
+				action: "consumable",
+				label: LOCALIZED_TEXT.CONSUMABLE,
+				icon: "fas fa-flask",
+				callback: () => displayCraftingDialog(actor, 'consumable')
+			}, {
+				action: "vial",
+				label: LOCALIZED_TEXT.QUICK_VIAL,
+				icon: "fas fa-vial",
+				callback: () => displayCraftingDialog(actor, 'vial')
+			});
 		}
-		
-		const quickAlchemyDialog = new Dialog({
-			title: LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_ITEM_TYPE,
-			content: content,
-			buttons: dbbuttons,
+
+		new foundry.applications.api.DialogV2({
+			window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_ITEM_TYPE },
+			content,
+			buttons,
 			default: "vial"
-		});
-		quickAlchemyDialog.render(true);
+		}).render(true);
 	}
 	
 	/*

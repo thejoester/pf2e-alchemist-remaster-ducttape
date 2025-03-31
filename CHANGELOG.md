@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0] - 2025-03-31
+### Added
+- **Module:** Updated dialogs to DialogV2. 
+- **Level Up:** Added macro to trigger adding higher level versions of known formulas manually (Look in the macro compendium).
+- **Level Up:** Added macro to trigger removing lower level versions of known formulas manually (Look in the macro compendium). 
+- **Level Up:** Added dialog with progress bar when leveling up to indicate that module is working on checking formulas. 
+
 ## [2.7.5] - 2025-03-26
 ### Fixed
 - **Powerful Alchemy:** Fixed bug that prevented certain save text in description from being updated properly, such as [Energy Mutagen (Major)](https://2e.aonprd.com/Equipment.aspx?ID=1962).
