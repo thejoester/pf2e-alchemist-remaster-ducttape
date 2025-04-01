@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 📚 Read the Wiki
+    url: https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki
+    about: Find usage guides, module setup instructions, and FAQs here.
+
+  - name: 💬 Discord Thread (Pathfinder on FoundryVTT Discord)
+    url: https://discord.com/channels/880968862240239708/1318068254945574962
+    about: Rather chat about it on Discord? Want to contribute translations? Come chat with us!
