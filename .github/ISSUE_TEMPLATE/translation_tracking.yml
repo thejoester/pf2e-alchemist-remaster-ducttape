@@ -1,3 +1,8 @@
+- type: markdown
+  attributes:
+    value: |
+      ⚠️ **Internal Use Only**  
+      This issue template is for maintainers to track translation status. Please do not use this unless you're a module translator or maintainer.
 name: 🌍 Translation Tracking
 description: Track translation status for a specific language.
 title: "[Translation] <LANG-CODE> Translation Status"
