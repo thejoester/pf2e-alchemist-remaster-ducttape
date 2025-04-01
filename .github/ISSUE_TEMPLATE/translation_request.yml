@@ -1,5 +1,5 @@
 ---
-name: 🌐 Translation Request
+name: 🌐 Translation Request / issue
 description: Request support for a new translation or submit missing translations for an existing language.
 title: "[Translation Request] <Language Name or Code>"
 labels: [localization, help wanted]
