@@ -31,7 +31,7 @@ body:
         - Up to Date
         - Needs Update
         - In Progress
-        - Awaiting Translator
+        - Awaiting Verification
         - Deprecated
     validations:
       required: true
