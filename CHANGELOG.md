@@ -6,7 +6,8 @@
 - **Level Up:** Added macro to trigger adding higher level versions of known formulas manually (Look in the macro compendium).
 - **Level Up:** Added macro to trigger removing lower level versions of known formulas manually (Look in the macro compendium). 
 - **Level Up:** Added dialog with progress bar when leveling up to indicate that module is working on checking formulas. 
-- **Module:** English (en.json) and Polish (pl.json) localizations updated. 
+- **Module:** Updated localizations for Engligh (en), Polish (pl) credit: [Lioheart](https://github.com/Lioheart)), and Brazilian Portuguese(pt-BR).
+  -  Brazilian Portuguese(pt-BR) additions were created with translation assistance and could use verification.
 
 ## [2.7.5] - 2025-03-26
 ### Fixed
