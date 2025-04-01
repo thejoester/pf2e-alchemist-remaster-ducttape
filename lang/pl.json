@@ -40,6 +40,7 @@
 		"BTN_YES":"Tak",
 		"BTN_NO":"Nie",
 		"BTN_USE":"Użyj",
+		"BTN_CANCEL":"Anuluj",
 		"BTN_ROLL_ATK":"Rzut na atak",
 		"NOTIF_ALREADY_MAX_VIALS":"{actorname} ma już maksymalną liczbę uniwersalnych fiolek.",
 		"NOTIF_SELECT_TOKEN_FIRST":"Najpierw wybierz token lub przypisz postać.",
@@ -98,7 +99,8 @@
 		"SETTING_DEBUG_ALL":"Wszystkie",
 		"SETTING_COMPENDIUM_CHECK":"Kompendia do sprawdzenia",
 		"SETTING_COMPENDIUM_CHECK_HINT":"Lista kompendiów, w których można szukać przedmiotów wyższego poziomu podczas awansowania postaci.",
-		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Wybierz typ przedmiotu",
+		"QUICK_ALCHEMY":" Szybka Alchemia",
+		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Szybka Alchemia: Wybierz rodzaj przedmiotu",
 		"QUICK_ALCHEMY_PROMPT_TYPE":"Jakiego rodzaju przedmiot chcesz stworzyć za pomocą Szybkiej Alchemii?",
 		"QUICK_ALCHEMY_NO_PRIOR_COMBATANT": "Podczas combatTurnChange nie znaleziono żadnego ważnego wcześniejszego walczącego.",
 		"QUICK_ALCHEMY_PLEASE_TARGET":"Wybierz token do ataku.",
@@ -220,6 +222,15 @@
 		"DEBUG_ADV_VIAL_TOX_FEAT":"Wykryto atut Zaawansowane Fiolki Toksykologa!",
 		"DEBUG_ADV_VIAL_MUT_FEAT":"Wykryto atut Zaawansowane Fiolki Mutagenika!",
 		"DEBUG_FAIL_EFFECT_COMPENDIUM":"Nie udało się pobrać efektu z kompendium.",
-		"DEBUG_VV_COUNT":"Liczba Uniwersalnych Fiolek dla"
+		"DEBUG_VV_COUNT":"Liczba Uniwersalnych Fiolek dla",
+		"MACRO_ADD_FORMULAS":"Dodać nowe formuły?",
+		"MACRO_REMOVE_FORMULAS":"Usunąć formuły niższych poziomów?",
+		"MACRO_PROMPT_STYLE":"Styl podpowiedzi:",
+		"MACRO_START_LEVEL":"Rozpocznij od poziomu:",
+		"MACRO_ADD_TITLE":"Dodaj formuły alchemiczne",
+		"MACRO_REMOVE_TITLE":"Usunięcie formuł alchemicznych niższego poziomu",
+		"MACRO_WAIT_TITLE":"Proszę czekać...",
+		"MACRO_CHECKING_NEW_FORMULAS":"Sprawdzanie nowych formuł alchemicznych...<br><br>Może to chwilę potrwać. Można zamknąć to okno.",
+		"MACRO_CHECKING_LOWER_FORMULAS":"Sprawdzanie formuł alchemicznych niższego poziomu do wyczyszczenia...<br><br>Może to chwilę potrwać. Można zamknąć to okno."
 	}
 }
