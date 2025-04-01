@@ -1,0 +1,48 @@
+name: 🌍 Translation Tracking
+description: Track translation status for a specific language.
+title: "[Translation] <LANG-CODE> Translation Status"
+labels: [localization, tracking]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📝 Translation Tracking
+
+        This issue is used to track the translation progress for a specific language. It stays open permanently and gets updated as needed.
+
+  - type: input
+    id: language
+    attributes:
+      label: Language Code (e.g. pt-BR, fr, de)
+      placeholder: e.g., pt-BR
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Current Translation Status
+      options:
+        - Up to Date
+        - Needs Update
+        - In Progress
+        - Awaiting Translator
+        - Deprecated
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes-needed
+    attributes:
+      label: What's Needed
+      description: List new keys to be translated, removed, or anything needing attention.
+      placeholder: |
+        - ADD: "NEW_FORMULA_TOOLTIP"
+        - REMOVE: "OLD_MACRO_NAME"
+        - REWORD: "QUICK_ALCHEMY"
+  
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes or Additional Info
+      description: Optional space to add discussion notes or links to commits/PRs.
