@@ -48,18 +48,3 @@ body:
       label: Relevant Debug Logs or Errors
       description: Paste any relevant debugLog output or browser console errors here.
       render: shell
-  - type: checkboxes
-    id: localization
-    attributes:
-      label: Is this related to localization?
-      options:
-        - label: This issue affects translation or localized text.
-  - type: dropdown
-    id: operating-system
-    attributes:
-      label: Operating System
-      options:
-        - Windows
-        - macOS
-        - Linux
-        - Other
