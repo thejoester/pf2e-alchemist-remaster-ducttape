@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.8.1] - 2025-04-01
+### Fixed
+- **Module:** New Macros are now included in the compendium. 
+
 ## [2.8.0] - 2025-03-31
 ### Added
 - **Module:** Updated dialogs to DialogV2. 
