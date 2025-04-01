@@ -1,5 +1,5 @@
 name: 🌍 Translation Tracking
-description: Track translation status for a specific language.
+description: ⚠️ **Internal Use Only** Track translation status for a specific language.
 title: "[Translation] <LANG-CODE> Translation Status"
 labels: [localization, tracking]
 body:
