@@ -638,8 +638,8 @@ Hooks.on("ready", () => {
 		when attacking it is using the same item.
 	*/
 	async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
-		debugLog(`${LOCALIZED_TEXT.DEBUG_SELECTED_VIAL}: ${selectedItem?.name || LOCALIZED_TEXT.DEBUG_NO_NAME}`);
-		debugLog(`${LOCALIZED_TEXT.DEBUG_SELECTED_ACTOR}: ${selectedActor?.name || LOCALIZED_TEXT.DEBUG_NO_NAME}`);
+		debugLog(`${LOCALIZED_TEXT.DEBUG_SELECTED_VIAL}: ${selectedItem?.name || LOCALIZED_TEXT.DEBUG_NO_NAME}`); // Selected Vial: 
+		debugLog(`${LOCALIZED_TEXT.DEBUG_SELECTED_ACTOR}: ${selectedActor?.name || LOCALIZED_TEXT.DEBUG_NO_NAME}`); // Selected acrtor: 
 		
 		if (!selectedItem || !selectedActor) {
 			debugLog(3, LOCALIZED_TEXT.DEBUG_INVALID_ACTOR_ITEM);
@@ -691,6 +691,7 @@ Hooks.on("ready", () => {
 			
 			// Replace materials if selected
 			if (specialIngredient !== "none"){
+				modifiedItem.system.traits.value.push(specialIngredient);
 				modifiedItem.system.material.grade = "standard";
 				modifiedItem.system.material.type = specialIngredient;
 			}
@@ -1073,7 +1074,7 @@ Hooks.on("ready", () => {
 		if (quickVial) {
 			newItemSlug = await craftVial(selectedItem, actor, selectedType, specialIngredient);
 		} else {
-			newItemSlug = await craftItem(selectedItem, actor, selectedType, specialIngredient);
+			newItemSlug = await craftItem(selectedItem, actor, selectedType);
 		}
 		debugLog(`newItemSlug: ${newItemSlug}`);
 		
@@ -1161,18 +1162,18 @@ Hooks.on("ready", () => {
 		// Check if we are making Quick Vial
 		if (itemType === 'vial'){
 			debugLog(`handleCrafting=> uuid: ${selectedUuid} | itemTye: ${itemType} | actor: ${actor.name} | selectedType: ${selectedType}`);
-			await handleCrafting(selectedUuid, actor, true, false, false, selectedType);
+			await handleCrafting(selectedUuid, actor, true, false, false, selectedType, specialIngredient);
 			debugLog(`Double Brew: handleCrafting=> uuid: ${dbSelectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
 			if (dbSelectedUuid == selectedUuid) { // We are creating another Quick Vial
-				await handleCrafting(dbSelectedUuid, actor, true, true, false, selectedType);
+				await handleCrafting(dbSelectedUuid, actor, true, true, false, selectedType, specialIngredient);
 			} else {
 				await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType);
 			}
 		} else {
 			debugLog(`handleCrafting=> uuid: ${selectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
-			await handleCrafting(selectedUuid, actor, false, false, false, selectedType, specialIngredient);
+			await handleCrafting(selectedUuid, actor, false, false, false, selectedType);
 			debugLog(`handleCrafting=> uuid: ${dbSelectedUuid} | actor: ${actor.name} | selectedType: ${selectedType}`);
-			await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType, specialIngredient);
+			await handleCrafting(dbSelectedUuid, actor, false, true, false, selectedType);
 		}
 	}
 
@@ -1626,15 +1627,13 @@ Hooks.on("ready", () => {
 					<select id="item-selection" name="item-selection" style="display: none;">
 						<option value="${uuid}">Quick Vial</option>
 					</select>
-				</div>
-			</form>`;
+				</div>`;
 
 			if (doubleBrewFeat) {
 				const vialCount = getVersatileVialCount(actor);
 				if (vialCount >= 2) {
 					const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
 					content += `
-						<form>
 							<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
 							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_QV_DB_PROMPT}</p>
 							<div>
@@ -1646,9 +1645,11 @@ Hooks.on("ready", () => {
 									${consumableOptions}
 								</select>
 							</div>
-						</form><br/>`;
+						<br/>`;
 				}
 			}
+			
+			content += `</form>`;
 
 			const buttons = [
 				{
@@ -1746,7 +1747,6 @@ Hooks.on("ready", () => {
 						<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
 						<br/><br/>
 					</div>
-				</form>
 			`;
 
 			// If actor has double brew feat
@@ -1767,7 +1767,7 @@ Hooks.on("ready", () => {
 									${consumableOptions}
 								</select>
 							</div>
-						</form><br/>
+						<br/>
 					`;
 				} else { // we will only prompt to make another vial
 					if (!isArchetype) { // do not show for Archetype
@@ -1787,7 +1787,7 @@ Hooks.on("ready", () => {
 					}
 				}
 			}
-
+			content += `</form>`;
 			const buttons = [];
 
 			// Weapon Buttons
