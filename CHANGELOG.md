@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.2] - 2025-04-07
+### Fixed
+- **Quick Alchemy:** [Issue #34](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/34) - Fixed bug with Double Brew, it now correctly makes the second item. 
+- **Module:** [Issue #33](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/33) - Macro to remove lower level formulas properly named.
+
 ## [2.8.1] - 2025-04-01
 ### Fixed
 - **Module:** New Macros are now included in the compendium. 
