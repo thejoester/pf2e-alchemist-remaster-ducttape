@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.8.3] - 2025-04-07
+### Fixed
+- **Quick Alchemy:** Implemented fix to prevent occasional error "This action no longer exists!" when using Quick Alchemy to craft and attack. 
+
 ## [2.8.2] - 2025-04-07
 ### Fixed
 - **Quick Alchemy:** [Issue #34](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/34) - Fixed bug with Double Brew, it now correctly makes the second item. 

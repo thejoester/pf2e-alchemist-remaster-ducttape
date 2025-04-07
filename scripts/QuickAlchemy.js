@@ -1066,6 +1066,35 @@ Hooks.on("ready", () => {
 			return;
 		}
 		
+		/*
+			Helper function to insert slight delay to avoid
+			'This action no longer exists!' error. 
+		*/
+		async function delayedRollActionMacro(actor, initialItem, maxAttempts = 5, delay = 200) {
+			let attempts = 0;
+
+			while (attempts < maxAttempts) {
+				const item = actor.items.get(initialItem?.id);
+				if (item) {
+					debugLog(`Item found on attempt ${attempts + 1}. Rolling strike.`);
+					game.pf2e.rollActionMacro({
+						actor: actor,
+						type: "strike",
+						item: item,
+						itemId: item.id,
+						slug: item.slug,
+					});
+					return;
+				}
+
+				attempts++;
+				debugLog(`Attempt ${attempts}: Item not found, retrying in ${delay}ms...`);
+				await new Promise(resolve => setTimeout(resolve, delay));
+			}
+
+			debugLog(`Failed to find item after ${maxAttempts} attempts.`);
+		}
+		
 		// Get Selected Item Object from uuid
 		const selectedItem = await fromUuid(uuid);
 		if (!selectedItem) return;
@@ -1135,14 +1164,7 @@ Hooks.on("ready", () => {
 		} else if (attack) {
 			if (getSetting("sendAtkToChat")) await sendMsg(temporaryItem.type, formattedUuid, actor);
 			debugLog(`temporaryItem.id: ${temporaryItem.id} | temporaryItem.slug: ${temporaryItem.slug}`);
-			game.pf2e.rollActionMacro({
-				actor: actor,
-				type: "strike",
-				item: temporaryItem,
-				itemId: temporaryItem.id,
-				slug: temporaryItem.slug,
-			});
-					
+			await delayedRollActionMacro(actor, temporaryItem);
 		} else {
 			// Send message to chat based on item type
 			await sendMsg(temporaryItem.type, formattedUuid, actor);
