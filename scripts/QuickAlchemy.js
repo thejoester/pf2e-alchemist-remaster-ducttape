@@ -1754,6 +1754,8 @@ Hooks.on("ready", () => {
 		/*
 			We are crafting Weapon or Consumable
 		*/
+		} else if(itemType == "healing-bomb") {
+			debugLog("Wants to make ahealing bomb");
 		} else { 
 				
 			let options = "";
@@ -1930,6 +1932,11 @@ Hooks.on("ready", () => {
 				label: LOCALIZED_TEXT.QUICK_VIAL,
 				icon: "fas fa-vial",
 				callback: () => displayCraftingDialog(actor, 'vial')
+			}, {
+				action: "healing-bomb",
+				label: LOCALIZED_TEXT.HEALING_BOMB,
+				icon: "fas fa-hospital",
+				callback: () => displayCraftingDialog(actor, 'healing-bomb')
 			});
 
 		} else {
@@ -1950,6 +1957,11 @@ Hooks.on("ready", () => {
 				label: LOCALIZED_TEXT.QUICK_VIAL,
 				icon: "fas fa-vial",
 				callback: () => displayCraftingDialog(actor, 'vial')
+			}, {
+				action: "healing-bomb",
+				label: LOCALIZED_TEXT.HEALING_BOMB,
+				icon: "fas fa-hospital",
+				callback: () => displayCraftingDialog(actor, 'healing-bomb')
 			});
 		}
 
