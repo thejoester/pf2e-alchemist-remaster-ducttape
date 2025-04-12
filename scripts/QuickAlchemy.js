@@ -3,8 +3,8 @@ import { LOCALIZED_TEXT } from "./localization.js";
 import { createChirugeonSuccessChatLog, createFailureChatLog, createSucessChatLog } from './HealingBomb.js';
 
 let isArchetype = false;
-const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
-const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
+const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
+const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
 
 // Hook for combat turn change to remove temp items on start of turn
 Hooks.on("combatTurnChange", async (combat, prior, current) => {
@@ -716,7 +716,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 	} else {
 
 		// Item does not exist, retrieve from compendium
-		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items");
+		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
 		if (!compendium) {
 			debugLog(3, LOCALIZED_TEXT.DEBUG_COMPENDIUM_NOTFOUND);
 			return;
@@ -1485,7 +1485,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`elixirStrength: ${elixirStrength}`);
 
 	// Get base item from compendium
-	const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items");
+	const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
 	if (!compendium) {
 		debugLog(3, LOCALIZED_TEXT.DEBUG_COMPENDIUM_NOTFOUND);
 		return;
@@ -1785,7 +1785,7 @@ async function displayCraftingDialog(actor, itemType) {
 		}
 
 		// Make sure module compendium is available 
-		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items");
+		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
 		if (!compendium) {
 			debugLog(3, LOCALIZED_TEXT.DEBUG_COMPENDIUM_NOTFOUND);
 			return;
@@ -2103,7 +2103,7 @@ async function displayCraftingDialog(actor, itemType) {
 			debugLog(LOCALIZED_TEXT.DEBUG_ADV_VIAL_MUT_FEAT);
 			async function applyEffectFromCompendium(actor) {
 				// Define the exact effect UUID
-				const effectUUID = "Compendium.pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items.Item.0Zpa9OfNcTUlNc2t";
+				const effectUUID = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.0Zpa9OfNcTUlNc2t";
 
 				// Get the effect document from the compendium
 				const effect = await fromUuid(effectUUID);

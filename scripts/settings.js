@@ -209,7 +209,7 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
     }
 
     getData() {
-        const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
+        const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
         return {
             savedCompendiums,
             tempCompendiums: this.tempCompendiums || []
@@ -248,17 +248,17 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
         // Remove a saved compendium
         html.find('.delete-saved-compendium').click(async (event) => {
             const compendiumToDelete = event.currentTarget.dataset.name;
-            const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
+            const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
             const updatedCompendiums = savedCompendiums.filter(c => c !== compendiumToDelete);
 
-            await game.settings.set('pf2e-alchemist-remaster-ducttape-fork', 'compendiums', updatedCompendiums);
+            await game.settings.set('pf2e-alchemist-remaster-ducttape', 'compendiums', updatedCompendiums);
             ui.notifications.info(game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COMPENDIUM_REMOVED(compendiumToDelete)"));
             this.render();
         });
 
         // Save compendiums when the Save button is clicked
         html.find('#save-compendiums-btn').click(async () => {
-            const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
+            const savedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
             const uniqueCompendiums = new Map(); // Use Map to avoid duplicates
 
             let invalidEntries = [];
@@ -478,7 +478,7 @@ Hooks.once("init", () => {
 		requiresReload: false,
 	});
 	
-	game.settings.register('pf2e-alchemist-remaster-ducttape-fork', 'compendiums', {
+	game.settings.register('pf2e-alchemist-remaster-ducttape', 'compendiums', {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COMPENDIUM_CHECK"),
 		hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COMPENDIUM_CHECK_HINT"),
 		scope: 'world',
