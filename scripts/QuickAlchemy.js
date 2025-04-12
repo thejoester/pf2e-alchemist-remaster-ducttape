@@ -1,5 +1,6 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
+import { createChirugeonSuccessChatLog, createFailureChatLog, createSucessChatLog } from './HealingBomb.js';
 
 let isArchetype = false;
 const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape-fork.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
@@ -90,6 +91,48 @@ Hooks.on("deleteCombat", async (combat) => {
 	}
 });
 
+/* 
+	Hook for modifying the buttons on the healing bombs
+*/
+Hooks.on("renderActorSheet", (app, html, data) => {
+	const actor = app.actor;
+	if (!actor) {
+		debugLog(3, `${LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND}: `, app);
+		return;
+	}
+	var $html = $(html);
+	$html.find("ol.actions-list.item-list.directory-list.strikes-list>li").each((index, element) => {
+		if ($(element).find("section>h4.name>a").text().includes("Healing Bomb")) {
+			$(element).find("button[data-action=strike-damage]").remove();
+			$(element).find("button[data-action=strike-critical]").remove();
+
+			var isChirgeion = hasFeat(actor, "greater-field-discovery-chirurgeon") && $(element).find('span[data-tooltip="PF2E.TraitDescriptionInfused"]').length > 0;
+
+			var sucessButton = $(`<button type="button" class="tag damage" data-action="strike-damage" data-tooltip="1 * (8d6 + 30) + 8">${isChirgeion ? "Chirgeon" : "Success"}</button>`)
+				.insertBefore($(element).find("div.button-group>.toggles"));
+			var failureButton = $(`<button type="button" class="tag damage" data-action="strike-critical" data-tooltip="2 * (8d6 + 30) + 8">Failure</button>`)
+				.insertAfter($(sucessButton));
+
+			$html.find("section.inventory-list.directory-list.inventory-pane>ul>li>div.data>div.item-name>h4.name>a").each(async (index, nameElement) => {
+				if($(nameElement).text() === $(element).find("section>h4.name>a").text()) {
+					var item = await fromUuid($(nameElement).parentsUntil("ul").last().data("uuid"));
+					//greater field-discovery-chirurgeon success
+					if (isChirgeion) {
+						createChirugeonSuccessChatLog(sucessButton, item, actor);
+					}
+					//regular success
+					else {
+						createSucessChatLog(sucessButton, item, actor);
+					}
+					//failure
+					createFailureChatLog(failureButton, item, actor);
+					return;
+				}
+			});
+			return;
+		}
+	});
+});
 
 /*
 	renderChatMessage Hook for Healing Bomb
@@ -173,214 +216,18 @@ Hooks.on('renderChatMessage', (message, html) => {
 		}
 
 		healingButtons += `</section>`;
-		if(message.isReroll) {
+		if (message.isReroll) {
 			$html.find("div.message-content>div.reroll-second>div.message-buttons").html(healingButtons);
 		}
 		else {
 			$html.find("div.message-content>div.message-buttons").html(healingButtons);
 		}
 
+		createSucessChatLog($html.find(".success[data-outcome=success]"), item, actor);
+		
+		createFailureChatLog($html.find(".failure[data-outcome=failure]"), item, actor);
 
-		const fullHealth = `${item.system.damage.dice}${item.system.damage.die} + ${item.system.damage.modifier}`;
-		const splashDamage = `${item.system.splashDamage.value}`;
-
-		$html.find(".success[data-outcome=success]").on("click", async (event) => {
-			const healRoll = new Roll(fullHealth);
-
-			await healRoll.evaluate();
-
-			console.log(healRoll);
-
-			const healResult = healRoll.total;
-
-			var diceRolls = "";
-			for (const roll of healRoll.terms[0].results) {
-				diceRolls += `
-				<li class="roll die d${healRoll.terms[0].faces} ${healRoll.terms[0].faces === roll.result ? "max" : ""}
-				${roll.result == 1 ? "min" : ""}">
-					${roll.result}
-				</li>`;
-			}
-
-			ChatMessage.create({
-				content: `
-				<section class="dice-roll damage-roll" data-tooltip-class="pf2e">
-					<div class="dice-result">
-							<div class="dice-formula">
-									<span class="untyped damage instance color" data-tooltip="Untyped">${healRoll.formula}</span>
-							</div>
-							<div class="dice-tooltip" style="display: none;">
-									<section class="tooltip-part damage instance color untyped">
-											<header>
-													Untyped <i class="fa-solid fa-"></i>
-											</header>
-											<div class="dice">
-													<header class="part-header flexrow">
-															<span class="part-formula">${healRoll.terms[0].expression}</span>
-															<span class="part-total">${healResult}</span>
-													</header>
-													<ol class="dice-rolls">
-														${diceRolls}
-													</ol>
-											</div>
-									</section>
-							</div>
-			
-							<h4 class="dice-total">
-									<span class="total">${healResult}</span>
-							</h4>
-					</div>
-			</section>
-			
-			<section class="damage-application" data-roll-index="0">
-					<button type="button" class="healing-only" data-action="apply-healing" title="[Click] Apply full healing to selected tokens.">
-							<span class="fa-stack fa-fw">
-									<i class="fa-solid fa-heart fa-stack-2x"></i>
-									<i class="fa-solid fa-plus fa-inverse fa-stack-1x"></i>
-							</span>
-							<span class="label">Apply Healing</span>
-					</button>
-			</section>
-			
-			
-			<section class="dice-roll damage-roll" data-tooltip-class="pf2e">
-			<div class="dice-result">	
-					<h4 class="dice-total">
-							<span class="total">${splashDamage}</span>
-					</h4>
-			</div>
-	</section>
-	
-	<section class="damage-application" data-roll-index="1">
-			<button type="button" class="healing-only" data-action="apply-healing" title="[Click] Apply full healing to selected tokens.">
-					<span class="fa-stack fa-fw">
-							<i class="fa-solid fa-heart fa-stack-2x"></i>
-							<i class="fa-solid fa-plus fa-inverse fa-stack-1x"></i>
-					</span>
-					<span class="label">Apply Splash Healing</span>
-			</button>
-	</section>`,
-				speaker: ChatMessage.getSpeaker(),
-				flags: {
-					core: { "canPopout": true },
-					"pf2e": {
-						"context": {
-							"origin": {
-								"uuid": message.flags.pf2e.origin.uuid,
-								"itemId": item.id,
-								"actorId": actor.id
-							},
-							"type": "healing-bomb-heal-roll",
-							"targetHeal": healResult,
-							"targetSplash": splashDamage,
-							"rollMode": "damage",
-						}
-					}
-				}
-			});
-		});
-
-		$html.find(".failure[data-outcome=failure]").on("click", async (event) => {
-			ChatMessage.create({
-				content: `
-			<section class="dice-roll damage-roll" data-tooltip-class="pf2e">
-				<div class="dice-result">	
-					<h4 class="dice-total">
-						<span class="total">${splashDamage}</span>
-					</h4>
-				</div>
-			</section>
-	
-			<section class="damage-application" data-roll-index="1">
-				<button type="button" class="healing-only" data-action="apply-healing" title="[Click] Apply full healing to selected tokens.">
-					<span class="fa-stack fa-fw">
-						<i class="fa-solid fa-heart fa-stack-2x"></i>
-						<i class="fa-solid fa-plus fa-inverse fa-stack-1x"></i>
-					</span>
-					<span class="label">Apply Healing</span>
-				</button>
-			</section>`,
-				speaker: ChatMessage.getSpeaker(),
-				flags: {
-					core: { "canPopout": true },
-					"pf2e": {
-						"context": {
-							"origin": {
-								"uuid": message.flags.pf2e.origin.uuid,
-								"itemId": item.id,
-								"actorId": actor.id
-							},
-							"type": "healing-bomb-heal-roll",
-							"targetHeal": 0,
-							"targetSplash": splashDamage,
-							"rollMode": "damage",
-						}
-					}
-				}
-			});
-		});
-
-		$html.find(".success[data-outcome=chirurgeon-success]").on("click", async (event) => {
-			var dieSize = item.system.damage.die.split("d")[1];
-			const healing = (item.system.damage.dice * dieSize) + item.system.damage.modifier
-
-			ChatMessage.create({
-				content: `
-				<section class="dice-roll damage-roll" data-tooltip-class="pf2e">
-					<div class="dice-result">
-							<h4 class="dice-total">
-									<span class="total">${healing}</span>
-							</h4>
-					</div>
-			</section>
-			
-			<section class="damage-application" data-roll-index="0">
-					<button type="button" class="healing-only" data-action="apply-healing" title="[Click] Apply full healing to selected tokens.">
-							<span class="fa-stack fa-fw">
-									<i class="fa-solid fa-heart fa-stack-2x"></i>
-									<i class="fa-solid fa-plus fa-inverse fa-stack-1x"></i>
-							</span>
-							<span class="label">Apply Healing</span>
-					</button>
-			</section>
-			
-			
-			<section class="dice-roll damage-roll" data-tooltip-class="pf2e">
-			<div class="dice-result">	
-					<h4 class="dice-total">
-							<span class="total">${splashDamage}</span>
-					</h4>
-			</div>
-	</section>
-	
-	<section class="damage-application" data-roll-index="1">
-			<button type="button" class="healing-only" data-action="apply-healing" title="[Click] Apply full healing to selected tokens.">
-					<span class="fa-stack fa-fw">
-							<i class="fa-solid fa-heart fa-stack-2x"></i>
-							<i class="fa-solid fa-plus fa-inverse fa-stack-1x"></i>
-					</span>
-					<span class="label">Apply Splash Healing</span>
-			</button>
-	</section>`,
-				speaker: ChatMessage.getSpeaker(),
-				flags: {
-					core: { "canPopout": true },
-					"pf2e": {
-						"context": {
-							"origin": {
-								"uuid": message.flags.pf2e.origin.uuid,
-								"itemId": item.id,
-								"actorId": actor.id
-							},
-							"type": "healing-bomb-heal-roll",
-							"targetHeal": healing,
-							"targetSplash": splashDamage,
-							"rollMode": "damage",
-						}
-					}
-				}
-			});
-		});
+		createChirugeonSuccessChatLog($html.find(".success[data-outcome=chirurgeon-success]"), item, actor);
 
 		html = $html[0];
 		console.log(item);
@@ -1669,7 +1516,9 @@ async function craftHealingBomb(actor, elixirUuid) {
 		const existingItem = actor.items.find(item =>
 			item.slug === healingSlug &&
 			item.system.ductTaped === true &&
-			item.name.includes(`(${elixirStrength.charAt(0).toUpperCase() + elixirStrength.slice(1)})`)
+			item.name.includes(`(${elixirStrength.charAt(0).toUpperCase() + elixirStrength.slice(1)})`) &&
+			((item.system.traits?.value?.includes("infused") && elixir.system.traits?.value?.includes("infused")) ||
+				(!item.system.traits?.value?.includes("infused") && !elixir.system.traits?.value?.includes("infused")))
 		);
 
 		if (existingItem) {
@@ -1685,6 +1534,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 
 		// Rename the item
 		modifiedItem.name += ` (${elixirStrength.charAt(0).toUpperCase() + elixirStrength.slice(1)}) (*Temporary)`;
+		modifiedItem.name += ` ${elixir.system.traits.value.includes("infused") ? "(Infused)" : ""}`;
 
 		// Add custom module tags
 		modifiedItem.system.ductTaped = true;
@@ -1699,36 +1549,42 @@ async function craftHealingBomb(actor, elixirUuid) {
 				modifiedItem.system.level.value = 1;
 				modifiedItem.system.damage.dice = 1;
 				modifiedItem.system.splashDamage.value = 1;
+				modifiedItem.system.bonus.value = 1;
 				break;
 			case "lesser":
 				modifiedItem.system.level.value = 5;
 				modifiedItem.system.damage.dice = 3;
 				modifiedItem.system.damage.modifier = 6;
 				modifiedItem.system.splashDamage.value = 3;
+				modifiedItem.system.bonus.value = 1;
 				break;
 			case "moderate":
 				modifiedItem.system.level.value = 9;
 				modifiedItem.system.damage.dice = 5;
 				modifiedItem.system.damage.modifier = 12;
 				modifiedItem.system.splashDamage.value = 5;
+				modifiedItem.system.bonus.value = 2;
 				break;
 			case "greater":
 				modifiedItem.system.level.value = 13;
 				modifiedItem.system.damage.dice = 7;
 				modifiedItem.system.damage.modifier = 18;
 				modifiedItem.system.splashDamage.value = 7;
+				modifiedItem.system.bonus.value = 2;
 				break;
 			case "major":
 				modifiedItem.system.level.value = 15;
 				modifiedItem.system.damage.dice = 8;
 				modifiedItem.system.damage.modifier = 21;
 				modifiedItem.system.splashDamage.value = 8;
+				modifiedItem.system.bonus.value = 3;
 				break;
 			case "true":
 				modifiedItem.system.level.value = 19;
 				modifiedItem.system.damage.dice = 10;
 				modifiedItem.system.damage.modifier = 27;
 				modifiedItem.system.splashDamage.value = 10;
+				modifiedItem.system.bonus.value = 3;
 				break;
 			default:
 				debugLog(3, LOCALIZED_TEXT.DEBUG_HEALING_VIAL_NOTFOUND);
