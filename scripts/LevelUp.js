@@ -25,7 +25,7 @@ Hooks.once('ready', async () => {
     }
 
     // Index user-added compendiums
-    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
+    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
     for (const userCompendium of userDefinedCompendiums) {
         const userPack = game.packs.get(userCompendium);
         if (userPack) {
@@ -140,7 +140,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 	updateLoadingProgress(10);
 	
     const systemCompendium = 'pf2e.equipment-srd';
-    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
+    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
 	updateLoadingProgress(20);
 	
     // Extract the UUIDs from the actor's known formulas
@@ -701,8 +701,8 @@ async function getAlchemistLevels(){
 		// Avoid sending multiple messages for the same actor
 		const processedActorIds = new Set();
 
-		// Loop through all actors and find Alchemists
-		for (const actor of game.actors.party.members) {
+		// Loop through all actors and find Alchemists		
+		game.actors.forEach(async actor =>  {
 			// Make sure selected token is an alchemist or has archetype
 			const alchemistCheck = isAlchemist(actor);
 			if (!alchemistCheck.qualifies) {
@@ -710,7 +710,7 @@ async function getAlchemistLevels(){
 			} else {
 
 				// Avoid processing the same actor multiple times
-				if (processedActorIds.has(actor.id)) continue;
+				if (processedActorIds.has(actor.id)) return;
 				processedActorIds.add(actor.id);
 				
 				// Clean up duplicate formulas
@@ -720,7 +720,7 @@ async function getAlchemistLevels(){
 				await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel', actor.system.details.level.value);	
 				debugLog(`Previous level flag set for ${actor.name} = ${actor.system.details.level.value}`);
 			}
-		}
+		});
 	}
 }
 
