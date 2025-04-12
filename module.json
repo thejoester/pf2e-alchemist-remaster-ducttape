@@ -14,6 +14,7 @@
         "scripts/settings.js",
         "scripts/QuickAlchemy.js",
         "scripts/AlchemistFeats.js",
+        "scripts/HealingBomb.js",
         "scripts/FormulaSearch.js",
         "scripts/LevelUp.js",
         "scripts/VialSearch.js"
