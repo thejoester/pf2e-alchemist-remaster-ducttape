@@ -25,7 +25,7 @@ Hooks.once('ready', async () => {
     }
 
     // Index user-added compendiums
-    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
+    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
     for (const userCompendium of userDefinedCompendiums) {
         const userPack = game.packs.get(userCompendium);
         if (userPack) {
@@ -140,7 +140,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 	updateLoadingProgress(10);
 	
     const systemCompendium = 'pf2e.equipment-srd';
-    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape-fork', 'compendiums') || [];
+    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
 	updateLoadingProgress(20);
 	
     // Extract the UUIDs from the actor's known formulas
