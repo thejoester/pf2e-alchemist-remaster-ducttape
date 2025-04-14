@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.0] - 2025-04-13
+### Added
+- **Quick Alchemy:** Added support for [Healing Bomb (Feat 4)](https://2e.aonprd.com/Feats.aspx?ID=5773) ([Panda](https://github.com/Jordan-Ireland)).
+
+
 ## [2.8.3] - 2025-04-07
 ### Fixed
 - **Quick Alchemy:** Implemented fix to prevent occasional error "This action no longer exists!" when using Quick Alchemy to craft and attack. 
