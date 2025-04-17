@@ -5,3 +5,7 @@
 2025/04/16-22:13:39.739 8540 Delete type=0 #270
 2025/04/16-22:13:39.739 8540 Delete type=3 #263
 2025/04/16-22:13:39.739 8540 Delete type=3 #267
+2025/04/16-23:08:39.925 6430 Level-0 table #273: started
+2025/04/16-23:08:39.925 6430 Level-0 table #273: 0 bytes OK
+2025/04/16-23:08:39.929 6430 Delete type=0 #271
+2025/04/16-23:08:39.929 6430 Manual compaction at level-0 from '!macros!A8Fd0G580CovRtDq' @ 72057594037927935 : 1 .. '!macros!ZTOUwRh7BGixOtL9' @ 0 : 0; will stop at (end)
