@@ -963,7 +963,7 @@ async function processFormulasWithProgress(actor) {
 /*
 	Function to process FILTERED formulas with a progress bar
 */
-async function processFilteredFormulasWithProgress(actor, type, name) {
+async function processFilteredFormulasWithProgress(actor, type, slug) {
 	if (!type) {
 		debugLog(3, LOCALIZED_TEXT.DEBUG_NO_TYPE_PASSED);
 		return { filteredEntries: [] };
@@ -1019,13 +1019,13 @@ async function processFilteredFormulasWithProgress(actor, type, name) {
 
 		// Check if entry is null
 		if (entry != null) {
-			listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} | name: ${entry.name}\n `;
+			listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}\n `;
 			if (entry.slug === "versatile-vial") {
 				// do nothing
 				listProcessedFormulas = `${listProcessedFormulas} skipping`;
 			} else if (entry.type === type) {
-				if (name) {
-					if (entry.name.toLowerCase().includes(name.toLowerCase())) {
+				if (slug) {
+					if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
 						filteredEntries.push(entry);
 						listProcessedFormulas = `${listProcessedFormulas} added to filteredEntries`;
 					}
@@ -1064,7 +1064,7 @@ async function processFilteredFormulasWithProgress(actor, type, name) {
 	progressDialog.close();
 }
 
-async function processFilteredInventoryWithProgress(actor, type, name) {
+async function processFilteredInventoryWithProgress(actor, type, slug) {
 	if (!type) {
 		debugLog(3, LOCALIZED_TEXT.DEBUG_NO_TYPE_PASSED);
 		return { filteredEntries: [] };
@@ -1114,8 +1114,8 @@ async function processFilteredInventoryWithProgress(actor, type, name) {
 		if (progressBar) progressBar.value = progress;
 
 		if (item.type === type) {
-			if (name) {
-				if (item.name.toLowerCase().includes(name.toLowerCase())) {
+			if (slug) {
+				if (item.slug.toLowerCase().includes(slug.toLowerCase())) {
 					listProcessedInventory = `${listProcessedInventory} added to filteredEntries`;
 					filteredEntries.push(item);
 				}
@@ -1562,7 +1562,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 						return;
 					}
 					debugLog(actor);
-					const { filteredEntries } = await processFilteredInventoryWithProgress(actor, "consumable", "Elixir of Life");
+					const { filteredEntries } = await processFilteredInventoryWithProgress(actor, "consumable", "elixir-of-life");
 					await displayInventorySelectDialog(actor, filteredEntries);
 				}
 			},
@@ -1602,7 +1602,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		return;
 	} else {
 		if (!elixir) {
-			const { filteredEntries } = await processFilteredInventoryWithProgress(actor, "consumable", "Elixir of Life");
+			const { filteredEntries } = await processFilteredInventoryWithProgress(actor, "consumable", "elixir-of-life");
 			await displayInventorySelectDialog(actor, filteredEntries);
 		} else {
 			await craftHealingBomb(actor, elixir.uuid);
@@ -2140,7 +2140,7 @@ async function displayCraftingDialog(actor, itemType) {
 	} else if (itemType == "healing-bomb") {
 		let options = "";
 		// Get list of filtered entries
-		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, "consumable", "elixir of life");
+		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, "consumable", "elixir-of-life");
 		options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 
 		// Build main content with initial item selection
