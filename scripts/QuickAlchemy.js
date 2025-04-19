@@ -1,6 +1,6 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
-import { createChirugeonSuccessChatLog, createFailureChatLog, createSucessChatLog } from './HealingBomb.js';
+//import { createChirugeonSuccessChatLog, createFailureChatLog, createSucessChatLog } from './HealingBomb.js';
 
 let isArchetype = false;
 const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
@@ -116,13 +116,20 @@ Hooks.on("renderChatMessage", (message, html) => {
 			ui.notifications.error(LOCALIZED_TEXT.QUICK_ALCHEMY_PLEASE_TARGET);
 			return;
 		}
+		
+		// Check if we are using a Healing Bomb
+		const isHealingBomb = item.slug?.startsWith("healing-bomb");
+		if (isHealingBomb) {
+			actor.rollOptions.all["healing-bomb-attack"] = true;
+			debugLog(`renderChatMessage isHealingBomb: ${isHealingBomb}`);
+		}	
 
 		// Roll the attack with the appropriate MAP modifier
 		game.pf2e.rollActionMacro({
 			actorUUID: actor.uuid,
 			type: "strike",
 			itemId: item.id,
-			slug: item.slug,
+			slug: item.slug
 		});
 	});
 
@@ -183,14 +190,14 @@ Hooks.on("renderChatMessage", (message, html) => {
 	const collapseChatDesc = getSetting("collapseChatDesc");
 	messageHook = `${messageHook}\n -> ${LOCALIZED_TEXT.DEBUG_COLLAPSE_ENABLED} ${collapseChatDesc}`;
 
-	// If Workbench is managing the collapsible content, skip your logic
+	// If Workbench is managing the collapsible content, skip logic
 	if (workbenchCollapseEnabled === "collapsedDefault" || workbenchCollapseEnabled === "nonCollapsedDefault") {
 		messageHook = `${messageHook}\n -> ${LOCALIZED_TEXT.DEBUG_SKIPPING_COLLAPSE_FUNC}`;
 		debugLog(messageHook);
 		return;
 	}
 
-	// Add collapsible functionality only if your module's setting is enabled
+	// Add collapsible functionality only if module's setting is enabled
 	if (collapseChatDesc) {
 		messageHook = `${messageHook}\n -> ${LOCALIZED_TEXT.DEBUG_ADDING_COLLAPSE_FUNC}`;
 
@@ -497,6 +504,34 @@ async function sendWeaponAttackMessage(itemUuid) {
 	});
 
 }
+
+// generate message when Healing Bomb is created
+async function sendHealingBombMessage(itemUuid) {
+	debugLog("[Healing Bomb] Sending healing bomb attack message:", itemUuid);
+
+	const item = await fromUuid(itemUuid);
+	if (!item || item.type !== "weapon") {
+		ui.notifications.error("Invalid Healing Bomb item.");
+		return;
+	}
+
+	const actor = item.actor;
+	if (!actor) {
+		ui.notifications.error("No actor found for Healing Bomb item.");
+		return;
+	}
+
+	game.pf2e.rollActionMacro({
+		actor: actor,
+		type: "strike",
+		itemId: item.id,
+		slug: item.slug,
+		context: {
+			domains: ["healing-bomb-attack"]
+		}
+	});
+}
+
 
 // Function to equip an item by slug
 async function equipItemBySlug(slug, actor) {
