@@ -63,7 +63,7 @@ Hooks.on("ready", () => {
 		Hooks.on("renderActorSheet", (app, html, data) => {
 			const actor = app.actor;
             if (!actor) {
-                debugLog(3,`${LOCALIZED_TEXT.DEBUG_ACTOR_NOTFOUND}: `,app);
+                debugLog(3,`${LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND}: `,app);
                 return;
             }
 		
