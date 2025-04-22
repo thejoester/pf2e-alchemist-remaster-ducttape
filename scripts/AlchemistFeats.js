@@ -55,6 +55,11 @@ Hooks.on("ready", () => {
 			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
 			return;
 		}
+
+		if(item.system.traits.value.includes("healing")) {
+			debugLog("Item is a healing item - Ignoring.");
+			return;
+		}
 		
 		// ensure the item type is 'weapon' or 'consumable'
 		if (!item || (item.type !== "weapon" && item.type !== "consumable")) {
@@ -81,7 +86,9 @@ Hooks.on("ready", () => {
 			*** DEBILITATING BOMB *** 
 			Check if the actor has Debilitating Bomb - if not return with mesactorge in log	
 		*/
-		if (hasFeat(actor, "debilitating-bomb")) {
+		if (hasFeat(actor, "debilitating-bomb") && !item.system.traits.value.includes("healing")) {
+			debugLog("Debilitating Bomb enabled.");
+			console.log(item)
 			await applyDebilitatingBomb(actor, item, alchemistCheck.dc);
 		}else{
 			debugLog(`Actor (${actor.name}) does not have Debilitating Bomb, ignoring!`);
@@ -165,6 +172,11 @@ async function applyDebilitatingBomb(actor, item, dc){
 	if (!item || !item.system.traits.value.includes("alchemical")) {
 	  debugLog(`Item (${item.name}) does not have the 'alchemical' trait or item is undefined.`);
 	  return;
+	}
+
+	if(item.system.traits.value.includes("healing")) {
+		debugLog("Item is a healing item - Ignoring.");
+		return;
 	}
 	
 	// Ensure Quick Alchemy was used to create item - it will have the "infused" trait
