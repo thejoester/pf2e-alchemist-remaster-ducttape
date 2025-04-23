@@ -3,7 +3,11 @@
 ## [2.9.0] - 2025-04-13
 ### Added
 - **Quick Alchemy:** Added support for [Healing Bomb (Feat 4)](https://2e.aonprd.com/Feats.aspx?ID=5773) ([Panda](https://github.com/Jordan-Ireland)).
-
+  - Healing Bomb will create Elixir or use one from inventory. 
+- **Quick Alchemy:** Added support for [Chirurgeon Greater Field Discovery](https://2e.aonprd.com/ResearchFields.aspx?ID=6).
+### Changed
+- Simplified localization files. 
+- Updated macto Icon for Quick Alchemy. 
 
 ## [2.8.3] - 2025-04-07
 ### Fixed
