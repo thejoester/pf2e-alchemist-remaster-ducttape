@@ -56,7 +56,7 @@ jobs:
           
       - name: Publish Module to FoundryVTT Website
         id: publish-to-foundry-website
-        if: ${{ ! github.event.release.prerelease && github.ref == 'refs/heads/master' }}
+        if: ${{ ! github.event.release.prerelease}}
         uses: cs96and/FoundryVTT-release-package@v1
         with:
           package-token: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
