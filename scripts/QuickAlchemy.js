@@ -115,13 +115,6 @@ Hooks.on("renderChatMessage", (message, html) => {
 			ui.notifications.error(LOCALIZED_TEXT.QUICK_ALCHEMY_PLEASE_TARGET);
 			return;
 		}
-		
-		// Check if we are using a Healing Bomb
-		const isHealingBomb = item.slug?.startsWith("healing-bomb");
-		if (isHealingBomb) {
-			actor.rollOptions.all["healing-bomb-attack"] = true;
-			debugLog(`renderChatMessage isHealingBomb: ${isHealingBomb}`);
-		}	
 
 		// Roll the attack with the appropriate MAP modifier
 		game.pf2e.rollActionMacro({
@@ -1399,7 +1392,7 @@ async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType, selected
 */
 async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`craftHealingBomb() | Item Selection: ${elixirUuid}`);
-	var healingSlug = "healing-bomb";
+	var healingSlug = "healing-bomb-ardt";
 	var elixir = await fromUuid(elixirUuid);
 	if (!elixir) {
 		debugLog(`craftHealingBomb() | Actor not found`);

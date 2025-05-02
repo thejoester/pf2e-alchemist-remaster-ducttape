@@ -23,7 +23,7 @@ Hooks.on("renderActorSheet", (app, html, data) => {
 // Hook to add healing buttons to chat message
 Hooks.on('renderChatMessage', async (message, html) => {
 	const origin = message.flags.pf2e?.origin?.uuid?.split(".");
-	if (!origin || !message.flags.pf2e?.context?.domains?.includes("healing-bomb-attack")) return;
+	if (!origin || !message.flags.pf2e?.context?.domains?.includes("healing-bomb-ardt-attack")) return;
 	debugLog(1, "[Healing Bomb] renderChatMessage triggered for ", game.user.name, " on message ", message.id);
 	
 	const actor = game.actors.get(origin[1]);
