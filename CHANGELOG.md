@@ -1,12 +1,11 @@
 # Changelog
 
-## [2.9.1] - 2025-04-13
+## [2.9.1] - 2025-05-01
 ### Added
 - **Module:** Tested and verified for Foundry V13.341
 - **Module:** Updated Macro icon! 
 ### Fixed
 - **Quick Alchemy:** Fixed slug for Healing Bomb item to be unique. 
-
 
 ## [2.9.0] - 2025-04-13
 ### Added
