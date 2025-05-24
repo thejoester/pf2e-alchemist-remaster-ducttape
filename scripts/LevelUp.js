@@ -246,7 +246,8 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 	debugLog(`Finished Task: Filter items by level, traits, and rarity`);
     debugLog(`Filtered items for ${actor.name}:`, filteredItems);
 	updateLoadingProgress(90);
-
+	loadingDialog.close();
+	
 	debugLog(`Starting Task: let newFormulaUUIDs = filteredItems.map(item => item.uuid)`);
     let newFormulaUUIDs = filteredItems.map(item => item.uuid);
     debugLog(`New formula UUIDs:\n${newFormulaUUIDs.join('\n')}`);
@@ -278,10 +279,11 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
     let addedFormulas = [];
 	
 	updateLoadingProgress(100);
-	loadingDialog.close();
+	
 	
     // Check setting to see if we are asking for each formula
     if (mode === "ask_each") {
+		loadingDialog.close();
         for (const uuid of newFormulaUUIDs) {
             const item = await fromUuid(uuid);
             if (!item) continue;
@@ -304,6 +306,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
         // Send new formula list to chat
         newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
     } else if (mode === "ask_all") { // If we are asking for all at once
+		loadingDialog.close();
         const formulasToPrompt = [];
         for (const uuid of newFormulaUUIDs) {
             const item = await fromUuid(uuid);
@@ -512,7 +515,20 @@ function extractBaseName(name) {
 	Helper function to extract base slug
 */
 function extractBaseSlug(slug) {
-	return slug ? slug.split('-').slice(0, -1).join('-') : null;
+	if (!slug) return null;
+
+	// Special case: elemental-ammunition-[tier]-[element]
+	if (slug.startsWith("elemental-ammunition-")) {
+		const parts = slug.split("-");
+		if (parts.length >= 4 && ["lesser", "moderate", "greater"].includes(parts[2])) {
+			// Remove the potency (third element), keep the elemental part
+			parts.splice(2, 1);
+			return parts.join("-");
+		}
+	}
+
+	// Default: remove last segment (usually the potency)
+	return slug.split("-").slice(0, -1).join("-");
 }
 
 /*

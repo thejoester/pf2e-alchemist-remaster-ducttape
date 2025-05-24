@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.9.2] - 2025-05-24
+### Fixed
+- **Level Up:** Fixed issue when removing lower level forumulas that caused all elemental ammunition to be removed. 
+
 ## [2.9.1] - 2025-05-01
 ### Added
 - **Module:** Tested and verified for Foundry V13.341

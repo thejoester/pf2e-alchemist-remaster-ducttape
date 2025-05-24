@@ -115,6 +115,13 @@ Hooks.on("renderChatMessage", (message, html) => {
 			ui.notifications.error(LOCALIZED_TEXT.QUICK_ALCHEMY_PLEASE_TARGET);
 			return;
 		}
+		
+		// Check if we are using a Healing Bomb
+		const isHealingBomb = item.slug?.startsWith("healing-bomb");
+		if (isHealingBomb) {
+			actor.rollOptions.all["healing-bomb-ardt-attack"] = true;
+			debugLog(`renderChatMessage isHealingBomb: ${isHealingBomb}`);
+		}	
 
 		// Roll the attack with the appropriate MAP modifier
 		game.pf2e.rollActionMacro({
@@ -1392,7 +1399,7 @@ async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType, selected
 */
 async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`craftHealingBomb() | Item Selection: ${elixirUuid}`);
-	var healingSlug = "healing-bomb-ardt";
+	var healingSlug = "healing-bomb";
 	var elixir = await fromUuid(elixirUuid);
 	if (!elixir) {
 		debugLog(`craftHealingBomb() | Actor not found`);
@@ -1530,6 +1537,55 @@ async function craftHealingBomb(actor, elixirUuid) {
 	}
 }
 
+/*
+	Function to display Double Brew content in dialogs
+*/
+function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
+	let content = "";
+
+	if (!doubleBrewFeat) return content;
+
+	const vialCount = getVersatileVialCount(actor);
+	if (vialCount > 1) {
+		// Return a promise for async processing of formulas
+		return processFormulasWithProgress(actor).then(({ weaponOptions, consumableOptions }) => {
+			return `
+				<form>
+					<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
+					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
+					<div>
+						<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
+						<select id="db-item-selection" name="db-item-selection">
+							<option value="none">${LOCALIZED_TEXT.NONE}</option>
+							${weaponOptions}
+							${consumableOptions}
+						</select>
+					</div>
+				<br/>`;
+		});
+	} else if (!isArchetype) {
+		// Static option to create a versatile vial
+		content = `
+			<form>
+				<div>
+					<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
+					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
+					<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
+					<select id="db-item-selection" name="db-item-selection">
+						<option value="none">${LOCALIZED_TEXT.NONE}</option>
+						<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
+					</select>
+				</div>
+			</form><br/>`;
+	}
+
+	return Promise.resolve(content); // Always return a Promise for consistency
+}
+
+
+/*
+	function to display healing bomb dialog
+*/
 async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = null) {
 	async function displayInventorySelectDialog(actor, filteredEntries) {
 		debugLog(`displayInventorySelectDialog() | actor: ${actor.name}`);
@@ -1678,6 +1734,7 @@ async function displayCraftingDialog(actor, itemType) {
 	debugLog(`displayCraftingDialog() | actor: ${actor.name} | itemType: ${itemType}`);
 
 	// Check if actor has double brew feat
+	const { isArchetype } = isAlchemist(actor);
 	const doubleBrewFeat = hasFeat(actor, "double-brew");
 	debugLog(`displayCraftingDialog() | doubleBrewFeat: ${doubleBrewFeat}`);
 	let content = ``;
@@ -2088,26 +2145,10 @@ async function displayCraftingDialog(actor, itemType) {
 						<option value="${uuid}">Quick Vial</option>
 					</select>
 				</div>`;
-
-		if (doubleBrewFeat) {
-			const vialCount = getVersatileVialCount(actor);
-			if (vialCount >= 2) {
-				const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
-				content += `
-							<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_QV_DB_PROMPT}</p>
-							<div>
-								<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
-								<select id="db-item-selection" name="db-item-selection">
-									<option value="none">${LOCALIZED_TEXT.NONE}</option>
-									<option value="${uuid}">${LOCALIZED_TEXT.QUICK_VIAL}</option>
-									${weaponOptions}
-									${consumableOptions}
-								</select>
-							</div>
-						<br/>`;
-			}
-		}
+		
+		// Show Double Brew content (if applicable)
+		const doubleBrewContent = await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype });
+		content += doubleBrewContent;
 
 		content += `</form>`;
 
@@ -2208,44 +2249,10 @@ async function displayCraftingDialog(actor, itemType) {
 					</div>
 			`;
 		debugLog(`displayCraftingDialog() | ${actor.name} wants to make a healing bomb`);
-		// If actor has double brew feat
-		if (doubleBrewFeat) {
-			// Check that actor has versatile vials
-			const vialCount = getVersatileVialCount(actor);
-			if (vialCount > 1) { // Make sure we have enough versatile vials
-				const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
-				content += `
-						<form>
-							<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
-							<div>
-								<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
-								<select id="db-item-selection" name="db-item-selection">
-									<option value="none">${LOCALIZED_TEXT.NONE}</option>
-									${weaponOptions}
-									${consumableOptions}
-								</select>
-							</div>
-						<br/>
-					`;
-			} else { // we will only prompt to make another vial
-				if (!isArchetype) { // do not show for Archetype
-					content += `
-							<form>
-								<div>
-									<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-									<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
-									<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
-									<select id="db-item-selection" name="db-item-selection">
-										<option value="none">${LOCALIZED_TEXT.NONE}</option>
-										<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
-									</select>
-								</div>
-							</form><br/>
-						`;
-				}
-			}
-		}
+		
+		// Show Double Brew content (if applicable)
+		const doubleBrewContent = await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype });
+		content += doubleBrewContent;
 		content += `</form>`;
 
 		const buttons = [{
@@ -2320,44 +2327,11 @@ async function displayCraftingDialog(actor, itemType) {
 					</div>
 			`;
 
-		// If actor has double brew feat
-		if (doubleBrewFeat) {
-			// Check that actor has versatile vials
-			const vialCount = getVersatileVialCount(actor);
-			if (vialCount > 1) { // Make sure we have enough versatile vials
-				const { weaponOptions, consumableOptions } = await processFormulasWithProgress(actor);
-				content += `
-						<form>
-							<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-							<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
-							<div>
-								<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
-								<select id="db-item-selection" name="db-item-selection">
-									<option value="none">${LOCALIZED_TEXT.NONE}</option>
-									${weaponOptions}
-									${consumableOptions}
-								</select>
-							</div>
-						<br/>
-					`;
-			} else { // we will only prompt to make another vial
-				if (!isArchetype) { // do not show for Archetype
-					content += `
-							<form>
-								<div>
-									<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-									<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
-									<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
-									<select id="db-item-selection" name="db-item-selection">
-										<option value="none">${LOCALIZED_TEXT.NONE}</option>
-										<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
-									</select>
-								</div>
-							</form><br/>
-						`;
-				}
-			}
-		}
+		// Show Double Brew content (if applicable)
+		const doubleBrewContent = await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype });
+		content += doubleBrewContent;
+		
+		// Close form
 		content += `</form>`;
 		const buttons = [];
 
