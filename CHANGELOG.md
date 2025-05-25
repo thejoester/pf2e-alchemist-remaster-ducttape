@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.3] - 2025-05-25
+### Fixed
+- **Level Up:** Updated level-up script and macros to check for higher versions of all formulas not just common when leveling up or running macro. 
+- **Level Up:** Excluding Colorful Coating and Sprite Apple items from being removed if another version is known. 
+
 ## [2.9.2] - 2025-05-24
 ### Fixed
 - **Level Up:** Fixed issue when removing lower level forumulas that caused all elemental ammunition to be removed. 

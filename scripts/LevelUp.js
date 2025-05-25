@@ -240,7 +240,8 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
         const isAlchemical = item.system.traits?.value?.includes('alchemical');
         const isCommon = item.system.traits?.rarity === 'common';
         const levelCheck = item.system.level.value <= newLevel && item.system.level.value > previousLevel;
-        return isAlchemical && isCommon && levelCheck;
+        // return isAlchemical && isCommon && levelCheck;
+		return isAlchemical && levelCheck;
     });
 	
 	debugLog(`Finished Task: Filter items by level, traits, and rarity`);
@@ -411,6 +412,12 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 			debugLog(`Skipping formula with invalid slug: ${item.name}`);
 			continue;
 		}
+		
+		// Skip if this is non-standard alchemical item
+		if (isNonStandardVariant(baseSlug)){
+			debugLog(`Skipping formula ${item.name}: non-standard slug naming`);
+			continue;
+		}
 
 		const level = Number(item.system.level.value);
 		const currentLevel = formulaMap.has(baseSlug) ? formulaMap.get(baseSlug).level : null;
@@ -529,6 +536,14 @@ function extractBaseSlug(slug) {
 
 	// Default: remove last segment (usually the potency)
 	return slug.split("-").slice(0, -1).join("-");
+}
+
+function isNonStandardVariant(slug) {
+	const NON_STANDARD_ALCHEMICAL_PREFIXES = [
+		"colorful-coating",
+		"sprite-apple"
+	];
+	return NON_STANDARD_ALCHEMICAL_PREFIXES.some(prefix => slug.startsWith(prefix));
 }
 
 /*
