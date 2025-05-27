@@ -1,5 +1,18 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.9.4] - 2025-05-26
+### Changed
+- **Debilitating Bomb:** Removed "Debilitating Bomb" support, if you check the option in the actions tab on your character sheet it will add debilitating bomb text to attack. 
+- **Powerful Alchemy:** Will only change items created using the module Quick Alchemy macro. 
+- **Quick Alchemy:** Added "Read me" button to Quick Alchemy macro, can be disabled in settings. This opens read me Journal in Compendium.
+### Fixed 
+- **Quick Alchemy:** [Issue 47](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/47) - Fixed issue with creating healing quick vial or healing bomb with translation modules. 
+
 ## [2.9.3] - 2025-05-25
 ### Fixed
 - **Level Up:** Updated level-up script and macros to check for higher versions of all formulas not just common when leveling up or running macro. 

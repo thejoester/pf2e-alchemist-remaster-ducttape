@@ -552,7 +552,7 @@ function isNonStandardVariant(slug) {
 async function removeDuplicateFormulas(actor) {
     
     await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'cleaningDuplicates', true);
-
+	let returnLog = "";
     let formulas = actor.system.crafting.formulas;
 
     // Create a Set to track unique UUIDs
@@ -571,15 +571,14 @@ async function removeDuplicateFormulas(actor) {
 
     // If there were duplicates, update the actor's formulas
     if (filteredFormulas.length !== formulas.length) {
-        await actor.update({ 'system.crafting.formulas': filteredFormulas });
-
-        debugLog(`Removed ${duplicates.length} duplicate formulas for ${actor.name}:`);
+        await actor.update({ 'system.crafting.formulas': filteredFormulas });     
         console.table(duplicates.map(f => ({ Name: f.name, UUID: f.uuid })));
+		returnLog = `-> Removed ${duplicates.length} duplicate formulas for ${actor.name}\n`;
     } else {
-        debugLog(`No duplicates found for ${actor.name}.`);
+        returnLog = `-> No duplicates found for ${actor.name}.\n`;
     }
-
     await actor.unsetFlag('pf2e-alchemist-remaster-ducttape', 'cleaningDuplicates');
+	return returnLog;
 }
 
 /*
@@ -729,6 +728,7 @@ function canManageFormulas(actor) {
 */
 async function getAlchemistLevels(){
 	if (game.user.isGM) {
+		let getAlchemistLevelsLog = "getAlchemistLevels():\n";
 		// Avoid sending multiple messages for the same actor
 		const processedActorIds = new Set();
 
@@ -737,21 +737,22 @@ async function getAlchemistLevels(){
 			// Make sure selected token is an alchemist or has archetype
 			const alchemistCheck = isAlchemist(actor);
 			if (!alchemistCheck.qualifies) {
-				debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
+				getAlchemistLevelsLog += `-> Selected Character (${actor.name}) is not an Alchemist - Ignoring\n`;
 			} else {
-
+				getAlchemistLevelsLog += `-> ${alchemistCheck.log}\n`;
 				// Avoid processing the same actor multiple times
 				if (processedActorIds.has(actor.id)) return;
 				processedActorIds.add(actor.id);
 				
 				// Clean up duplicate formulas
-				await removeDuplicateFormulas(actor);
+				getAlchemistLevelsLog += await removeDuplicateFormulas(actor);
 				
 				// Set previous level flag as current level
 				await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel', actor.system.details.level.value);	
-				debugLog(`Previous level flag set for ${actor.name} = ${actor.system.details.level.value}`);
+				getAlchemistLevelsLog += `Previous level flag set for ${actor.name} = ${actor.system.details.level.value}\n`;
 			}
 		});
+		debugLog(`${getAlchemistLevelsLog}`);
 	}
 }
 

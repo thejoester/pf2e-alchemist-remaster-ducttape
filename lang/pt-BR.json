@@ -41,7 +41,7 @@
 		"BTN_YES":"Sim",
 		"BTN_NO":"Não",
 		"BTN_USE":"Usar",
-		"BTN_CANCEL": "Cancelar", // TODO: CHeck Translation
+		"BTN_CANCEL": "Cancelar",
 		"BTN_ROLL_ATK":"Rolar Ataque",
 		
 		"NOTIF_ACTOR_NOTFOUND":"O ator não foi encontrado.",
@@ -105,6 +105,8 @@
 		"SETTING_DEBUG_ALL":"Todos",
 		"SETTING_COMPENDIUM_CHECK": "Compêndios a Verificar", 
 		"SETTING_COMPENDIUM_CHECK_HINT": "Lista de compêndios para procurar itens de nível mais alto quando os personagens subirem de nível.", 
+		"SETTING_SHOW_HELP": "Mostrar botão de ajuda da Alquimia Rápida",
+		"SETTING_SHOW_HELP_HINT": "Exibe um botão de ajuda no diálogo de Alquimia Rápida que abre a entrada de diário com a documentação."
 		
 		"QUICK_ALCHEMY": "Alquimia Rápida", 
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE": "Alquimia Rápida: Selecione o Tipo de Item",

@@ -105,6 +105,8 @@
 		"SETTING_DEBUG_ALL":"All",
 		"SETTING_COMPENDIUM_CHECK":"Compendiums to Check",
 		"SETTING_COMPENDIUM_CHECK_HINT":"List of compendiums to search for higher-level items when characters level up.",
+		"SETTING_SHOW_HELP":"Show Quick Alchemy Help Button",
+		"SETTING_SHOW_HELP_HINT":"Display a help button in the Quick Alchemy dialog that links to the documentation journal entry.",
 		
 		"QUICK_ALCHEMY":" Quick Alchemy",
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Quick Alchemy: Select Item Type",

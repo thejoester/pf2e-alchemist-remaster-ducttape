@@ -43,6 +43,12 @@ Hooks.on("ready", () => {
 			}
 		}
 		
+		// Make sure item was created by Quick Alchemy Macro
+		if (!item?.system?.ductTaped) {
+			debugLog(`Item ${item.name} not created with Duct Tape module... skipping`);
+			return;
+		}
+		
 		// Make sure selected token is an alchemist or has archetype
 		const alchemistCheck = isAlchemist(actor);
 		if (alchemistCheck.qualifies) {
@@ -80,19 +86,7 @@ Hooks.on("ready", () => {
 			}else{
 				debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 			}
-		}
-		
-		/*
-			*** DEBILITATING BOMB *** 
-			Check if the actor has Debilitating Bomb - if not return with mesactorge in log	
-		*/
-		if (hasFeat(actor, "debilitating-bomb") && !item.system.traits.value.includes("healing")) {
-			debugLog("Debilitating Bomb enabled.");
-			console.log(item)
-			await applyDebilitatingBomb(actor, item, alchemistCheck.dc);
-		}else{
-			debugLog(`Actor (${actor.name}) does not have Debilitating Bomb, ignoring!`);
-		}		
+		}			
 	});
 });
 
@@ -165,51 +159,4 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 			console.error(err); // Optional: for debugging during development
 		}
 	}, 100);
-}
-
-async function applyDebilitatingBomb(actor, item, dc){
-	// Ensure the item has the 'alchemical' trait
-	if (!item || !item.system.traits.value.includes("alchemical")) {
-	  debugLog(`Item (${item.name}) does not have the 'alchemical' trait or item is undefined.`);
-	  return;
-	}
-
-	if(item.system.traits.value.includes("healing")) {
-		debugLog("Item is a healing item - Ignoring.");
-		return;
-	}
-	
-	// Ensure Quick Alchemy was used to create item - it will have the "infused" trait
-	if (!item || !item.system.traits.value.includes("infused")) {
-	  debugLog(`Item (${item.name}) does not have the 'infused' trait or item is undefined.`);
-	  return;
-	}
-	
-	// Ensure description exists and is a string
-	let description = item.system.description.value;
-	if (typeof description !== "string") {
-		debugLog("Debilitating Bomb: Item description is not a string:", description);
-		return;
-	}
-
-	// Construct Debilitating Bomb note block (wrap in <p> for HTML safety)
-	const noteBlock = `
-		<p>
-		<ul class="notes">
-			<li class="roll-note" data-item-id="${item.id}">
-				<strong>Debilitating Bomb</strong> The target must succeed at a @Check[fortitude|dc:${dc}], or suffer one of the following effects: dazzled, deafened, off-guard, or take a -5 foot status penalty to Speeds. @UUID[Compendium.pf2e.feat-effects.Item.VTJ8D23sOIfApEt3]{Effect: Debilitating Bomb}
-			</li>
-		</ul>
-		</p>`.trim();
-
-	const updatedDescription = noteBlock + description;
-
-	// Try updating item
-	try {
-		await item.update({ "system.description.value": updatedDescription });
-		debugLog(`Debilitating Bomb: Description updated for item "${item.name}"`);
-	} catch (err) {
-		debugLog("Debilitating Bomb: Failed to update item description:", err);
-		console.error(err);
-	}
 }

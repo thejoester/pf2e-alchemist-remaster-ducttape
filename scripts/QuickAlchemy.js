@@ -257,7 +257,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 });
 
 Hooks.on("ready", () => {
-	console.log("%cPF2e Alchemist Remaster Duct Tape (QuickAlchemy.js) loaded", "color: aqua; font-weight: bold;");
+	console.log("%cPF2e Alchemist Remaster Duct Tape QuickAlchemy.js loaded", "color: aqua; font-weight: bold;");
 	// Attach function to the global window object
 	window.qaCraftAttack = qaCraftAttack;
 });
@@ -642,7 +642,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 		try {
 			// Find the item in the compendium
 			const compendiumIndex = await compendium.getIndex();
-			const healingItemEntry = compendiumIndex.find(entry => entry.name === "Healing Quick Vial");
+			const healingItemEntry = compendiumIndex.find(entry => entry.system.slug === "healing-quick-vial-temp");
 			if (!healingItemEntry) {
 				debugLog(3, "craftHealingVial() | Healing Quick Vial not found in compendium.");
 				return;
@@ -974,23 +974,23 @@ async function processFormulasWithProgress(actor) {
 
 		// Check if entry is null
 		if (entry != null) {
-			listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} |`;
+			listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} |`;
 
 			if (entry.slug === "versatile-vial") {
 				// do nothing 
-				listProcessedFormulas = `${listProcessedFormulas} | skipping`;
+				listProcessedFormulas = `-> ${listProcessedFormulas} | skipping`;
 			} else if (entry.type === "weapon") {
 				weaponEntries.push(entry);
-				listProcessedFormulas = `${listProcessedFormulas} added to weaponEntries`;
+				listProcessedFormulas = `-> ${listProcessedFormulas} added to weaponEntries`;
 			} else if (entry.type === "consumable") {
 				consumableEntries.push(entry);
-				listProcessedFormulas = `${listProcessedFormulas} added to consumableEntries`;
+				listProcessedFormulas = `-> ${listProcessedFormulas} added to consumableEntries`;
 			} else {
 				//otherEntries.push(entry);
-				listProcessedFormulas = `${listProcessedFormulas} ignoring.`;
+				listProcessedFormulas = `-> ${listProcessedFormulas} ignoring.`;
 			}
 		} else { // entry is null
-			listProcessedFormulas = `${listProcessedFormulas} entry ${formula.uuid} is null`;
+			listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null`;
 		}
 		listProcessedFormulas = `${listProcessedFormulas}\n`;
 	}
@@ -1086,23 +1086,23 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 
 		// Check if entry is null
 		if (entry != null) {
-			listProcessedFormulas = `${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}\n `;
+			listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}`;
 			if (entry.slug === "versatile-vial") {
 				// do nothing
-				listProcessedFormulas = `${listProcessedFormulas} skipping`;
+				listProcessedFormulas = `-> ${listProcessedFormulas} skipping`;
 			} else if (entry.type === type) {
 				if (slug) {
 					if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
 						filteredEntries.push(entry);
-						listProcessedFormulas = `${listProcessedFormulas} added to filteredEntries`;
+						listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
 					}
 					continue;
 				}
 				filteredEntries.push(entry);
-				listProcessedFormulas = `${listProcessedFormulas} added to filteredEntries`;
+				listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
 			}
 		} else { // entry is null
-			listProcessedFormulas = `${listProcessedFormulas} entry ${formula.uuid} is null`;
+			listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null`;
 		}
 		listProcessedFormulas = `${listProcessedFormulas}\n`;
 	}
@@ -1429,7 +1429,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 
 		// Find the item in the compendium
 		const compendiumIndex = await compendium.getIndex();
-		const healingItemEntry = compendiumIndex.find(entry => entry.name === "Healing Bomb");
+		const healingItemEntry = compendiumIndex.find(entry => entry.sytem.slug === "healing-bomb-ardt");
 		if (!healingItemEntry) {
 			debugLog(3, "craftHealingBomb() | Healing Quick Vial not found in compendium.");
 			return;
@@ -2439,7 +2439,7 @@ async function qaDialog(actor) {
 	const buttons = [];
 
 	if (vialCount < 1) {
-		content = `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_VV}</p>`;
+		content += `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_VV}</p>`;
 		if (!isArchetype) content += `${LOCALIZED_TEXT.QUICK_ALCHEMY_10_MIN}<br/><br/>`;
 
 		buttons.push({
@@ -2463,9 +2463,23 @@ async function qaDialog(actor) {
 				callback: () => displayHealingBombDialog(actor)
 			});
 		}
-
+		
+		// Help Button
+		if (getSetting("showQuickAlchemyHelp")){
+			buttons.push({
+				action: "help",
+				label: ``,
+				icon: "fas fa-book-open",
+				callback: async () => {
+					const uuid = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-journal.JournalEntry.wrCXMx4U8bqUaG51";
+					const journal = await fromUuid(uuid);
+					if (journal?.sheet) journal.sheet.render(true);
+					else ui.notifications.warn("Journal entry not found.");
+				}
+			});
+		}
 	} else {
-		content = `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_TYPE}</p>`;
+		content += `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_TYPE}</p>`;
 
 		buttons.push({
 			action: "weapon",
@@ -2492,13 +2506,39 @@ async function qaDialog(actor) {
 				callback: () => displayHealingBombDialog(actor)
 			});
 		}
+		// Help Button
+		if (getSetting("showQuickAlchemyHelp")){
+			buttons.push({
+				action: "help",
+				label: ``,
+				icon: "fas fa-book-open",
+				callback: async () => {
+					const uuid = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-journal.JournalEntry.wrCXMx4U8bqUaG51";
+					const journal = await fromUuid(uuid);
+					if (journal?.sheet) journal.sheet.render(true);
+					else ui.notifications.warn("Journal entry not found.");
+				}
+			});
+		}
 	}
 
 	new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_ITEM_TYPE },
 		content,
 		buttons,
-		default: "vial"
+		default: "vial",
+		render: (app, html) => {
+			const link = html[0].querySelector("#qa-help-link");
+			if (!link) return;
+
+			link.addEventListener("click", async () => {
+				const uuid = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-journal.JournalEntry.wrCXMx4U8bqUaG51";
+				const journal = await fromUuid(uuid);
+				if (journal?.sheet) journal.sheet.render(true);
+				else ui.notifications.warn("Journal entry not found from UUID.");
+			});
+		}
+
 	}).render(true);
 }
 

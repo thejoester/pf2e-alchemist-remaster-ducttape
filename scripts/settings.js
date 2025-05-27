@@ -123,29 +123,28 @@ export function hasFeat(actor, slug) {
 	Checks if a character qualifies for Alchemist benefits.
 */
 export function isAlchemist(actor) {
-    if (!actor) return { qualifies: false, dc: 0, isArchetype: false };
-
+    if (!actor) return { qualifies: false, dc: 0, isArchetype: false, log: `no valid actor passed` };
 
     // Check if the actor's class matches the localized Alchemist class name
     const isAlchemistClass = actor?.class?.system?.slug === 'alchemist';
 	
     // Check if the actor has the localized Alchemist Dedication feat
     const hasAlchemistDedication = hasFeat(actor, "alchemist-dedication");
-
-	debugLog(`${actor.name} is Alchemist: ${isAlchemistClass} | Alchemist Dedication: ${hasAlchemistDedication}`);
-
+	
+	const isAlchemistLog = `${actor.name} is Alchemist: ${isAlchemistClass} | Alchemist Dedication: ${hasAlchemistDedication}`;
+	
     // If the actor qualifies, get the Alchemist Class DC
     if (isAlchemistClass || hasAlchemistDedication) {
         const alchemistClassDC = actor.system.proficiencies.classDCs.alchemist?.dc || 0;
         return {
             qualifies: true,
             dc: alchemistClassDC,
-            isArchetype: hasAlchemistDedication && !isAlchemistClass
+            isArchetype: hasAlchemistDedication && !isAlchemistClass,
+			log: isAlchemistLog
         };
     }
-
     // If the actor doesn't qualify
-    return { qualifies: false, dc: 0, isArchetype: false };
+    return { qualifies: false, dc: 0, isArchetype: false , log: isAlchemistLog};
 }
 
 /*
@@ -634,6 +633,18 @@ Hooks.once("init", () => {
 				}
 			});
 		}
+	});
+
+/*
+	Help Button
+*/
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQuickAlchemyHelp", {
+		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_HELP"),
+		hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_HELP_HINT"),
+		scope: "client",
+		config: true,
+		type: Boolean,
+		default: true
 	});
 
 /*
