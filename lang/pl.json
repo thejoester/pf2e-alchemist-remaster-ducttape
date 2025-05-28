@@ -43,9 +43,9 @@
 		"BTN_USE":"Użyj",
 		"BTN_CANCEL":"Anuluj",
 		"BTN_ROLL_ATK":"Rzut na atak",
-		
+
 		"NOTIF_ACTOR_NOTFOUND":"Nie znaleziono aktora.",
-		"NOTIF_ITEM_NOTFOUND":"Nie znaleziono przedmiotu.",								  
+		"NOTIF_ITEM_NOTFOUND":"Nie znaleziono przedmiotu.",
 		"NOTIF_ALREADY_MAX_VIALS":"{actorname} ma już maksymalną liczbę uniwersalnych fiolek.",
 		"NOTIF_SELECT_TOKEN_FIRST":"Najpierw wybierz token lub przypisz postać.",
 		"NOTIF_SELECT_ALCHEMIST":"Wybierz postać Alchemika.",
@@ -59,7 +59,7 @@
 		"NOTIF_APPLY_EFFECT_ACTOR":"Zastosowano efekt {effectname} na {actorname}.",
 		"NOTIF_NO_PERMS":"Nie masz uprawnień do modyfikowania tego aktora.",
 		"NOTIF_ACTOR_NOT_ASSOC_ITEM":"Brak aktora powiązanego z tym przedmiotem.",
-			
+		
 		"SETTING_WORKBENCH_NOT_FOUND":"Nie znaleziono klucza ustawień Workbench 'xdy-pf2e-workbench.autoCollapseItemChatCardContent'.",
 		"SETTING_MANAGE_HOMEBREW_COMPENDIUM":"Zarządzanie kompendiami Homebrew",
 		"SETTING_COMPENDIUM_ALREADY_IN_LIST":"Kompendium '{input}' znajduje się już na liście.",
@@ -105,10 +105,9 @@
 		"SETTING_DEBUG_ALL":"Wszystkie",
 		"SETTING_COMPENDIUM_CHECK":"Kompendia do sprawdzenia",
 		"SETTING_COMPENDIUM_CHECK_HINT":"Lista kompendiów, w których można szukać przedmiotów wyższego poziomu podczas awansowania postaci.",
-		"SETTING_SHOW_HELP": "Pokaż przycisk pomocy Szybkiej Alchemii",
-		"SETTING_SHOW_HELP_HINT": "Wyświetl przycisk pomocy w oknie Szybkiej Alchemii, który prowadzi do wpisu dziennika z dokumentacją."
-
-	
+		"SETTING_SHOW_HELP":"Pokaż przycisk pomocy Szybkiej Alchemii",
+		"SETTING_SHOW_HELP_HINT":"Wyświetl przycisk pomocy w oknie dialogowym Szybka Alchemia, który prowadzi do wpisu w dzienniku dokumentacji.",
+		
 		"QUICK_ALCHEMY":" Szybka Alchemia",
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Szybka Alchemia: Wybierz rodzaj przedmiotu",
 		"QUICK_ALCHEMY_PROMPT_TYPE":"Jakiego rodzaju przedmiot chcesz stworzyć za pomocą Szybkiej Alchemii?",
@@ -149,7 +148,7 @@
 		"LEVELUP_PROMPT_ADD_FORMULA":"Czy chcesz to dodać?",
 		"LEVELUP_REMOVE_LOWERLEVEL_FORMULAS":"Usuwanie formuł niższego poziomu",
 		"LEVELUP_NEW_FORMULAS_DISCOVERED":"Odkryto nowe formuły",
-		"LEVELUP_HIGHER_VERSION": "ma wyższą wersję formuły",
+		"LEVELUP_HIGHER_VERSION": "ma wyższą wersję formuły",		
 		
 		"POWERFUL_ALCHEMY_UPDATED_CLASS_DC":"zaktualizowane przy użyciu ST klasy",
 		
@@ -159,7 +158,7 @@
 		"VIALSEARCH_ADD_VIALS":"Dodaj fiolki",
 		"VIALSEARCH_HAS_MAX_VIALS":"ma już maksymalną liczbę uniwersalnych fiolek.",
 		"VIALSEARCH_CHAT_FOUND_VIALS":"{actorname} znalazł {vialcount} wszechstronnych fiolek.",
-		
+					
 		"MACRO_ADD_FORMULAS":"Dodać nowe formuły?",
 		"MACRO_REMOVE_FORMULAS":"Usunąć formuły niższych poziomów?",
 		"MACRO_PROMPT_STYLE":"Styl podpowiedzi:",
@@ -169,23 +168,23 @@
 		"MACRO_WAIT_TITLE":"Proszę czekać...",
 		"MACRO_CHECKING_NEW_FORMULAS":"Sprawdzanie nowych formuł alchemicznych...<br><br>Może to chwilę potrwać. Można zamknąć to okno.",
 		"MACRO_CHECKING_LOWER_FORMULAS":"Sprawdzanie formuł alchemicznych niższego poziomu do wyczyszczenia...<br><br>Może to chwilę potrwać. Można zamknąć to okno.",
-		
-		"HEALING_BOMB": "Bomba Lecząca",
-		"HEALING_BOMB_TITLE": "Atak dystansowy: Bomba Lecząca",
+	
+		"HEALING_BOMB":"Bomba Uzdrawiająca",
+		"HEALING_BOMB_TITLE": "Atak dystansowy: Bomba Uzdrawiająca",
 		"HEALING_BOMB_TRAIT_HEALING": "Leczenie",
 		"HEALING_BOMB_TRAIT_MANIPULATE": "Manipulacja",
-		"HEALING_BOMB_TRAIT_ALCHEMICAL": "Alchemiczne",
-		"HEALING_BOMB_TRAIT_CONSUMABLE": "Zużywalne",
+		"HEALING_BOMB_TRAIT_ALCHEMICAL": "Alchemiczny",
+		"HEALING_BOMB_TRAIT_CONSUMABLE": "Zużywalny",
 		"HEALING_BOMB_TRAIT_SPLASH": "Rozprysk",
-		"HEALING_BOMB_TRAIT_RANGE30": "Zasięg 30 stóp",
-		"HEALING_BOMB_BUTTON_CHIRURGEON": "Zaawansowane odkrycie: Leczenie",
-		"HEALING_BOMB_BUTTON_HEAL": "Zastosuj leczenie",
-		"HEALING_BOMB_BUTTON_ROLLED": "Bomba Lecząca (rzut na leczenie)",
-		"HEALING_BOMB_BUTTON_SPLASH": "Zastosuj leczenie z rozprysku",
-		"HEALING_BOMB_SPLASH_APPLIED": "leczenie z rozprysku zastosowane do:",
-		"HEALING_BOMB_BUTTON_FAILURE": "Zastosuj leczenie przy niepowodzeniu",
-		"HEALING_BOMB_SELECT_CRAFT_INVENTORY": "Czy chcesz stworzyć nowy Eliksir Życia<br />czy<br />użyć jednego z ekwipunku?",
-		"HEALING_BOMB_CRAFT": "Stwórz Bombę Leczącą",
-		"HEALING_BOMB_SELECT_INVENTORY": "Wybierz, którego Eliksiru Życia użyć z ekwipunku"
+		"HEALING_BOMB_TRAIT_RANGE30":"Przyrost dystansu 30 stóp",
+		"HEALING_BOMB_BUTTON_CHIRURGEON": "Wielkie Odkrycie Terenowe Leczenie",
+		"HEALING_BOMB_BUTTON_HEAL": "Zastosuj Leczenie",
+		"HEALING_BOMB_BUTTON_ROLLED": "Bomba Uzdrawiająca (Rzucono Leczenie)",
+		"HEALING_BOMB_BUTTON_SPLASH": "Zastosuj leczenie Rozpryskowe",
+		"HEALING_BOMB_SPLASH_APPLIED": "leczenie rozpryskowe zastosowano dla:",
+		"HEALING_BOMB_BUTTON_FAILURE": "Zastosuj porażkę leczenia",
+		"HEALING_BOMB_SELECT_CRAFT_INVENTORY":"Chcesz stworzyć nowy Eliksir Życia <br />lub<br /> użyć jednego z posiadanych w ekwipunku?",
+		"HEALING_BOMB_CRAFT": "Wytwarzanie Bomby Uzdrawiającej",
+		"HEALING_BOMB_SELECT_INVENTORY":"Wybierz z ekwipunku Eliksir Życia, którego chcesz użyć"
 	}
 }
