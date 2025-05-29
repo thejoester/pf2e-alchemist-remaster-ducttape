@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.5] - 2025-05-29
+### Changed
+- **Localization:** Added Polish translation. Credit: [Lioheart](https://github.com/Lioheart)
+
 ## [2.9.4] - 2025-05-26
 ### Changed
 - **Debilitating Bomb:** Removed "Debilitating Bomb" support, if you check the option in the actions tab on your character sheet it will add debilitating bomb text to attack. 
