@@ -497,37 +497,74 @@ Hooks.once("init", () => {
 	
 	// Disable addNewFormulasToChat if addFormulasOnLevelUp is set to 'disabled'
 	Hooks.on("renderSettingsConfig", (app, html, data) => {
-		const controllerSetting = "pf2e-alchemist-remaster-ducttape.addFormulasOnLevelUp";
-		const dependentSettings = [
-			"pf2e-alchemist-remaster-ducttape.addNewFormulasToChat",
-			"pf2e-alchemist-remaster-ducttape.addFormulasPermission",
-            "pf2e-alchemist-remaster-ducttape.handleLowerFormulasOnLevelUp"
-		];
-		
-		// Get the current value of the controller setting
-		const enableAdvancedOptions = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
-		
-		// Disable both dependent settings on initial render
-		dependentSettings.forEach(setting => {
-			const dependentInput = html.find(`input[name="${setting}"], select[name="${setting}"]`);
-			if (dependentInput.length) {
-				dependentInput.prop('disabled', enableAdvancedOptions === 'disabled');
+		if (game.release?.generation >= 13) { // If v13
+			debugLog(`renderSettingsConfig Foundry v13`);
+
+			const controllerSetting = "pf2e-alchemist-remaster-ducttape.addFormulasOnLevelUp";
+			const dependentSettings = [
+				"pf2e-alchemist-remaster-ducttape.addNewFormulasToChat",
+				"pf2e-alchemist-remaster-ducttape.addFormulasPermission",
+				"pf2e-alchemist-remaster-ducttape.handleLowerFormulasOnLevelUp"
+			];
+
+			// Get the current value of the controller setting
+			const enableAdvancedOptions = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
+
+			// Disable all dependent settings on initial render
+			dependentSettings.forEach(setting => {
+				const dependentInput = html.querySelector(`input[name="${setting}"], select[name="${setting}"]`);
+				if (dependentInput) {
+					dependentInput.disabled = (enableAdvancedOptions === 'disabled');
+				}
+			});
+
+			// Watch for changes to the controller setting
+			const controllerSelect = html.querySelector(`select[name="${controllerSetting}"]`);
+			if (controllerSelect) {
+				controllerSelect.addEventListener("change", (event) => {
+					const selectedValue = event.target.value;
+					dependentSettings.forEach(setting => {
+						const dependentInput = html.querySelector(`input[name="${setting}"], select[name="${setting}"]`);
+						if (dependentInput) {
+							dependentInput.disabled = (selectedValue === 'disabled');
+						}
+					});
+				});
 			}
-		});
-		
-		// Watch for changes to the controller setting
-		html.find(`select[name="${controllerSetting}"]`).change((event) => {
-			const selectedValue = event.target.value;
+		} else { // If v12
+			debugLog(`renderSettingsConfig Foundry v12`);
+			const controllerSetting = "pf2e-alchemist-remaster-ducttape.addFormulasOnLevelUp";
+			const dependentSettings = [
+				"pf2e-alchemist-remaster-ducttape.addNewFormulasToChat",
+				"pf2e-alchemist-remaster-ducttape.addFormulasPermission",
+				"pf2e-alchemist-remaster-ducttape.handleLowerFormulasOnLevelUp"
+			];
 			
-			// Update both dependent settings
+			// Get the current value of the controller setting
+			const enableAdvancedOptions = game.settings.get("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp");
+			
+			// Disable both dependent settings on initial render
 			dependentSettings.forEach(setting => {
 				const dependentInput = html.find(`input[name="${setting}"], select[name="${setting}"]`);
 				if (dependentInput.length) {
-					dependentInput.prop('disabled', selectedValue === 'disabled');
+					dependentInput.prop('disabled', enableAdvancedOptions === 'disabled');
 				}
 			});
-		});
-	});
+			
+			// Watch for changes to the controller setting
+			html.find(`select[name="${controllerSetting}"]`).change((event) => {
+				const selectedValue = event.target.value;
+				
+				// Update both dependent settings
+				dependentSettings.forEach(setting => {
+					const dependentInput = html.find(`input[name="${setting}"], select[name="${setting}"]`);
+					if (dependentInput.length) {
+						dependentInput.prop('disabled', selectedValue === 'disabled');
+					}
+				});
+			});
+		}
+});
 
 /*
 	Vial Search 

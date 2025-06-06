@@ -119,6 +119,10 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 				{
 					pattern: /DC is (\d+)/g,
 					replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistDC}`)
+				},
+				{
+					pattern: /DC is \[\[\/act [^\]]*?dc=(\d+)\]\]\{\d+\}/g,
+					replaceFn: (match, p1) => `DC is [[/act escape dc=${alchemistDC}]]{${alchemistDC}}`
 				}
 			];
 
