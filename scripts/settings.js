@@ -624,51 +624,113 @@ Hooks.once("init", () => {
 	});
 	
 	Hooks.on("renderSettingsConfig", (app, html, data) => {
-		const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
-		const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
+		if (game.release?.generation >= 13) { // If v13
+			Hooks.on("renderSettingsConfig", (app, html, data) => {
+				const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
+				const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
 
-		// Check if Workbench is installed and active
-		const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
+				// Check if Workbench is installed and active
+				const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
 
-		//monitor for settings change of workbench collapse setting
-		if (isWorkbenchInstalled) {
-			// Get the current value of the Workbench setting
-			const workbenchSettingValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
+				if (!isWorkbenchInstalled) return;
 
-			// Get this setting input field in the UI
-			const thisSettingInput = html.find(`input[name="${thisSettingKey}"]`);
+				// Get the current value of the Workbench setting
+				const workbenchSettingValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
 
-			// Disable or enable this setting based on the Workbench setting
-			if (thisSettingInput.length) {
-				if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
-					thisSettingInput.prop("disabled", true);
-					thisSettingInput.parent().append(
-						`<p class="notes" style="color: red;">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH")}</p>`
-					);
-				} else if (workbenchSettingValue === "noCollapse") {
-					thisSettingInput.prop("disabled", false);
-				}
-			}
+				// Get this setting input field in the UI
+				const thisSettingInput = html.querySelector(`input[name="${thisSettingKey}"]`);
 
-			// Watch for changes to the Workbench setting in the UI
-			html.find(`select[name="${workbenchSettingKey}"]`).change((event) => {
-				const selectedValue = event.target.value;
+				if (thisSettingInput) {
+					const wrapperDiv = thisSettingInput.closest(".form-group");
+					if (!wrapperDiv) return;
 
-				// Update this setting's state dynamically
-				if (thisSettingInput.length) {
-					if (selectedValue === "collapsedDefault" || selectedValue === "nonCollapsedDefault") {
-						thisSettingInput.prop("disabled", true);
-						thisSettingInput.parent().find(".notes").remove(); // Remove old notes
-						thisSettingInput.parent().append(
-							`<p class="notes" style="color: red;">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH")}</p>`
-						);
-						game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
-					} else if (selectedValue === "noCollapse") {
-						thisSettingInput.prop("disabled", false);
-						thisSettingInput.parent().find(".notes").remove(); // Remove old notes
+					// Helper to insert note if not already added
+					const insertNote = () => {
+						if (!wrapperDiv.querySelector(".notes")) {
+							const note = document.createElement("p");
+							note.className = "notes";
+							note.style.color = "red";
+							note.innerText = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH");
+							wrapperDiv.appendChild(note);
+						}
+					};
+
+					// Set initial state
+					if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
+						thisSettingInput.disabled = true;
+						insertNote();
+					} else if (workbenchSettingValue === "noCollapse") {
+						thisSettingInput.disabled = false;
+					}
+
+					// Listen for changes to Workbench dropdown
+					const workbenchSelect = html.querySelector(`select[name="${workbenchSettingKey}"]`);
+					if (workbenchSelect) {
+						workbenchSelect.addEventListener("change", (event) => {
+							const selectedValue = event.target.value;
+
+							// Remove existing notes
+							const oldNote = wrapperDiv.querySelector(".notes");
+							if (oldNote) oldNote.remove();
+
+							if (selectedValue === "collapsedDefault" || selectedValue === "nonCollapsedDefault") {
+								thisSettingInput.disabled = true;
+								insertNote();
+								game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
+							} else if (selectedValue === "noCollapse") {
+								thisSettingInput.disabled = false;
+							}
+						});
 					}
 				}
 			});
+		}else{ // v12
+			const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
+			const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
+
+			// Check if Workbench is installed and active
+			const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
+
+			//monitor for settings change of workbench collapse setting
+			if (isWorkbenchInstalled) {
+				// Get the current value of the Workbench setting
+				const workbenchSettingValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
+
+				// Get this setting input field in the UI
+				const thisSettingInput = html.find(`input[name="${thisSettingKey}"]`);
+
+				// Disable or enable this setting based on the Workbench setting
+				if (thisSettingInput.length) {
+					if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
+						thisSettingInput.prop("disabled", true);
+						thisSettingInput.parent().append(
+							`<p class="notes" style="color: red;">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH")}</p>`
+						);
+					} else if (workbenchSettingValue === "noCollapse") {
+						thisSettingInput.prop("disabled", false);
+					}
+				}
+
+				// Watch for changes to the Workbench setting in the UI
+				html.find(`select[name="${workbenchSettingKey}"]`).change((event) => {
+					const selectedValue = event.target.value;
+
+					// Update this setting's state dynamically
+					if (thisSettingInput.length) {
+						if (selectedValue === "collapsedDefault" || selectedValue === "nonCollapsedDefault") {
+							thisSettingInput.prop("disabled", true);
+							thisSettingInput.parent().find(".notes").remove(); // Remove old notes
+							thisSettingInput.parent().append(
+								`<p class="notes" style="color: red;">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH")}</p>`
+							);
+							game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
+						} else if (selectedValue === "noCollapse") {
+							thisSettingInput.prop("disabled", false);
+							thisSettingInput.parent().find(".notes").remove(); // Remove old notes
+						}
+					}
+				});
+			}
 		}
 	});
 
