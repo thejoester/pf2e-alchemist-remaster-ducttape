@@ -20,6 +20,16 @@ This is still sort of a work in progress, and by no means a full release. I have
 
 In the meantime if you have a request for a work around fix for an Alchemist feature, please submit one in the [Issues Page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues). 
 
+## Credits
+I would like to extend a thanks to the following people for helping contribute to this module!
+
+### Development
+- Healing Bomb implementation: [Panda](https://github.com/Jordan-Ireland)
+
+### Translations
+- Polish (pl): [Lioheart](https://github.com/Lioheart)
+- Brazilian Portuguese(pt-BR): [Charlinho](https://github.com/Chrystian-Carvalho)
+
 ## Contribute
 
 If you would like to contribute to the localization, the best way is to [fork the repository](https://www.youtube.com/watch?v=f5grYMXbAV0) (copy master branch only). Then download the [en.json](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/lang/en.json) file, rename it to the language code or language (for example es.json or spanish.json for Spanish language), then edit the file translating the text in quotes on the RIGHT SIDE of the colon. When done upload the new language file to your fork in the **lang** folder, then click the "Contribute" button and "Open Pull Request".
