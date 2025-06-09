@@ -90,9 +90,7 @@ Hooks.on("deleteCombat", async (combat) => {
 	}
 });
 
-/*
-	renderChatMessage Hook for .roll-attack and .use-consumable buttons
-*/
+//	renderChatMessage Hook for .roll-attack and .use-consumable buttons
 Hooks.on("renderChatMessage", (message, html) => {
 	
 	// Handle "Roll Attack" button functionality
@@ -164,9 +162,7 @@ Hooks.on("renderChatMessage", (message, html) => {
 	});
 });
 
-/*
-	renderChatMessage Hook for collapsable messages
-*/
+//	renderChatMessage Hook for collapsable messages
 Hooks.on("renderChatMessage", (message, html) => {
 	let messageHook = `Hook called for message from ${message.speaker?.alias || message.flavor || "Unknown"}`;
 
@@ -232,6 +228,7 @@ Hooks.on("renderChatMessage", (message, html) => {
 	debugLog(messageHook);
 });
 
+//	Hook for item use chat messages
 Hooks.on("renderChatMessage", async (message, html, data) => {
 	debugLog("renderChatMessage hook triggered", message);
 	html.find('.use-consumable').on('click', async (event) => {
@@ -262,9 +259,7 @@ Hooks.on("ready", () => {
 	window.qaCraftAttack = qaCraftAttack;
 });
 
-/*
-	function to close popup from rollActionMacro
-*/
+//	function to close popup from rollActionMacro
 function closeAttackPopouts(){
 	for (const app of Object.values(ui.windows)) {
 		const id = app._element?.[0]?.id ?? "";
@@ -275,9 +270,7 @@ function closeAttackPopouts(){
 	}
 }
 
-/*
-	Function to clear temporary items from inventory
-*/
+//	Function to clear temporary items from inventory
 async function deleteTempItems(actor, endTurn = false) {
 	debugLog(`deleteTempItems() | Deleting temp items for ${actor.name}, Quick Vials = ${endTurn}`);
 
@@ -409,9 +402,7 @@ async function sendConsumableUseMessage(itemUuid) {
 	});
 }
 
-/*
-	Function to send "Already consumed" chat message
-*/
+//	Function to send "Already consumed" chat message
 function sendAlreadyConsumedChat() {
 	/*
 		// most likely this happens because user clicked 
@@ -429,10 +420,8 @@ function sendAlreadyConsumedChat() {
 	});
 }
 
-/*
-	Function to create chat message after creating Versatile Vial
-	prompting to attack or open QuickAlchemy dialog
-*/
+//	Function to create chat message after creating Versatile Vial
+//	prompting to attack or open QuickAlchemy dialog
 async function sendVialAttackMessage(itemUuid, actor) {
 	// Log the UUID for debugging purposes
 	debugLog(`sendVialAttackMessage() | Attempting to fetch item with UUID: ${itemUuid}`);
@@ -605,10 +594,9 @@ async function clearInfused(actor) {
 	}
 }
 
-/* 	
-	Function to craft "Healing Quick Vial" from the module compendium  
-	and add "(*Temporary)" to the end of the name and custom flag
-*/
+ 	
+//	Function to craft "Healing Quick Vial" from the module compendium  
+//	and add "(*Temporary)" to the end of the name and custom flag
 async function craftHealingVial(selectedItem, selectedActor) {
 	// Define the slug for the healing quick vial
 	const healingSlug = "healing-quick-vial";
@@ -701,13 +689,12 @@ async function craftHealingVial(selectedItem, selectedActor) {
 	}
 }
 
-/* 	
-	Function to craft Quick Vial using Quick Alchemy and add  
-	"(*Temporary)" to the end of the name and custom tag to 
-	any item created with this Quick Alchmy macro so that it 
-	can be removed at the end of the turn and ensured that 
-	when attacking it is using the same item.
-*/
+ 	
+//	Function to craft Quick Vial using Quick Alchemy and add  
+//	"(*Temporary)" to the end of the name and custom tag to 
+//	any item created with this Quick Alchmy macro so that it 
+//	can be removed at the end of the turn and ensured that 
+//	when attacking it is using the same item.
 async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
 	debugLog(`craftVial() | Selected Vial: ${selectedItem?.name} || No Name}`); // Selected Vial: 
 	debugLog(`craftVial() | Selected Actor: ${selectedActor?.name} || No Name}`); // Selected acrtor: 
@@ -806,14 +793,12 @@ async function craftVial(selectedItem, selectedActor, selectedType = "acid", spe
 	return newItemSlug; // return slug
 }
 
-/* 	
-	Function to craft item using Quick Alchemy and add  
-	"(*Temporary)" to the end of the name and a custom
-	tag "ductTapped" to any item created with this 
-	Quick Alchmy macro so that it can be removed at the 
-	end of the turn and ensured that when attacking it is 
-	using the same item.
-*/
+//	Function to craft item using Quick Alchemy and add  
+//	"(*Temporary)" to the end of the name and a custom
+//	tag "ductTapped" to any item created with this 
+//	Quick Alchmy macro so that it can be removed at the 
+//	end of the turn and ensured that when attacking it is 
+//	using the same item.
 async function craftItem(selectedItem, selectedActor, count = 1) {
 	debugLog(`craftItem() | Selected Item: ${selectedItem?.name} || No Name}`);
 	debugLog(`craftItem() | Selected Actor: ${selectedActor?.name} || No Name}`);
@@ -872,9 +857,7 @@ async function craftItem(selectedItem, selectedActor, count = 1) {
 	return selectedItem?.slug;
 }
 
-/*
-	Function to get count of versatile vials in actor's inventory
-*/
+//	Function to get count of versatile vials in actor's inventory
 export function getVersatileVialCount(actor) {
 	// Verify valid actor passed
 	if (!actor || !actor.items) {
@@ -889,9 +872,7 @@ export function getVersatileVialCount(actor) {
 	return totalVialCount;
 }
 
-/*
-	Function to consume a versatile vial when crafting with quick alchemy
-*/
+//	Function to consume a versatile vial when crafting with quick alchemy
 async function consumeVersatileVial(actor, slug, count = 1) {
 	if (!actor) {
 		debugLog(3, "consumeVersatileVial(): Actor not found.");
@@ -920,9 +901,7 @@ async function consumeVersatileVial(actor, slug, count = 1) {
 	return false;
 }
 
-/*
-	Function to process formulas with a progress bar
-*/
+//	Function to process formulas with a progress bar
 async function processFormulasWithProgress(actor) {
 	// Get known formulas
 	const formulas = actor?.system.crafting?.formulas || [];
@@ -965,7 +944,7 @@ async function processFormulasWithProgress(actor) {
 	// Gather entries in respective arrays
 	let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
-		const entry = await fromUuid(formula.uuid);
+		const entry = await fromUuidSync(formula.uuid);
 
 		// Update progress
 		progress++;
@@ -1027,9 +1006,8 @@ async function processFormulasWithProgress(actor) {
 	return { weaponOptions, consumableOptions };
 }
 
-/*
-	Function to process FILTERED formulas with a progress bar
-*/
+
+//	Function to process FILTERED formulas with a progress bar
 async function processFilteredFormulasWithProgress(actor, type, slug) {
 	if (!type) {
 		debugLog(3, "processFilteredFormulasWithProgress(): No type passed");
@@ -1041,15 +1019,15 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	const formulas = actor?.system.crafting?.formulas || [];
 	const formulaCount = formulas.length;
 
+	// make sure there are formulas
 	if (!formulas.length) {
 		debugLog(`processFilteredFormulasWithProgress() | No formulas available for actor ${actor.name}`);
 		return { filteredEntries: [] };
 	}
 
-	// Prepare progress bar dialog
+	// Progress bar dialog
 	let progress = 0;
 	const total = formulas.length;
-
 	const progressDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
 		content: `
@@ -1077,7 +1055,7 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	// Gather entries in respective arrays
 	let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
-		const entry = await fromUuid(formula.uuid);
+		const entry = await fromUuidSync(formula.uuid);
 
 		// Update progress
 		progress++;
@@ -1131,6 +1109,7 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	progressDialog.close();
 }
 
+//	Function to process Filtered inventory with progress bar
 async function processFilteredInventoryWithProgress(actor, type, slug) {
 	if (!type) {
 		debugLog(3, "processFilteredInventoryWithProgress() | No type passed!");
@@ -1219,9 +1198,8 @@ async function processFilteredInventoryWithProgress(actor, type, slug) {
 	progressDialog.close();
 }
 
-/*
-	Helper function for craftButton() and craftAttackButton()
-*/
+
+//	Helper function for craftButton() and craftAttackButton()
 async function handleCrafting(uuid, actor, { quickVial = false, doubleBrew = false, attack = false, selectedType = "acid", specialIngredient = "none", sendChat = true }) {
 	debugLog(`handleCrafting(${uuid}, ${actor.name}, ${quickVial}, ${doubleBrew}, ${attack}, ${selectedType}, ${specialIngredient}, ${sendChat}) called.`);
 	// Make sure uuid was passed
@@ -1336,9 +1314,7 @@ async function handleCrafting(uuid, actor, { quickVial = false, doubleBrew = fal
 	return temporaryItem;
 };
 
-/*
-	Function to process craft button
-*/
+//	Function to process craft button
 async function craftButton(actor, itemUuid, dbItemUuid, itemType, {selectedType = "acid", specialIngredient = "none", sendMsg = true} = {}) {
 	const selectedUuid = itemUuid;
 	const dbSelectedUuid = dbItemUuid;
@@ -1366,9 +1342,7 @@ async function craftButton(actor, itemUuid, dbItemUuid, itemType, {selectedType 
 	return temporaryItem;
 }
 
-/*
-	Function to process craft and attack button
-*/
+//	Function to process craft and attack button
 async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType, selectedType = "acid", specialIngredient = "none") {
 	const selectedUuid = itemUuid;
 	const dbSelectedUuid = dbItemUuid;
@@ -1394,9 +1368,7 @@ async function craftAttackButton(actor, itemUuid, dbItemUuid, itemType, selected
 	}
 }
 
-/*
-	Function to process crafting healing bomb
-*/
+//	Function to process crafting healing bomb
 async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`craftHealingBomb() | Item Selection: ${elixirUuid}`);
 	var healingSlug = "healing-bomb";
@@ -1537,9 +1509,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 	}
 }
 
-/*
-	Function to display Double Brew content in dialogs
-*/
+//	Function to display Double Brew content in dialogs
 function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
 	let content = "";
 
@@ -1583,9 +1553,7 @@ function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
 }
 
 
-/*
-	function to display healing bomb dialog
-*/
+//	Function to display healing bomb dialog
 async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = null) {
 	async function displayInventorySelectDialog(actor, filteredEntries) {
 		debugLog(`displayInventorySelectDialog() | actor: ${actor.name}`);
@@ -1726,9 +1694,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 	}
 }
 
-/*
-	Function to display crafting dialog
-*/
+//	Function to display crafting dialog
 async function displayCraftingDialog(actor, itemType) {
 
 	debugLog(`displayCraftingDialog() | actor: ${actor.name} | itemType: ${itemType}`);
@@ -2422,9 +2388,7 @@ async function displayCraftingDialog(actor, itemType) {
 	}
 }
 
-/*
-	Function to display Quick Alchemy Dialog
-*/
+//	Function to display Quick Alchemy Dialog
 async function qaDialog(actor) {
 
 	/*
@@ -2542,9 +2506,7 @@ async function qaDialog(actor) {
 	}).render(true);
 }
 
-/*
-	Main crafting function
-*/
+//	Main crafting function
 async function qaCraftAttack() {
 
 	// Check if a token is selected, if not default to game.user.character

@@ -1,8 +1,6 @@
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
-/*
-	Function for debugging
-*/
+//	Function for debugging
 export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	
 	// Get Timestamps
@@ -82,10 +80,8 @@ export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	}
 }
 
-/*
-	Function to check setting and return it
-	will ONLY work for settings for this module!
-*/
+//	Function to check setting and return it
+//	will ONLY work for settings for this module!
 export function getSetting(settingName, returnIfError = false) {
     // Validate the setting name
     if (typeof settingName !== "string" || settingName.trim() === "") {
@@ -111,17 +107,13 @@ export function getSetting(settingName, returnIfError = false) {
     }
 }
 
-/*
-	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
-*/
 
+//	Check if actor has a feat by searching for the slug, example "powerful-alchemy"
 export function hasFeat(actor, slug) {
 	return actor.itemTypes.feat.some((feat) => feat.slug === slug);
 }
 
-/*
-	Checks if a character qualifies for Alchemist benefits.
-*/
+//	Checks if a character qualifies for Alchemist benefits.
 export function isAlchemist(actor) {
     if (!actor) return { qualifies: false, dc: 0, isArchetype: false, log: `no valid actor passed` };
 
@@ -147,9 +139,8 @@ export function isAlchemist(actor) {
     return { qualifies: false, dc: 0, isArchetype: false , log: isAlchemistLog};
 }
 
-/*
-  Function to check if actor has any active logged in owners
-*/
+
+//  Function to check if actor has any active logged in owners
 export function hasActiveOwners(actor) {
     // Get owners with ownership level 3 ('Owner')
     const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
@@ -164,10 +155,7 @@ export function hasActiveOwners(actor) {
     return loggedInOwners.length > 0;
 }
 
-
-/* 
-	Function to dynamically manage collapseChatDesc setting based on Workbench's setting
-*/
+//	Function to dynamically manage collapseChatDesc setting based on Workbench's setting
 function adjustCollapseSettingBasedOnWorkbench() {
     const settingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
     const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
@@ -193,9 +181,7 @@ function adjustCollapseSettingBasedOnWorkbench() {
     }
 }
 
-/*
-	AddCompendiumsApp class object
-*/
+//	AddCompendiumsApp class object
 window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {

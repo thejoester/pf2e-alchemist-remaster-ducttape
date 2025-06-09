@@ -1,13 +1,11 @@
 import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
 
-/**
-	Update item description based on regex pattern and replacement logic. 
-	@param {string} description - The original item description. 
-	@param {RegExp} regexPattern - The regex pattern to match.
-	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
-	@returns {string} - The updated item description.
-*/
+//	Update item description based on regex pattern and replacement logic. 
+//	@param {string} description - The original item description. 
+//	@param {RegExp} regexPattern - The regex pattern to match.
+//	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
+//	@returns {string} - The updated item description.
 function updateDescription(description, regexPattern, replacementFn) {
 	const updatedDescription = description.replace(regexPattern, replacementFn);
 	return updatedDescription;
@@ -90,9 +88,7 @@ Hooks.on("ready", () => {
 	});
 });
 
-/*
-	Function to apply Powerful Alchemy effects to item created by Alchemist
-*/
+//	Function to apply Powerful Alchemy effects to item created by Alchemist
 async function applyPowerfulAlchemy(item,actor,alchemistDC){
 	// Delay to allow item to finish embedding (avoids Foundry V12 timing issues)
 	setTimeout(async () => {

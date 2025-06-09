@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.9.7 - 2025-06-06
+## [2.9.8] - 2025-06-09
+### Changed 
+- **Quick Alchemy:** Improved Quick Alchemy macro to be more efficient when pulling list of formulas, now should load instantly! 
+
+## [2.9.7] - 2025-06-06
 ### Fixed
 - **Settings:** Fixed jQuery check in settings that was causing error in console in v13, and not disabling "collapse item description in chat" if this was being done by [xdy-pf2e-workbench module](https://github.com/xdy/xdy-pf2e-workbench).
 - **Powerful Alchemy:** Fixed DC replacement for items such as Glue Bomb using newer '/act escape dc=28' format.

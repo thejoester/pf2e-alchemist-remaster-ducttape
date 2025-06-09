@@ -8,8 +8,14 @@ let addNewFormulasToChat = false;
 let addFormulasPermission = "gm_only"; 
 let handleLowerFormulasOnLevelUp = "disabled";
 let promptLowerFormulasOnLevelUp = "ask_each_lower";
+let pauseFlags = false;
 
 Hooks.once('ready', async () => {
+	
+	// Clear any stuck flags
+	pauseFlags = true;
+	await clearFlags();
+	pauseFlags = false;
 	
 	window.promptTokenFormulaAdd = promptTokenFormulaAdd;
 	window.promptTokenFormulaRemove = promptTokenFormulaRemove;
@@ -55,7 +61,7 @@ Hooks.once('init', () => {
     if (addFormulasSetting !== "disabled") {
         // Hook into updateActor to detect level-ups and grant Alchemist formulas
         Hooks.on('updateActor', async (actor, updateData, options, userId) => {
-			
+			if (pauseFlags) return;
 			// Prevent recursion and unnecessary execution of code when cleaning formulas or processing update
 			if (actor.getFlag('pf2e-alchemist-remaster-ducttape', 'cleaningDuplicates') || 
 				actor.getFlag('pf2e-alchemist-remaster-ducttape', 'processingUpdate')) {
@@ -105,9 +111,7 @@ Hooks.once('init', () => {
     }
 });
 
-/* 
-	Grant new formulas to Alchemists as they level up.
-*/
+//	Grant new formulas to Alchemists as they level up.
 async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting, previousLevel) {
 	const loadingDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
@@ -133,11 +137,12 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 		}
 	});
 	loadingDialog.render(true);
+	updateLoadingProgress(10);
 	
 	debugLog(`grantAlchemistFormulas() | mode: ${mode}`);
     debugLog(`Checking for new formulas for ${actor.name} for level ${newLevel}.`);
 	debugLog(`Previous Level for ${actor.name}: ${previousLevel}.`);
-	updateLoadingProgress(10);
+	updateLoadingProgress(15);
 	
     const systemCompendium = 'pf2e.equipment-srd';
     const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
@@ -153,7 +158,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
     const knownBaseSlugs = await Promise.all(
         knownFormulaUUIDs.map(async (uuid) => {
             try {
-                const item = await fromUuid(uuid);
+                const item = await fromUuidSync(uuid);
 				//debugLog(`processing uuid: ${uuid}...`);
                 return item ? extractBaseSlug(item.system.slug) : null;
             } catch (error) {
@@ -192,10 +197,18 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
         debugLog(`Compendium index for ${compendiumKey}:`, index);
 
 		debugLog(`Step: const filteredIndex = index.filter(entry => { const baseSlug = extractBaseSlug(entry.system.slug)`);
+		let logCompendiumEntry = "";
         const filteredIndex = index.filter(entry => {
-            const baseSlug = extractBaseSlug(entry.system.slug);
+			if (!entry?.system?.slug) {
+				logCompendiumEntry += `\n -> Skipping compendium entry ${entry.name} (${entry.uuid}) missing system.slug`;
+				
+				return false;
+			}
+			const baseSlug = extractBaseSlug(entry.system.slug);
             return deduplicatedBaseSlugs.includes(baseSlug);
         });
+		if (logCompendiumEntry) debugLog(logCompendiumEntry);
+		
         debugLog(`Filtered index for ${compendiumKey}:`, filteredIndex);
 		updateLoadingProgress(60);
         // Fetch the full documents for relevant entries
@@ -286,7 +299,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
     if (mode === "ask_each") {
 		loadingDialog.close();
         for (const uuid of newFormulaUUIDs) {
-            const item = await fromUuid(uuid);
+            const item = await fromUuidSync(uuid);
             if (!item) continue;
 
             const confirmed = await showFormulaDialog(actor, item, item.system.level.value);
@@ -310,7 +323,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 		loadingDialog.close();
         const formulasToPrompt = [];
         for (const uuid of newFormulaUUIDs) {
-            const item = await fromUuid(uuid);
+            const item = await fromUuidSync(uuid);
             if (!item) continue;
             formulasToPrompt.push({ uuid, name: item.name, level: item.system.level.value });
         }
@@ -345,7 +358,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
             debugLog(`${actor.name} has learned ${newFormulaUUIDs.length} new formulas.`);
             // Get the names of the added formulas
             const formulaNames = await Promise.all(newFormulaUUIDs.map(async (uuid) => {
-                const item = await fromUuid(uuid);
+                const item = await fromUuidSync(uuid);
                 return item?.name ?? 'Unknown Formula';
             }));
             // Add the formula names to the list
@@ -358,9 +371,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
     }
 }
 
-/*
-	Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
-*/
+//	Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
 async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevelUp) {
 	
 	debugLog(`removeLowerLevelFormulas() | mode: ${mode}`);
@@ -401,7 +412,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 	for (let i = 0; i < total; i++) {
 		const formula = knownFormulas[i];
 
-		const item = await fromUuid(formula.uuid);
+		const item = await fromUuidSync(formula.uuid);
 		if (!item) {
 			debugLog(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
 			continue;
@@ -507,10 +518,8 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
     }
 }
 
-/*
-	Function to extract base name ignoring parenthisis and contents within, 
-	as well as commas and text after
-*/
+//	Function to extract base name ignoring parenthisis and contents within, 
+//	as well as commas and text after
 function extractBaseName(name) {
     return name
 		.toLowerCase()
@@ -518,9 +527,7 @@ function extractBaseName(name) {
 		.trim();
 }
 
-/* 
-	Helper function to extract base slug
-*/
+//	Helper function to extract base slug
 function extractBaseSlug(slug) {
 	if (!slug) return null;
 
@@ -538,6 +545,7 @@ function extractBaseSlug(slug) {
 	return slug.split("-").slice(0, -1).join("-");
 }
 
+//	Function to check for non-standard variant slugs
 function isNonStandardVariant(slug) {
 	const NON_STANDARD_ALCHEMICAL_PREFIXES = [
 		"colorful-coating",
@@ -546,9 +554,7 @@ function isNonStandardVariant(slug) {
 	return NON_STANDARD_ALCHEMICAL_PREFIXES.some(prefix => slug.startsWith(prefix));
 }
 
-/*
-	Function to check for and remove any duplicates in actor.system.crafting
-*/
+//	Function to check for and remove any duplicates in actor.system.crafting
 async function removeDuplicateFormulas(actor) {
     
     await actor.setFlag('pf2e-alchemist-remaster-ducttape', 'cleaningDuplicates', true);
@@ -581,9 +587,7 @@ async function removeDuplicateFormulas(actor) {
 	return returnLog;
 }
 
-/*
-	Send message to chat with list of learned formulas.
-*/
+//	Send message to chat with list of learned formulas.
 function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	if (addNewFormulasToChat && newFormulaCount > 0) { // if option enabled and there was formulas added, display in chat
       try {
@@ -598,9 +602,7 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	}
 }
 
-/*
-	Show a dialog to ask if the user wants to add all the gathered formulas.
-*/
+//	Show a dialog to ask if the user wants to add all the gathered formulas.
 async function showFormulaListDialog(actor, formulas, isRemoving = false) {
   return new Promise((resolve) => {
     if (formulas.length === 0) {
@@ -648,9 +650,7 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
   });
 }
 
-/*
-	Show a dialog to ask if the user wants to add a formula.
-*/
+//	Show a dialog to ask if the user wants to add a formula.
 async function showFormulaDialog(actor, formula, level, isRemoving = false) {
 	return new Promise((resolve) => {
 		const title = isRemoving
@@ -686,9 +686,7 @@ async function showFormulaDialog(actor, formula, level, isRemoving = false) {
 	});
 }
 
-/*
-  Function to handle permissions
-*/
+//  Function to handle permissions
 function canManageFormulas(actor) {
     const activeOwnersExist = hasActiveOwners(actor);
 
@@ -723,9 +721,7 @@ function canManageFormulas(actor) {
     return false;
 }
 
-/*
-	Function to get all Alchemists current level at start
-*/
+//	Function to get all Alchemists current level at start
 async function getAlchemistLevels(){
 	if (game.user.isGM) {
 		let getAlchemistLevelsLog = "getAlchemistLevels():\n";
@@ -756,9 +752,36 @@ async function getAlchemistLevels(){
 	}
 }
 
-/*
-	Function to update progress bar
-*/
+//	Function to clear flags from alchemists used while 
+//	scanning them to prevent recurive loops
+async function clearFlags() {
+	if (!game.user.isGM) return;
+
+	let clearedFlagsLog = "clearFlags():\n";
+
+	for (const actor of game.actors) {
+		let cleared = false;
+
+		for (const flagKey of ["cleaningDuplicates", "processingUpdate"]) {
+			const hasFlag = actor.getFlag("pf2e-alchemist-remaster-ducttape", flagKey);
+			if (hasFlag !== undefined) {
+				await actor.unsetFlag("pf2e-alchemist-remaster-ducttape", flagKey);
+				clearedFlagsLog += `-> Cleared '${flagKey}' flag for ${actor.name}\n`;
+				cleared = true;
+			}
+		}
+		
+		/*
+		if (!cleared) {
+			clearedFlagsLog += `-> No flags to clear for ${actor.name}\n`;
+		}
+		*/
+	}
+
+	debugLog(clearedFlagsLog);
+}
+
+//	Function to update progress bar
 function updateLoadingProgress(percent) {
   const fill = document.getElementById("progress-fill");
   const text = document.getElementById("progress-text");
@@ -767,9 +790,7 @@ function updateLoadingProgress(percent) {
 }
 
 
-/*
-	Function to handle form submission
-*/
+//	Function to handle form submission
 async function handleFormSubmit(actor,options,currentLevel){
 	debugLog(`Options chosen: ${JSON.stringify(options)}`);
 	
@@ -786,9 +807,7 @@ async function handleFormSubmit(actor,options,currentLevel){
 	}
 }
 
-/*
-	Function to use as a macro to prompt to add formulas for alchemist
-*/
+//	Function to use as a macro to prompt to add formulas for alchemist
 async function promptTokenFormulaAdd() {
 	
 	const token = canvas.tokens.controlled[0];
@@ -879,9 +898,7 @@ async function promptTokenFormulaAdd() {
 	dialog.render(true);
 }
 
-/*
-	Function to use as a macro to prompt to remove lower level formulas for alchemist
-*/
+//	Function to use as a macro to prompt to remove lower level formulas for alchemist
 async function promptTokenFormulaRemove() {
 	
 	const token = canvas.tokens.controlled[0];
