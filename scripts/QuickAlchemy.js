@@ -253,8 +253,17 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 	});
 });
 
-Hooks.on("ready", () => {
+Hooks.on("ready", async () => {
 	console.log("%cPF2e Alchemist Remaster Duct Tape QuickAlchemy.js loaded", "color: aqua; font-weight: bold;");
+	
+	//	Preload compendium
+	try {
+		await game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items")?.getDocuments();
+		debugLog(1, "Preloaded compendium: alchemist-duct-tape-items");
+	} catch (err) {
+		debugLog(3, "Error preloading compendium alchemist-duct-tape-items: ", err);
+	}
+	
 	// Attach function to the global window object
 	window.qaCraftAttack = qaCraftAttack;
 });
@@ -918,6 +927,7 @@ async function processFormulasWithProgress(actor) {
 
 	const progressDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		classes: ["quick-alchemy-dialog"],
 		content: `
 				<div>
 					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
@@ -1030,6 +1040,7 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	const total = formulas.length;
 	const progressDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		classes: ["quick-alchemy-dialog"],
 		content: `
 				<div>
 					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
@@ -1134,6 +1145,7 @@ async function processFilteredInventoryWithProgress(actor, type, slug) {
 
 	const progressDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		classes: ["quick-alchemy-dialog"],
 		content: `
 				<div>
 					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(inventoryCount)}</p>
@@ -1197,7 +1209,6 @@ async function processFilteredInventoryWithProgress(actor, type, slug) {
 	// Close progress dialog - just in case
 	progressDialog.close();
 }
-
 
 //	Helper function for craftButton() and craftAttackButton()
 async function handleCrafting(uuid, actor, { quickVial = false, doubleBrew = false, attack = false, selectedType = "acid", specialIngredient = "none", sendChat = true }) {
@@ -1401,7 +1412,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 
 		// Find the item in the compendium
 		const compendiumIndex = await compendium.getIndex();
-		const healingItemEntry = compendiumIndex.find(entry => entry.sytem.slug === "healing-bomb-ardt");
+		const healingItemEntry = compendiumIndex.find(entry => entry.system.slug === "healing-bomb-ardt");
 		if (!healingItemEntry) {
 			debugLog(3, "craftHealingBomb() | Healing Quick Vial not found in compendium.");
 			return;
@@ -1592,8 +1603,9 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		new foundry.applications.api.DialogV2({
 			window: {
 				title: LOCALIZED_TEXT.HEALING_BOMB,
-				width: 450
+				// width: 450
 			},
+			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
 			default: "crafthealingbomb",
@@ -1661,8 +1673,9 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		new foundry.applications.api.DialogV2({
 			window: {
 				title: LOCALIZED_TEXT.HEALING_BOMB,
-				width: 450
+				// width: 450
 			},
+			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
 			default: "inventory",
@@ -1786,6 +1799,7 @@ async function displayCraftingDialog(actor, itemType) {
 			const userConfirmed = await foundry.applications.api.DialogV2.confirm({
 				content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_CRAFT_HEALING_VIAL}</p>`,
 				window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_CHIRURGEON },
+				classes: ["quick-alchemy-dialog"],
 				rejectClose: false,
 				modal: true
 			});
@@ -1803,6 +1817,7 @@ async function displayCraftingDialog(actor, itemType) {
 			// Prompt for damage type
 			selectedType = await foundry.applications.api.DialogV2.prompt({
 				window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_FIELD_VIAL_BOMBER },
+				classes: ["quick-alchemy-dialog"],
 				content: `
 						<form>
 							<div class="form-group" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
@@ -1827,6 +1842,7 @@ async function displayCraftingDialog(actor, itemType) {
 				debugLog(`displayCraftingDialog() | Feat 'advanced-vials-bomber' detected.`);
 				specialIngredient = await foundry.applications.api.DialogV2.prompt({
 					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_ADV_VIAL_BOMBER },
+					classes: ["quick-alchemy-dialog"],
 					content: `
 							<form>
 								<div class="form-group" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
@@ -1875,6 +1891,7 @@ async function displayCraftingDialog(actor, itemType) {
 				const selectedWeapon = await new Promise((resolve) => {
 					new foundry.applications.api.DialogV2({
 						window: { title: LOCALIZED_TEXT.INJURY_POISON },
+						classes: ["quick-alchemy-dialog"],
 						content: `
 								<form>
 									<div class="form-group">
@@ -1994,6 +2011,7 @@ async function displayCraftingDialog(actor, itemType) {
 			const isInjuryPoison = await new Promise((resolve) => {
 				new foundry.applications.api.DialogV2({
 					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_TOXICOLOGIST_OPTIONS },
+					classes: ["quick-alchemy-dialog"],
 					content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_APPLY_INJURY_POISON}</p>`,
 					buttons: [
 						{
@@ -2094,6 +2112,7 @@ async function displayCraftingDialog(actor, itemType) {
 
 				new foundry.applications.api.DialogV2({
 					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_MUTAGENIST_OPTIONS },
+					classes: ["quick-alchemy-dialog"],
 					content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_CONSUME_VIAL}</p>`,
 					buttons,
 					default: "qv"
@@ -2173,8 +2192,9 @@ async function displayCraftingDialog(actor, itemType) {
 		new foundry.applications.api.DialogV2({
 			window: {
 				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
-				width: 450
+				// width: 450
 			},
+			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
 			default: "craftvial",
@@ -2248,8 +2268,9 @@ async function displayCraftingDialog(actor, itemType) {
 		new foundry.applications.api.DialogV2({
 			window: {
 				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
-				width: 450
+				// width: 450
 			},
+			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
 			default: "craft",
@@ -2362,8 +2383,9 @@ async function displayCraftingDialog(actor, itemType) {
 		new foundry.applications.api.DialogV2({
 			window: {
 				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
-				width: 450
+				// width: 450
 			},
+			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
 			default: "craft",
@@ -2391,11 +2413,10 @@ async function displayCraftingDialog(actor, itemType) {
 //	Function to display Quick Alchemy Dialog
 async function qaDialog(actor) {
 
-	/*
-		First we will check how many versatile vials actor has,
-		if they have none we will prompt them to search for 10
-		minutes, unless they are archetype. 
-	*/
+	//	First we will check how many versatile vials actor has,
+	//	if they have none we will prompt them to search for 10
+	//	minutes, unless they are archetype. 
+	
 	const vialCount = getVersatileVialCount(actor);
 	debugLog(`qaDialog() | Versatile Vial count for ${actor.name}: ${vialCount}`);
 
@@ -2490,6 +2511,7 @@ async function qaDialog(actor) {
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_ITEM_TYPE },
 		content,
 		buttons,
+		classes: ["quick-alchemy-dialog"],
 		default: "vial",
 		render: (app, html) => {
 			const link = html[0].querySelector("#qa-help-link");

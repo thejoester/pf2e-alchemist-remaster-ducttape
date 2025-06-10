@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.9] - 2025-06-10
+### Fixed
+- **Healing Bomb:** Fixed bug in code preventing healing bomb item to be created correctly. 
+- **Healing Bomb:** Fixed logic in Healing Bombs to match RAW (https://2e.aonprd.com/Feats.aspx?ID=5773):
+  - Splash Healing applies on success or better (was only on Crit Success).
+  - Spash Healing only applies to adjacent creatures, not also to target.
+- **LevelUp:** Fixed bug when prompting to add/remove formulas upon leveling up where closing the prompt window not resolve the dialog causing that code to hang, and that character to possibly not be prompted in the future. 
+- **Quick Alchemy:** Updated Style to prevent wrapping of button text.
+
 ## [2.9.8] - 2025-06-09
 ### Changed 
 - **Quick Alchemy:** Improved Quick Alchemy macro to be more efficient when pulling list of formulas, now should load instantly! 

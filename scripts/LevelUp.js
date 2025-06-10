@@ -19,39 +19,14 @@ Hooks.once('ready', async () => {
 	
 	window.promptTokenFormulaAdd = promptTokenFormulaAdd;
 	window.promptTokenFormulaRemove = promptTokenFormulaRemove;
-	
-	// Always index `pf2e.equipment-srd`
-    const compendiumName = "pf2e.equipment-srd";
-    const compendium = game.packs.get(compendiumName);
-    if (compendium) {
-        await compendium.getIndex(); // Index with the updated fields
-        debugLog(`Rebuilt index for compendium: ${compendium.metadata.label} (${compendiumName})`);
-    } else {
-        debugLog(3, `Compendium '${compendiumName}' not found.`);
-    }
 
-    // Index user-added compendiums
-    const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
-    for (const userCompendium of userDefinedCompendiums) {
-        const userPack = game.packs.get(userCompendium);
-        if (userPack) {
-            await userPack.getIndex(); // Index the user-defined compendium
-            debugLog(`Rebuilt index for user compendium: ${userPack.metadata.label} (${userCompendium})`);
-        } else {
-            debugLog(2, `User-defined compendium '${userCompendium}' not found.`);
-        }
-    }
-	
 	getAlchemistLevels();
 	
 });	
 
 Hooks.once('init', () => {
 	
-	// Configure compendiums to have slug indexable
-	CONFIG.Item.compendiumIndexFields = ["system.slug"];
-	
-    // Get Settings
+	// Get Settings
     addFormulasSetting = getSetting("addFormulasOnLevelUp","disabled");
 	handleLowerFormulasOnLevelUp = getSetting("handleLowerFormulasOnLevelUp","disabled");
 	addNewFormulasToChat = getSetting("addNewFormulasToChat");
@@ -294,7 +269,6 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 	
 	updateLoadingProgress(100);
 	
-	
     // Check setting to see if we are asking for each formula
     if (mode === "ask_each") {
 		loadingDialog.close();
@@ -455,7 +429,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
     if (removedFormulas.length === 0) {
         debugLog(`No lower-level formulas to remove for ${actor.name}.`);
 		loadingDialog.close();
-        return;
+		return;
     }
 	
 	// Close Dialog if open
@@ -471,7 +445,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 
         if (!confirmed) {
             debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
-            return; // Exit if user cancels
+			return; // Exit if user cancels
         }
     } else if (mode === "ask_each_lower") {
 		// Handle ask_each_lower: Prompt for each formula individually
@@ -483,7 +457,6 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 				keptFormulas.push(formula); // Keep formulas user declined to remove
 			}
 		}
-
 		debugLog(`Kept formulas:\n${keptFormulas.map(f => f.name).join('\n')}`);
 
 		// Filter out formulas to remove
@@ -604,50 +577,68 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 
 //	Show a dialog to ask if the user wants to add all the gathered formulas.
 async function showFormulaListDialog(actor, formulas, isRemoving = false) {
-  return new Promise((resolve) => {
-    if (formulas.length === 0) {
-      debugLog("No formulas to show in the dialog.");
-      return resolve(false);
-    }
+	return new Promise((resolve) => {
+		if (formulas.length === 0) {
+			debugLog("No formulas to show in the dialog.");
+			return resolve(false);
+		}
 
-    const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
-    const formulaListHTML = sortedFormulas.map(f =>
-      `<li>${LOCALIZED_TEXT.LEVELUP_LEVEL} ${f.level}: <strong>${f.name}</strong></li>`
-    ).join('');
+		const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
+		const formulaListHTML = sortedFormulas.map(f =>
+			`<li>${LOCALIZED_TEXT.LEVELUP_LEVEL} ${f.level}: <strong>${f.name}</strong></li>`
+		).join('');
 
-    const title = isRemoving
-      ? LOCALIZED_TEXT.LEVELUP_REMOVE_LOWERLEVEL_FORMULAS
-      : LOCALIZED_TEXT.LEVELUP_NEW_FORMULAS_DISCOVERED;
+		const title = isRemoving
+			? LOCALIZED_TEXT.LEVELUP_REMOVE_LOWERLEVEL_FORMULAS
+			: LOCALIZED_TEXT.LEVELUP_NEW_FORMULAS_DISCOVERED;
 
-    const content = isRemoving
-      ? `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_LOWER_LEVEL_BEING_REPLACED}:</p>
-         <ul>${formulaListHTML}</ul>
-         <p>${LOCALIZED_TEXT.LEVELUP_PROMPT_REMOVE_FORMULAS}</p>`
-      : `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_UNLOCKED_FORMULAS}:</p>
-         <ul>${formulaListHTML}</ul>
-         <p>${LOCALIZED_TEXT.LEVELUP_PROMPT_ADD_FORMULAS}</p>`;
+		const content = isRemoving
+			? `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_LOWER_LEVEL_BEING_REPLACED}:</p>
+				<ul>${formulaListHTML}</ul>
+				<p>${LOCALIZED_TEXT.LEVELUP_PROMPT_REMOVE_FORMULAS}</p>`
+			: `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_UNLOCKED_FORMULAS}:</p>
+				<ul>${formulaListHTML}</ul>
+				<p>${LOCALIZED_TEXT.LEVELUP_PROMPT_ADD_FORMULAS}</p>`;
 
-    new foundry.applications.api.DialogV2({
-      window: { title },
-      content,
-      buttons: [
-        {
-          action: "yes",
-          label: LOCALIZED_TEXT.BTN_YES,
-          icon: "fas fa-check",
-          default: true
-        },
-        {
-          action: "no",
-          label: LOCALIZED_TEXT.BTN_NO,
-          icon: "fas fa-times"
-        }
-      ],
-      submit: (result) => {
-        resolve(result === "yes");
-      }
-    }).render(true);
-  });
+		let resolved = false;
+
+		const dialog = new foundry.applications.api.DialogV2({
+			window: { title },
+			content,
+			buttons: [
+				{
+					action: "yes",
+					label: LOCALIZED_TEXT.BTN_YES,
+					icon: "fas fa-check",
+					default: true
+				},
+				{
+					action: "no",
+					label: LOCALIZED_TEXT.BTN_NO,
+					icon: "fas fa-times"
+				}
+			],
+			submit: (result) => {
+				if (!resolved) {
+					resolved = true;
+					resolve(result === "yes");
+				}
+			}
+		});
+
+		dialog.render(true);
+
+		// Monkey-patch _onClose to resolve if the user closed the window
+		const originalClose = dialog._onClose.bind(dialog);
+		dialog._onClose = (...args) => {
+			if (!resolved) {
+				debugLog(1, "Dialog was closed manually — treating as 'No'");
+				resolved = true;
+				resolve(false);
+			}
+			return originalClose(...args);
+		};
+	});
 }
 
 //	Show a dialog to ask if the user wants to add a formula.

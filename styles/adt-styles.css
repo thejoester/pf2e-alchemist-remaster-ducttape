@@ -52,3 +52,18 @@
 .invalid {
   color: red;
 }
+/* Apply only to your Quick Alchemy dialog */
+.quick-alchemy-dialog footer.form-footer {
+	display: flex;
+	flex-wrap: nowrap !important;
+	gap: 0.5rem;
+	justify-content: space-between;
+	overflow-x: auto;
+}
+
+.quick-alchemy-dialog footer.form-footer button {
+	white-space: nowrap !important;
+	min-width: max-content !important;
+	flex-shrink: 0 !important;
+}
+

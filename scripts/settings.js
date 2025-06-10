@@ -284,9 +284,10 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
 
 Hooks.once("init", () => {
 	
-/*	
-	Saved Data Settings
-*/
+	// Configure compendiums to have slug indexable
+	CONFIG.Item.compendiumIndexFields = ["system.slug"];
+	
+//	Saved Data Settings
 	// Tracks the last processed time for exploration mode
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
         name: 'Last Processed Time',
@@ -304,9 +305,7 @@ Hooks.once("init", () => {
 		default: 0
 	});
 	
-/*
-	QUICK ALCHEMY SETTINGS
-*/
+//	QUICK ALCHEMY SETTINGS
 	
 	// Quick Alchemy: remove temporary items at end of turn
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtTurnChange", {
@@ -368,9 +367,7 @@ Hooks.once("init", () => {
 		requiresReload: false
 	});
 	
-/* 
-	Powerful Alchemy Settings
-*/
+//	Powerful Alchemy Settings
 	console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Powerful Alchemy settings...","color: aqua; font-weight: bold;");
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_POWERFUL_ALCHEMY"),
@@ -385,9 +382,7 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-/*
-	LevelUp - auto add formulas
-*/
+//	LevelUp - auto add formulas
 	// Add higher level versions of known formulas on level up?
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_ADD_HIGHER"),
@@ -552,9 +547,7 @@ Hooks.once("init", () => {
 		}
 });
 
-/*
-	Vial Search 
-*/
+//	Vial Search 
 	// Enable Vial Search
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_VIAL_SEARCH_REMINDER"),
@@ -577,9 +570,7 @@ Hooks.once("init", () => {
 		requiresReload: false,
 	});
 	
-/* 
-	Searchable Formulas
-*/
+//	Searchable Formulas
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_FORMULA_SEARCH"),
 		hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_FORMULA_SEARCH_HINT"),
@@ -593,9 +584,7 @@ Hooks.once("init", () => {
 		requiresReload: true
 	});
 	
-/* 
-	Collapse Item Description in chat
-*/
+//	Collapse Item Description in chat
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COLLAPSE_ITEM_DESC_CHAT"),
 		hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COLLAPSE_ITEM_DESC_CHAT_HINT"),
@@ -720,9 +709,7 @@ Hooks.once("init", () => {
 		}
 	});
 
-/*
-	Help Button
-*/
+//	Help Button
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "showQuickAlchemyHelp", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_HELP"),
 		hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_HELP_HINT"),
@@ -732,9 +719,8 @@ Hooks.once("init", () => {
 		default: true
 	});
 
-/*
-	Debugging
-*/
+
+//	Debugging
 	// Register debugLevel setting
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "debugLevel", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_LEVEL"),
@@ -757,10 +743,35 @@ Hooks.once("init", () => {
 	console.log(`%cPF2E Alchemist Remaster Duct Tape | Debugging Level: ${debugLevel}`,"color: aqua; font-weight: bold;");
 });
 
-Hooks.once("ready", () => {
-    console.log("PF2e Alchemist Remaster Duct Tape | Ready hook triggered.");
-    
-    // Adjust collapseChatDesc based on the Workbench setting
+Hooks.once("ready", async () => {
+	
+	
+	//	Index Compendiums
+	const compendiumIds = [
+		"pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items",
+		"pf2e.equipment-srd"
+	];
+	// Get user-defined compendiums from settings
+	const userDefinedCompendiums = game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") || [];
+	compendiumIds.push(...userDefinedCompendiums);
+	for (const id of compendiumIds) {
+		try {
+			const pack = game.packs.get(id);
+			if (pack) {
+				await pack.getDocuments();
+				debugLog(1, `Preloaded compendium: ${id}`);
+			} else {
+				debugLog(3, `Compendium not found: ${id}`);
+			}
+		} catch (err) {
+			debugLog(3, `Error preloading compendium ${id}:`, err);
+		}
+	}
+	
+    //	Adjust collapseChatDesc based on the Workbench setting
     adjustCollapseSettingBasedOnWorkbench();
 	
+	//	Logging
+	console.log("PF2e Alchemist Remaster Duct Tape | Ready hook triggered.");
+    
 });
