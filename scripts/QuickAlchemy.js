@@ -567,7 +567,7 @@ async function equipItemBySlug(slug, actor) {
 		}
 	}
 
-	const item = await actor.items.find((i) => i.slug === slug);
+	const item = actor.items.find((i) => i.slug === slug && i.system?.ductTaped === true);
 	if (!item) {
 		debugLog("equipItemBySlug() | Item not found.");
 		return;
