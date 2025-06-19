@@ -5,9 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2025-06-19
+### Added
+- **Quick Alchemy:** Added support for [Wandering Chef Dedication](https://2e.aonprd.com/Feats.aspx?ID=7053).
+  - When running Quick Alchemy macro will just open dialog to select food to create from formulas. 
+
 ## [2.9.10] - 2025-06-12
 ### Fixed
-- - **Quick Alchemy:** Fixed bug when sending message to chat, it would link an existing item not the temporary item just created. 
+- **Quick Alchemy:** Fixed bug when sending message to chat, it would link an existing item not the temporary item just created. 
 
 ## [2.9.9] - 2025-06-10
 ### Fixed

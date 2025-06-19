@@ -1079,6 +1079,20 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 			if (entry.slug === "versatile-vial") {
 				// do nothing
 				listProcessedFormulas = `-> ${listProcessedFormulas} skipping`;
+			//	Check only food items for Wandering Chef dedication
+			} else if (type === "food") {
+				const tags = entry.system?.traits?.otherTags ?? [];
+				if (tags.includes("alchemical-food")) {
+					if (slug) {
+						if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
+							filteredEntries.push(entry);
+							listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
+						}
+						continue;
+					}
+					filteredEntries.push(entry);
+					listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
+				}
 			} else if (entry.type === type) {
 				if (slug) {
 					if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
@@ -1717,6 +1731,7 @@ async function displayCraftingDialog(actor, itemType) {
 	const doubleBrewFeat = hasFeat(actor, "double-brew");
 	debugLog(`displayCraftingDialog() | doubleBrewFeat: ${doubleBrewFeat}`);
 	let content = ``;
+	let options = "";
 	let selectedUuid = "";
 	let dbSelectedUuid = "";
 	let craftItemButtons = {};
@@ -1753,10 +1768,8 @@ async function displayCraftingDialog(actor, itemType) {
 		}
 		debugLog(`displayCraftingDialog() | actor: ${actor.name} |itemType: ${itemType} | uuid: ${uuid} | item name: ${item.name}`);
 
-		/*
-			Helper function to determine damage type based on target 
-			resistances, immunities, and weaknesses
-		*/
+		//	Helper function to determine damage type based on target 
+		//	resistances, immunities, and weaknesses
 		async function getBestDamageType(target) {
 			// Ensure the target and syntheticActor exist
 			if (!target?.document?.delta?.syntheticActor?.system?.attributes) {
@@ -2216,11 +2229,8 @@ async function displayCraftingDialog(actor, itemType) {
 			}
 		}).render(true);
 
-		/*
-			We are crafting Healing Bomb
-		*/
+	//	We are crafting Healing Bomb
 	} else if (itemType == "healing-bomb") {
-		let options = "";
 		// Get list of filtered entries
 		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, "consumable", "elixir-of-life");
 		options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
@@ -2292,13 +2302,82 @@ async function displayCraftingDialog(actor, itemType) {
 				});
 			}
 		}).render(true);
+		
+	//	We are crafting alchemical-food items
+	} else if (itemType === "food") {
+		
+		// Get list of alchemical-food entries
+		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
+		debugLog(`displayCraftingDialog() | filteredEntries: ${filteredEntries}`);
+		options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
+		
+		// Build main content with initial item selection
+		let content = `
+				<form>
+					<div>
+						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
+						<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
+						<br/><br/>
+					</div>
+				</form>
+			`;
+			
+		const buttons = [];
+		//	Craft
+		buttons.push({
+			action: "craft",
+			label: LOCALIZED_TEXT.CRAFT,
+			icon: "fas fa-hammer",
+			callback: async (event, button, dialog) => {
+				if (!actor) {
+					ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+					return;
+				}
 
-		/*
-			We are crafting Weapons/Consumables
-		*/
+				// Perform actions with the actor
+				selectedUuid = button.form.elements["item-selection"]?.value || "none";
+				dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+
+				debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+				craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+			},
+		},
+		{
+			action: "Cancel",
+			label: LOCALIZED_TEXT.BTN_CANCEL,
+			icon: "fa-solid fa-xmark",
+			callback: (_event, _button, dialog) => dialog.close()
+		});
+		
+		// Show dialog
+		new foundry.applications.api.DialogV2({
+			window: {
+				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
+				// width: 450
+			},
+			classes: ["quick-alchemy-dialog"],
+			content,
+			buttons,
+			default: "craft",
+			render: (html) => {
+				// Apply styles to specific buttons
+				html.find('button:contains("Craft")').css({
+					width: "100px",
+					height: "40px",
+					fontSize: "14px"
+				});
+				html.find('button:contains("Back")').css({
+					width: "50px",
+					height: "40px",
+					fontSize: "14px"
+				});
+			}
+		}).render(true);
+		
+		
+	//	We are crafting Weapons/Consumables
 	} else {
 
-		let options = "";
 		// Get list of filtered entries
 		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
 		debugLog(`displayCraftingDialog() | filteredEntries: ${filteredEntries}`);
@@ -2547,7 +2626,13 @@ async function qaCraftAttack() {
 		return;
 	}
 
-	// Make sure selected token is an alchemist or has archetype
+	//	Check for Wandering Chef dedication
+	if (hasFeat(actor, "wandering-chef-dedication")) {
+		debugLog(1,`${actor.name} has Wandering Chef Dedication — skipping to food crafting dialog.`);
+		return displayCraftingDialog(actor, "food");
+	}
+	
+	//	Make sure selected token is an alchemist or has archetype
 	const alchemistCheck = isAlchemist(actor);
 	if (!alchemistCheck.qualifies) {
 		debugLog(`qaCraftAttack() | Selected Character ( ${actor.name} ) is not an Alchemist - Ignoring`);
