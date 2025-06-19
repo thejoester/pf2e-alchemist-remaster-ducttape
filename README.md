@@ -16,9 +16,7 @@ For a list of features and settings please view [the Wiki](https://github.com/th
 
 ## Requests
 
-This is still sort of a work in progress, and by no means a full release. I have made changes that affect my players the most at the moment. I expect when the Alchemist Player Core 2 changes are implemented in the PF2e system, parts of this module will be obsolete. 
-
-In the meantime if you have a request for a work around fix for an Alchemist feature, please submit one in the [Issues Page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues). 
+This is still a work in progress, if you have a request for a work around fix for an Alchemist feature, please submit one in the [Issues Page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues). 
 
 ## Credits
 I would like to extend a thanks to the following people for helping contribute to this module!
