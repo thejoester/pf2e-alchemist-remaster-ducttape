@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2025-06-21
+### Added
+- **Quick Alchemy:** Added support for [Munition Machinist Feat](https://2e.aonprd.com/Feats.aspx?ID=3172).
+- **Quick Alchemy:** Added support for [Firework Technician Dedication](https://2e.aonprd.com/Archetypes.aspx?ID=119). 
+  - Note: Currently no way to limit crafting to 'firework' items, so will show all formulas. 
+
 ## [2.10.0] - 2025-06-19
 ### Added
 - **Quick Alchemy:** Added support for [Wandering Chef Dedication](https://2e.aonprd.com/Feats.aspx?ID=7053).
