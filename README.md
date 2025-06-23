@@ -1,6 +1,9 @@
 # ![alt text][logo]
 [logo]: https://github.com/user-attachments/assets/a89b5016-9b46-4e1c-8156-ae0237576c26 "PF2e Alchemist Remaster Duct Tape"
 
+![Latest Release](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/thejoester/pf2e-alchemist-remaster-ducttape/master/module.json&query=$.version&label=Latest%20Release&style=plastic)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fthejoester%2Fpf2e-alchemist-remaster-ducttape%2Fmaster%2Fmodule.json&query=%24.compatibility.verified&style=plastic&label=Foundry%20Version&color=orange)
+
 > [!IMPORTANT]
 > PF2e system has been updated with the Player Core 2 Alchemist features. This module still functions and provides added functionality and quality of life features aimed to streamline playing Alchemist.
 
