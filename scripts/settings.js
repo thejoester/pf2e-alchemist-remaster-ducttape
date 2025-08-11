@@ -1,5 +1,6 @@
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
+
 //	Function for debugging
 export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	
@@ -287,7 +288,8 @@ Hooks.once("init", () => {
 	// Configure compendiums to have slug indexable
 	CONFIG.Item.compendiumIndexFields = ["system.slug"];
 	
-//	Saved Data Settings
+//	Saved Data Settings	
+
 	// Tracks the last processed time for exploration mode
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
         name: 'Last Processed Time',
@@ -296,6 +298,7 @@ Hooks.once("init", () => {
         type: Number,
         default: 0
     });
+	
 	// Tracks the last recorded world time to calculate elapsed time
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'previousTime', {
 		name: 'Previous World Time',

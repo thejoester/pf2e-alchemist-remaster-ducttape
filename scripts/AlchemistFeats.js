@@ -43,7 +43,7 @@ Hooks.on("ready", () => {
 		
 		// Make sure item was created by Quick Alchemy Macro
 		if (!item?.system?.ductTaped) {
-			debugLog(`Item ${item.name} not created with Duct Tape module... skipping`);
+			debugLog(`Item ${item.name} not created with Duct Tape module... skipping: `, item);
 			return;
 		}
 		
@@ -59,6 +59,13 @@ Hooks.on("ready", () => {
 			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
 			return;
 		}
+		
+		/*
+			*** EFFECT LINK *** 
+			Check if description has an effect link in it and inject note before
+			the link to state "Apply before use" 
+		*/
+		await annotateEffectLinkBeforeUse(item);
 
 		if(item.system.traits.value.includes("healing")) {
 			debugLog("Item is a healing item - Ignoring.");
@@ -87,6 +94,49 @@ Hooks.on("ready", () => {
 		}			
 	});
 });
+
+/*
+	Injects "<strong> Apply before using: </strong>" immediately before the first
+	@UUID[...] {Effect: ...} link in the item's description.
+	Does nothing if it's already injected or no such link exists.
+*/
+async function annotateEffectLinkBeforeUse(item) {
+	setTimeout(async () => {
+		try {
+			if (!item) return;
+
+			const desc = item.system?.description?.value ?? '';
+			if (!desc) return;
+
+			// Already injected? bail.
+			if (/>\s*Apply before using\s*:\s*<\/strong>\s*\@UUID\[/i.test(desc)) {
+				debugLog(`annotateEffectLinkBeforeUse: already present for ${item.name}`);
+				return;
+			}
+
+			// Only the @UUID[...] {Effect: ...} pattern
+			const uuidEffectRe = /(\@UUID\[[^\]]+\]\{\s*Effect:\s*[^}]+\})/i;
+
+			if (!uuidEffectRe.test(desc)) {
+				debugLog(`annotateEffectLinkBeforeUse: no @UUID Effect link in ${item.name}`);
+				return;
+			}
+
+			const updated = desc.replace(uuidEffectRe, (_m, g1) => {
+				return `<p><strong> Apply before using: </strong>${g1}</p>`;
+			});
+
+			if (updated !== desc) {
+				await item.update({ 'system.description.value': updated });
+				debugLog(`annotateEffectLinkBeforeUse: injected label for ${item.name}`);
+			}
+		} catch (err) {
+			debugLog(`annotateEffectLinkBeforeUse ERROR: ${err?.message || err}`);
+			console.error(err);
+		}
+	}, 100);
+}
+
 
 //	Function to apply Powerful Alchemy effects to item created by Alchemist
 async function applyPowerfulAlchemy(item,actor,alchemistDC){
