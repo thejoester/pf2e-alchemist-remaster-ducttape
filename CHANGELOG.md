@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [2.12.0] - 2025-08-11
+### Fixed 
+- Fixing missing script inclusion in module.json
+
 ## [2.12.0] - 2025-08-11
 ### Added 
 - **Quick Alchemy:** When applying an effect from an item created with Quick Alchemy, will limit duration of effect to 10 minutes per raw (https://2e.aonprd.com/Actions.aspx?ID=2801) 
