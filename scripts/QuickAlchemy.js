@@ -1,6 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
-//import { createChirugeonSuccessChatLog, createFailureChatLog, createSucessChatLog } from './HealingBomb.js';
 
 let isArchetype = false;
 const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
@@ -266,6 +265,38 @@ Hooks.on("ready", async () => {
 	
 	// Attach function to the global window object
 	window.qaCraftAttack = qaCraftAttack;
+	
+	// Show the selected formula's description in the dialog
+	window.qaShowFormulaDescription = async (uuid) => {
+		try {
+			const el = document.getElementById("qa-desc");
+			if (!el) return;
+
+			// Raw description (fallback if nothing selected)
+			let item = null;
+			let raw = `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+			if (uuid) {
+				item = fromUuidSync(uuid);
+				raw  = item?.system?.description?.value ?? raw;
+			}
+
+			// Enrich @UUID[...] and other Foundry inline syntax into clickable links
+			const enriched = await TextEditor.enrichHTML(raw, {
+				async: true,
+				secrets: game.user.isGM,
+				relativeTo: item ?? undefined,
+				rollData: item?.getRollData?.() ?? undefined,
+			});
+
+			el.innerHTML = enriched;
+
+			// Optional: ensure listeners are bound in this container (harmless if not needed)
+			if (TextEditor?.bindListeners) TextEditor.bindListeners(el);
+		} catch (err) {
+			debugLog(3, `qaShowFormulaDescription() | ${err?.message ?? err}`);
+		}
+	};
+	
 });
 
 //	function to close popup from rollActionMacro
@@ -273,6 +304,7 @@ function closeAttackPopouts(){
 	for (const app of Object.values(ui.windows)) {
 		const id = app._element?.[0]?.id ?? "";
 		if (id.startsWith("AttackPopout-") && app.options?.type === "strike") {
+			// DEBUG
 			debugLog(1, `[Healing Bomb] Closing attack popout: ${id}`);
 			app.close();
 		}
@@ -429,10 +461,11 @@ function sendAlreadyConsumedChat() {
 	});
 }
 
-//	Function to create chat message after creating Versatile Vial
-//	prompting to attack or open QuickAlchemy dialog
+//	Function to create chat message after creating Versatile Vial prompting to 
+//	attack or open QuickAlchemy dialog
 async function sendVialAttackMessage(itemUuid, actor) {
-	// Log the UUID for debugging purposes
+	
+	// DEBUG: Log the UUID
 	debugLog(`sendVialAttackMessage() | Attempting to fetch item with UUID: ${itemUuid}`);
 
 	// Fetch the item (weapon) from the provided full UUID
@@ -604,8 +637,8 @@ async function clearInfused(actor) {
 }
 
  	
-//	Function to craft "Healing Quick Vial" from the module compendium  
-//	and add "(*Temporary)" to the end of the name and custom flag
+//	Function to craft "Healing Quick Vial" from the module compendium and add 
+//	"(*Temporary)" to the end of the name and custom flag
 async function craftHealingVial(selectedItem, selectedActor) {
 	// Define the slug for the healing quick vial
 	const healingSlug = "healing-quick-vial";
@@ -699,11 +732,10 @@ async function craftHealingVial(selectedItem, selectedActor) {
 }
 
  	
-//	Function to craft Quick Vial using Quick Alchemy and add  
-//	"(*Temporary)" to the end of the name and custom tag to 
-//	any item created with this Quick Alchmy macro so that it 
-//	can be removed at the end of the turn and ensured that 
-//	when attacking it is using the same item.
+//	Function to craft Quick Vial using Quick Alchemy and add "(*Temporary)" 
+//	to the end of the name and custom tag to any item created with this 
+//	Quick Alchmy macro so that it can be removed at the end of the turn 
+//	and ensured that when attacking it is using the same item.
 async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
 	debugLog(`craftVial() | Selected Vial: ${selectedItem?.name} || No Name}`); // Selected Vial: 
 	debugLog(`craftVial() | Selected Actor: ${selectedActor?.name} || No Name}`); // Selected acrtor: 
@@ -802,12 +834,10 @@ async function craftVial(selectedItem, selectedActor, selectedType = "acid", spe
 	return newItemSlug; // return slug
 }
 
-//	Function to craft item using Quick Alchemy and add  
-//	"(*Temporary)" to the end of the name and a custom
-//	tag "ductTapped" to any item created with this 
-//	Quick Alchmy macro so that it can be removed at the 
-//	end of the turn and ensured that when attacking it is 
-//	using the same item.
+//	Function to craft item using Quick Alchemy and add "(*Temporary)" to the 
+//	end of the name and a custom tag "ductTapped" to any item created with this 
+//	Quick Alchmy macro so that it can be removed at the end of the turn and 
+//	ensured that when attacking it is using the same item.
 async function craftItem(selectedItem, selectedActor, count = 1) {
 	debugLog(`craftItem() | Selected Item: ${selectedItem?.name} || No Name}`);
 	debugLog(`craftItem() | Selected Actor: ${selectedActor?.name} || No Name}`);
@@ -917,8 +947,8 @@ async function processFormulasWithProgress(actor) {
 	const formulaCount = formulas.length;
 
 	if (!formulaCount) {
-		debugLog(`processFormulasWithProgress() | No formulas found for type: ${type || 'all'}`);
-		return;
+		debugLog(`processFormulasWithProgress() | No formulas available for actor ${actor?.name ?? "Unknown"}`);
+		return { weaponOptions: "", consumableOptions: "" };
 	}
 
 	// Prepare progress bar dialog
@@ -929,21 +959,21 @@ async function processFormulasWithProgress(actor) {
 		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
 		classes: ["quick-alchemy-dialog"],
 		content: `
-				<div>
-					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
-					<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
-				</div>
-			`,
+			<div>
+				<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
+				<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
+			</div>
+		`,
 		buttons: [
 			{
 				action: "noop",
 				label: LOCALIZED_TEXT.OK,
 				icon: "",
-				callback: () => { },
+				callback: () => {},
 				disabled: true
 			}
 		],
-		close: () => { }
+		close: () => {}
 	});
 	progressDialog.render(true);
 
@@ -954,54 +984,80 @@ async function processFormulasWithProgress(actor) {
 	// Gather entries in respective arrays
 	let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
-		const entry = await fromUuidSync(formula.uuid);
+		try {
+			const entry = fromUuidSync(formula.uuid);
 
-		// Update progress
-		progress++;
-		const progressBar = document.getElementById("progress-bar");
-		if (progressBar) progressBar.value = progress;
+			// Update progress
+			progress++;
+			const progressBar = document.getElementById("progress-bar");
+			if (progressBar) progressBar.value = progress;
 
-		// Check if entry is null
-		if (entry != null) {
-			listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid} |`;
-
-			if (entry.slug === "versatile-vial") {
-				// do nothing 
-				listProcessedFormulas = `-> ${listProcessedFormulas} | skipping`;
-			} else if (entry.type === "weapon") {
-				weaponEntries.push(entry);
-				listProcessedFormulas = `-> ${listProcessedFormulas} added to weaponEntries`;
-			} else if (entry.type === "consumable") {
-				consumableEntries.push(entry);
-				listProcessedFormulas = `-> ${listProcessedFormulas} added to consumableEntries`;
-			} else {
-				//otherEntries.push(entry);
-				listProcessedFormulas = `-> ${listProcessedFormulas} ignoring.`;
+			// Check if entry is null
+			if (!entry) {
+				listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null\n`;
+				continue;
 			}
-		} else { // entry is null
-			listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null`;
+
+			const itemSlug = entry.slug ?? entry.system?.slug ?? entry.name ?? "";
+			listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${itemSlug} | uuid: ${entry.uuid} |`;
+
+			// Skip versatile vial
+			if (itemSlug === "versatile-vial") {
+				listProcessedFormulas = `-> ${listProcessedFormulas} skipping\n`;
+				continue;
+			}
+
+			// Pull traits (lowercased); works with indexed docs
+			const traitsRaw =
+				entry?.system?.traits?.value ??
+				entry?.traits?.value ??
+				entry?._source?.system?.traits?.value ??
+				[];
+			const traits = Array.isArray(traitsRaw) ? traitsRaw.map(t => String(t).toLowerCase()) : [];
+			const isAlchemical = traits.includes("alchemical");
+
+			// For Double Brew, include ONLY alchemical weapons/consumables
+			if (entry.type === "weapon") {
+				if (!isAlchemical) {
+					listProcessedFormulas = `-> ${listProcessedFormulas} skipped (weapon not alchemical)\n`;
+					continue;
+				}
+				weaponEntries.push(entry);
+				listProcessedFormulas = `-> ${listProcessedFormulas} added to weaponEntries\n`;
+			} else if (entry.type === "consumable") {
+				if (!isAlchemical) {
+					listProcessedFormulas = `-> ${listProcessedFormulas} skipped (consumable not alchemical)\n`;
+					continue;
+				}
+				consumableEntries.push(entry);
+				listProcessedFormulas = `-> ${listProcessedFormulas} added to consumableEntries\n`;
+			} else {
+				// not a weapon/consumable
+				listProcessedFormulas = `-> ${listProcessedFormulas} ignoring.\n`;
+			}
+		} catch (err) {
+			debugLog(3, `processFormulasWithProgress() | error at i=${index}, uuid=${formula?.uuid}: ${err?.message ?? err}`);
+			continue; // don’t let one item kill the whole run
 		}
-		listProcessedFormulas = `${listProcessedFormulas}\n`;
 	}
+
 	debugLog(`processFormulasWithProgress() | Processed Formulas:\n${listProcessedFormulas}`);
 
 	// Close progress dialog
 	progressDialog.close();
 
-	// Sort entries by name
-	const sortEntries = async (entriesToSort) => {
+	// Sort entries by name then level (ignoring text in parentheses)
+	const sortEntries = (entriesToSort) => {
 		entriesToSort.sort((a, b) => {
-			const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim(); // Remove text in parentheses
+			const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim();
 			const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
 			const nameComparison = nameA.localeCompare(nameB);
-			if (nameComparison !== 0) return nameComparison; // Sort by name if names differ
-			const levelA = a.system.level?.value || 0; // Default to 0 if undefined
+			if (nameComparison !== 0) return nameComparison;
+			const levelA = a.system.level?.value || 0;
 			const levelB = b.system.level?.value || 0;
-			return levelB - levelA; // Otherwise, sort by item level descending
+			return levelB - levelA;
 		});
-		return { entriesToSort };
 	};
-
 	sortEntries(weaponEntries);
 	sortEntries(consumableEntries);
 
@@ -1015,7 +1071,6 @@ async function processFormulasWithProgress(actor) {
 	// Return categorized entries
 	return { weaponOptions, consumableOptions };
 }
-
 
 //	Function to process FILTERED formulas with a progress bar
 async function processFilteredFormulasWithProgress(actor, type, slug) {
@@ -1064,52 +1119,85 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	const filteredEntries = [];
 
 	// Gather entries in respective arrays
-	let listProcessedFormulas = "";
+	//let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
-		const entry = await fromUuidSync(formula.uuid);
+		try {
+			const entry = fromUuidSync(formula.uuid);
 
-		// Update progress
-		progress++;
-		const progressBar = document.getElementById("progress-bar");
-		if (progressBar) progressBar.value = progress;
+			// Update progress
+			progress++;
+			const progressBar = document.getElementById("progress-bar");
+			if (progressBar) progressBar.value = progress;
 
-		// Check if entry is null
-		if (entry != null) {
-			listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}`;
-			if (entry.slug === "versatile-vial") {
+			// Skip null or partial entries safely
+			if (!entry) {
+				debugLog(`  --> entry is null for uuid=${formula.uuid} — skipping`);
+				continue;
+			}
+
+			// compute once per entry (BEFORE any logs/use)
+			const itemSlug = entry.slug ?? entry.system?.slug ?? entry.name ?? "";
+			const traitsRaw =
+				entry?.system?.traits?.value ??
+				entry?.traits?.value ??
+				entry?._source?.system?.traits?.value ??
+				[];
+			const traits = Array.isArray(traitsRaw) ? traitsRaw.map(t => String(t).toLowerCase()) : [];
+			const isAlchemical = traits.includes("alchemical");
+			
+			//listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}`;
+
+			// Skip Versatile Vials
+			if (itemSlug === "versatile-vial") {
 				// do nothing
-				listProcessedFormulas = `-> ${listProcessedFormulas} skipping`;
+				//listProcessedFormulas = `-> ${listProcessedFormulas} skipped (versatile-vial)`;
+				continue;
+			}
 			//	Check only food items for Wandering Chef dedication
-			} else if (type === "food") {
+			if (type === "food") {
 				const tags = entry.system?.traits?.otherTags ?? [];
 				if (tags.includes("alchemical-food")) {
 					if (slug) {
 						if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
 							filteredEntries.push(entry);
-							listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
+							//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
 						}
 						continue;
 					}
 					filteredEntries.push(entry);
-					listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
+					//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
 				}
 			} else if (entry.type === type) {
+				// Require the "alchemical" trait when selecting weapons or consumables
+				const requireAlchemical = type === "weapon" || type === "consumable";
+				if (requireAlchemical && !isAlchemical) {
+					//listProcessedFormulas = `-> ${listProcessedFormulas} skipped (not alchemical)`;
+					debugLog(`  --> SKIP (not alchemical) slug=${itemSlug} | traits=[${traits.join(",")}]`);
+					continue;
+				}
+
 				if (slug) {
-					if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
+					if (itemSlug.toLowerCase().includes(slug.toLowerCase())) {
 						filteredEntries.push(entry);
-						listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
+						//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
+						debugLog(`  --> ADD (slug match) ${itemSlug}`);
 					}
 					continue;
 				}
+
 				filteredEntries.push(entry);
-				listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
+				//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
+				debugLog(`  --> ADD ${itemSlug}`);
+			} else { // entry is null
+				//listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null`;
 			}
-		} else { // entry is null
-			listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null`;
+		} catch (err) {
+			debugLog(3, `  --> error at i=${index}, uuid=${formula?.uuid}: ${err?.message ?? err}`);
+			continue; // don’t let a bad record stall the run
 		}
-		listProcessedFormulas = `${listProcessedFormulas}\n`;
 	}
-	debugLog(`processFilteredFormulasWithProgress() | Processed Formulas:\n${listProcessedFormulas}`);
+
+	// debugLog(`processFilteredFormulasWithProgress() | Processed Formulas:\n${listProcessedFormulas}`);
 
 	// Close progress dialog
 	progressDialog.close();
@@ -1128,6 +1216,8 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 		return levelB - levelA; // Otherwise, sort by item level descending
 	});
 
+	// TEMP DEBUG
+	debugLog(`processFilteredFormulasWithProgress() | result count=${filteredEntries.length} | slugs=[${filteredEntries.map(i => i.slug ?? i.system?.slug ?? i.name).join(",")}]`);
 	return { filteredEntries };
 
 	// Close progress dialog - just in case
@@ -1724,6 +1814,82 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 //	Function to display crafting dialog
 async function displayCraftingDialog(actor, itemType) {
 
+/*
+	========== HELPER FUNCTIONS ==========
+*/
+	
+	// Helper Function: build the <select> drop-down list dialog content for itemType = "food" or weapon/consumable
+	async function qaBuildCraftingContent({ actor, itemType, entries, showDesc, descStyle }) {
+		try {
+			const options = entries.map(e => `<option value="${e.uuid}">${e.name}</option>`).join("");
+
+			let initialDesc = "";
+			if (showDesc) {
+				const initialUuid = entries[0]?.uuid ?? "";
+				const initialItem = initialUuid ? fromUuidSync(initialUuid) : null;
+				const initialRaw	= initialItem?.system?.description?.value ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+				// v12 uses the global TextEditor
+				initialDesc = await TextEditor.enrichHTML(initialRaw, {
+					async: true,
+					secrets: game.user.isGM,
+					relativeTo: initialItem ?? undefined,
+					rollData: initialItem?.getRollData?.() ?? undefined
+				});
+			}
+
+			const content = `
+				<form>
+					${descStyle}
+					<div class="qa-wrapper" style="min-width: 300px; max-width: 720px; width: 100%;">
+						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
+						<select id="item-selection" name="item-selection"
+								onchange="qaShowFormulaDescription(this.value)"
+								style="display: inline-block; margin-top: 5px; overflow-y: auto; width: 100%;">
+							${options}
+						</select>
+						<br/><br/>
+						${showDesc ? `
+							<hr/>
+							<div id="qa-desc" class="editor-content" style="max-height: 40vh; overflow: auto; padding: .5em; border: 1px solid var(--color-border-light-primary); border-radius: 6px;">
+								${initialDesc}
+							</div>
+						` : ""}
+					</div>
+				</form>
+			`;
+			return content;
+		} catch (err) {
+			debugLog(3, `qaBuildCraftingContent() | ${err?.message ?? err}`);
+			return `<form><div class="qa-wrapper"><em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em></div></form>`;
+		}
+	}
+
+	// Helper Function: render buttons 
+	function qaAddCraftingButtons(html) {
+		try {
+			html.find('button:contains("Craft")').css({ width: "100px", height: "40px", fontSize: "14px" });
+			html.find('button:contains("Attack")').css({ height: "40px", fontSize: "14px" });
+			html.find('button:contains("Back")').css({ width: "50px", height: "40px", fontSize: "14px" });
+		} catch (e) {
+			debugLog(3, `qaAddCraftingButtons() | ${e?.message ?? e}`);
+		}
+	}
+
+	// Helper Function: wrapper for DialogV2 call
+	async function qaOpenCraftingDialog({ title, content, buttons, def = "craft" }) {
+		return new foundry.applications.api.DialogV2({
+			window: { title },
+			classes: ["quick-alchemy-dialog"],
+			content,
+			buttons,
+			default: def,
+			render: qaAddCraftingButtons
+		}).render(true);
+	}
+/*
+	========== END HELPER FUNCTIONS ==========
+*/
+
 	debugLog(`displayCraftingDialog() | actor: ${actor.name} | itemType: ${itemType}`);
 
 	// Check if actor has double brew feat
@@ -1739,6 +1905,34 @@ async function displayCraftingDialog(actor, itemType) {
 	let newItemSlug = "";
 	let selectedType = "acid"; // default to acid
 	let specialIngredient = "none";
+	// get show formula description setting
+	const showDesc = game.settings.get("pf2e-alchemist-remaster-ducttape", "showFormulaDescription");
+	//	Description Style
+	const descStyle = `
+		<style>
+			.quick-alchemy-dialog .qa-wrapper {
+				width: 600px;           
+				max-height: 800px;
+				overflow-y: auto;
+				padding-right: 1em;
+			}
+			.quick-alchemy-dialog .qa-wrapper select {
+				width: 100%;
+			}
+			.quick-alchemy-dialog #qa-desc {
+				max-height: 800px;
+				overflow: auto;
+				padding: .5em;
+				border: 1px solid var(--color-border-light-primary);
+				border-radius: 6px;
+			}
+			
+			.quick-alchemy-dialog #qa-desc img { max-width: 100%; height: auto; }
+			.quick-alchemy-dialog #qa-desc table { width: 100%; display: block; overflow: auto; }
+			.quick-alchemy-dialog #qa-desc pre, 
+			.quick-alchemy-dialog #qa-desc code { white-space: pre-wrap; word-break: break-word; }
+		</style>`;
+	
 	// Get uuid of vial dependant on if actor is toxicologist
 	let uuid = hasFeat(actor, "toxicologist") ? poisonVialId || acidVialId : acidVialId;
 
@@ -2210,7 +2404,7 @@ async function displayCraftingDialog(actor, itemType) {
 			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
-			default: "craftvial",
+			default: "craftAttack",
 			render: (html) => {
 				html.find('button:contains("Craft")').css({
 					width: "100px",
@@ -2229,27 +2423,26 @@ async function displayCraftingDialog(actor, itemType) {
 			}
 		}).render(true);
 
-	//	We are crafting Healing Bomb
-	} else if (itemType == "healing-bomb") {
+	} else if (itemType === "healing-bomb") { //	We are crafting Healing Bomb
+		
 		// Get list of filtered entries
 		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, "consumable", "elixir-of-life");
 		options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 
-		// Build main content with initial item selection
 		let content = `
-				<form>
-					<div>
-						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Elixir of Life")}:</h3>
-						<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
-						<br/><br/>
-					</div>
-			`;
+			<form>
+				<div style="min-width: 300px; max-height: 70vh; overflow-y: auto; padding-right: 1em;">
+					<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Elixir of Life")}:</h3>
+					<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
+					<br/><br/>
+		`;
+
 		debugLog(`displayCraftingDialog() | ${actor.name} wants to make a healing bomb`);
 		
 		// Show Double Brew content (if applicable)
 		const doubleBrewContent = await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype });
 		content += doubleBrewContent;
-		content += `</form>`;
+		content += `</div></form>`;
 
 		const buttons = [{
 			action: "craft",
@@ -2304,188 +2497,111 @@ async function displayCraftingDialog(actor, itemType) {
 		}).render(true);
 		
 	//	We are crafting alchemical-food items
-	} else if (itemType === "food") {
+	} else {
 		
-		// Get list of alchemical-food entries
+		// Get list of alchemical entries matching itemType
 		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
 		debugLog(`displayCraftingDialog() | filteredEntries: ${filteredEntries}`);
-		options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
 		
-		// Build main content with initial item selection
-		let content = `
-				<form>
-					<div>
-						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
-						<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
-						<br/><br/>
-					</div>
-				</form>
-			`;
-			
-		const buttons = [];
-		//	Craft
-		buttons.push({
-			action: "craft",
-			label: LOCALIZED_TEXT.CRAFT,
-			icon: "fas fa-hammer",
-			callback: async (event, button, dialog) => {
-				if (!actor) {
-					ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
-					return;
-				}
-
-				// Perform actions with the actor
-				selectedUuid = button.form.elements["item-selection"]?.value || "none";
-				dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
-
-				debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-				craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
-			},
-		},
-		{
-			action: "Cancel",
-			label: LOCALIZED_TEXT.BTN_CANCEL,
-			icon: "fa-solid fa-xmark",
-			callback: (_event, _button, dialog) => dialog.close()
+		// Build Content
+		const content = await qaBuildCraftingContent({
+			actor,
+			itemType,
+			entries: filteredEntries,
+			showDesc,
+			descStyle
 		});
+
+		let buttons = [];
+
+		if (itemType === "food") { // Build food buttons
 		
-		// Show dialog
-		new foundry.applications.api.DialogV2({
-			window: {
-				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
-				// width: 450
-			},
-			classes: ["quick-alchemy-dialog"],
-			content,
-			buttons,
-			default: "craft",
-			render: (html) => {
-				// Apply styles to specific buttons
-				html.find('button:contains("Craft")').css({
-					width: "100px",
-					height: "40px",
-					fontSize: "14px"
-				});
-				html.find('button:contains("Back")').css({
-					width: "50px",
-					height: "40px",
-					fontSize: "14px"
+			// Build Food buttons 
+			buttons = [
+				{
+					action: "craft",
+					label: LOCALIZED_TEXT.CRAFT,
+					icon: "fas fa-hammer",
+					callback: async (event, button, dialog) => {
+						if (!actor) {
+							ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+							return;
+						}
+						selectedUuid = button.form.elements["item-selection"]?.value || "none";
+						dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+						debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+						craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					}
+				},
+				{
+					action: "Cancel",
+					label: LOCALIZED_TEXT.BTN_CANCEL,
+					icon: "fa-solid fa-xmark",
+					callback: (_event, _button, dialog) => dialog.close()
+				}
+			];
+
+		} else { // Build Weapons/Consumables buttons
+
+			// Attack button if itemType === "weapon"
+			if (itemType === "weapon") {
+				buttons.push({
+					action: "craftAttack",
+					label: LOCALIZED_TEXT.CRAFT_ATTACK,
+					icon: "fas fa-bomb",
+					callback: async (event, button, dialog) => {
+						if (!actor) {
+							debugLog(`displayCraftingDialog() | Actor not found.`);
+							return;
+						}
+						const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
+						if (!target) {
+							ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
+							displayCraftingDialog(actor, "weapon");
+							return;
+						}
+						selectedUuid = button.form.elements["item-selection"]?.value || "none";
+						dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
+						debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
+						craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					}
 				});
 			}
-		}).render(true);
-		
-		
-	//	We are crafting Weapons/Consumables
-	} else {
 
-		// Get list of filtered entries
-		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
-		debugLog(`displayCraftingDialog() | filteredEntries: ${filteredEntries}`);
-		options = filteredEntries.map(entry => `<option value="${entry.uuid}">${entry.name}</option>`).join("");
-
-		// Build main content with initial item selection
-		let content = `
-				<form>
-					<div>
-						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
-						<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
-						<br/><br/>
-					</div>
-			`;
-
-		// Show Double Brew content (if applicable)
-		const doubleBrewContent = await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype });
-		content += doubleBrewContent;
-		
-		// Close form
-		content += `</form>`;
-		const buttons = [];
-
-		// Weapon Buttons
-		if (itemType === 'weapon') {
-			buttons.push({
-				action: "craftAttack",
-				label: LOCALIZED_TEXT.CRAFT_ATTACK,
-				icon: "fas fa-bomb",
+			//Craft Button
+			buttons.push({ 
+				action: "craft",
+				label: LOCALIZED_TEXT.CRAFT,
+				icon: "fas fa-hammer",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
-						debugLog(`displayCraftingDialog() | Actor not found.`);
+						ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
 						return;
 					}
-
-					// Ensure user has target
-					const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
-					if (!target) {
-						ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
-						displayCraftingDialog(actor, 'weapon');
-						return;
-					}
-
 					selectedUuid = button.form.elements["item-selection"]?.value || "none";
 					dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
-
 					debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-					craftAttackButton(actor, selectedUuid, dbSelectedUuid, itemType);
+					craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
 				}
 			});
+
+			// Back Button
+			buttons.push({
+				action: "back",
+				label: LOCALIZED_TEXT.BACK,
+				icon: "fas fa-arrow-left",
+				callback: () => qaDialog(actor)
+			});
+
 		}
-
-		// Shared Craft Button
-		buttons.push({
-			action: "craft",
-			label: LOCALIZED_TEXT.CRAFT,
-			icon: "fas fa-hammer",
-			callback: async (event, button, dialog) => {
-				if (!actor) {
-					ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
-					return;
-				}
-
-				// Perform actions with the actor
-				selectedUuid = button.form.elements["item-selection"]?.value || "none";
-				dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
-
-				debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
-				craftButton(actor, selectedUuid, dbSelectedUuid, itemType);
-			}
-		});
-
-		// Back button
-		buttons.push({
-			action: "back",
-			label: LOCALIZED_TEXT.BACK,
-			icon: "fas fa-arrow-left",
-			callback: () => qaDialog(actor)
-		});
-
-		// Show dialog
-		new foundry.applications.api.DialogV2({
-			window: {
-				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
-				// width: 450
-			},
-			classes: ["quick-alchemy-dialog"],
+		
+		// show crafting Dialog
+		await qaOpenCraftingDialog({
+			title: LOCALIZED_TEXT.QUICK_ALCHEMY,
 			content,
 			buttons,
-			default: "craft",
-			render: (html) => {
-				// Apply styles to specific buttons
-				html.find('button:contains("Craft")').css({
-					width: "100px",
-					height: "40px",
-					fontSize: "14px"
-				});
-				html.find('button:contains("Attack")').css({
-					height: "40px",
-					fontSize: "14px"
-				});
-				html.find('button:contains("Back")').css({
-					width: "50px",
-					height: "40px",
-					fontSize: "14px"
-				});
-			}
-		}).render(true);
+			def: "craft"
+		});
 	}
 }
 

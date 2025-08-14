@@ -1,6 +1,5 @@
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
-
 //	Function for debugging
 export function debugLog(intLogType, stringLogMsg, objObject = null) {
 	
@@ -285,11 +284,16 @@ window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
 
 Hooks.once("init", () => {
 	
-	// Configure compendiums to have slug indexable
-	CONFIG.Item.compendiumIndexFields = ["system.slug"];
+	const gen	= Number(game?.release?.generation ?? 12);
+	const isV13	= gen >= 13;
 	
-//	Saved Data Settings	
-
+	// Configure compendiums to have slug and traits indexable
+	const fields = new Set(CONFIG.Item.compendiumIndexFields ?? []);
+	fields.add("system.slug");
+	fields.add("system.traits.value");
+	CONFIG.Item.compendiumIndexFields = Array.from(fields);
+	
+//	Saved Data Settings
 	// Tracks the last processed time for exploration mode
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
         name: 'Last Processed Time',
@@ -298,7 +302,6 @@ Hooks.once("init", () => {
         type: Number,
         default: 0
     });
-	
 	// Tracks the last recorded world time to calculate elapsed time
 	game.settings.register('pf2e-alchemist-remaster-ducttape', 'previousTime', {
 		name: 'Previous World Time',
@@ -309,7 +312,20 @@ Hooks.once("init", () => {
 	});
 	
 //	QUICK ALCHEMY SETTINGS
-	
+
+	// Show description in QA dialog
+	game.settings.register("pf2e-alchemist-remaster-ducttape", "showFormulaDescription", {
+		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_FORMULA_DESC_NAME"),
+		hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_FORMULA_DESC_HINT"),
+		scope: "client",
+		config: !isV13, // hide if v13+
+		type: Boolean,
+		default: isV13 ? false : true, // default off on v13+
+		requiresReload: false,
+		onChange: (value) => {
+			console.log(`Setting changed: showFormulaDescription=${value}`);
+		}
+	});
 	// Quick Alchemy: remove temporary items at end of turn
 	game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtTurnChange", {
 		name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_REMOVE_TEMP_START_TURN"),
@@ -747,7 +763,22 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", async () => {
-	
+
+	//	Set 'showFormulaDescription' setting if on v13
+	const gen	= Number(game?.release?.generation ?? 12);
+	const isV13	= gen >= 13;
+	try {
+		// If on v13+, force the value to false even if a prior version saved it as true
+		if (isV13) {
+			const cur = game.settings.get("pf2e-alchemist-remaster-ducttape", "showFormulaDescription");
+			if (cur !== false) {
+				await game.settings.set("pf2e-alchemist-remaster-ducttape", "showFormulaDescription", false);
+				debugLog("showFormulaDescription forced to false on Foundry v13+");
+			}
+		}
+	} catch (err) {
+		debugLog(3, `Failed to enforce showFormulaDescription: ${err?.message ?? err}`);
+	}
 	
 	//	Index Compendiums
 	const compendiumIds = [
@@ -757,17 +788,33 @@ Hooks.once("ready", async () => {
 	// Get user-defined compendiums from settings
 	const userDefinedCompendiums = game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") || [];
 	compendiumIds.push(...userDefinedCompendiums);
+	
+	// Reindex compendiums
+	try {
+		for (const id of compendiumIds) {
+			const pack = game.packs.get(id);
+			if (!pack) {
+				debugLog(3, `Compendium not found: ${id}`);
+				continue;
+			}
+			// Force reindex with the new fields (traits) BEFORE any getDocuments()
+			await pack.getIndex({ reload: true });
+			debugLog(`Reindexed compendium: ${id}`);
+		}
+	} catch (err) {
+		debugLog(3, `Error reindexing compendiums: ${err?.message ?? err}`);
+	}
+
+	// preload 
 	for (const id of compendiumIds) {
 		try {
 			const pack = game.packs.get(id);
 			if (pack) {
 				await pack.getDocuments();
-				debugLog(1, `Preloaded compendium: ${id}`);
-			} else {
-				debugLog(3, `Compendium not found: ${id}`);
+				debugLog(`Preloaded compendium: ${id}`);
 			}
 		} catch (err) {
-			debugLog(3, `Error preloading compendium ${id}:`, err);
+			debugLog(3, `Error preloading compendium ${id}: ${err?.message ?? err}`);
 		}
 	}
 	

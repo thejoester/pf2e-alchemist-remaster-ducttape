@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.2] - 2025-08-14
+### Added 
+- **Quick Alchemy:** Added item description on Quick Alchemy when selecting item to craft.
+  - This is a v12 feature only for this release. 
+  - This release will be the final v12 release, and the next release will contain this feature for v13
+### Fixed
+- - **Quick Alchemy:** Fixed issue where non alchemical items could be selected and crafted with the Quick Alchemy macro. ([Issue 52](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/52))
 
 ## [2.12.1] - 2025-08-11
 ### Fixed 
