@@ -4,6 +4,54 @@ import { LOCALIZED_TEXT } from "./localization.js";
 let isArchetype = false;
 const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
 const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
+const qaDescCache = new Map(); // uuid -> enriched HTML
+
+// Prefer actor's hydrated crafting item; fall back to UUID lookups
+async function qaGetItemForFormula(actor, uuid) {
+	try {
+		if (!uuid) return null;
+
+		// PF2E crafting cache (when hydrated)
+		const formulas = actor?.system?.crafting?.formulas ?? [];
+		const f = formulas.find(x => x?.uuid === uuid);
+		if (f?.item) return f.item;
+
+		// Fast sync, then async load if evicted
+		let doc = fromUuidSync(uuid);
+		if (doc) return doc;
+
+		doc = await fromUuid(uuid);
+		return doc ?? null;
+	} catch (err) {
+		debugLog(3, `qaGetItemForFormula() | ${err?.message ?? err}`);
+		return null;
+	}
+}
+
+// Warm the cache for a list of entries before showing the dialog
+async function qaPrimeDescCache(actor, entries) {
+	try {
+		const tasks = entries.map(async (e) => {
+			const uuid = e?.uuid;
+			if (!uuid || qaDescCache.has(uuid)) return;
+
+			const item = await qaGetItemForFormula(actor, uuid);
+			const raw  = item?.system?.description?.value ?? "";
+			if (!raw) return;
+
+			const html = await TextEditor.enrichHTML(raw, {
+				async: true,
+				secrets: game.user.isGM,
+				relativeTo: item ?? undefined,
+				rollData: item?.getRollData?.() ?? {}
+			});
+			qaDescCache.set(uuid, html);
+		});
+		await Promise.allSettled(tasks);
+	} catch (err) {
+		debugLog(3, `qaPrimeDescCache() | ${err?.message ?? err}`);
+	}
+}
 
 // Hook for combat turn change to remove temp items on start of turn
 Hooks.on("combatTurnChange", async (combat, prior, current) => {
@@ -267,31 +315,30 @@ Hooks.on("ready", async () => {
 	window.qaCraftAttack = qaCraftAttack;
 	
 	// Show the selected formula's description in the dialog
-	window.qaShowFormulaDescription = async (uuid) => {
+	window.qaShowFormulaDescription = async function(uuid, descEl) {
 		try {
-			const el = document.getElementById("qa-desc");
-			if (!el) return;
+			descEl ??= document.querySelector("#qa-desc");
+			if (!descEl || !uuid) return;
 
-			// Raw description (fallback if nothing selected)
-			let item = null;
-			let raw = `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
-			if (uuid) {
-				item = fromUuidSync(uuid);
-				raw  = item?.system?.description?.value ?? raw;
-			}
+			// Instant if cached
+			const cached = qaDescCache.get(uuid);
+			if (cached) { descEl.innerHTML = cached; return; }
 
-			// Enrich @UUID[...] and other Foundry inline syntax into clickable links
-			const enriched = await TextEditor.enrichHTML(raw, {
+			descEl.innerHTML = `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_LOADING ?? "Loading..."}</em>`;
+
+			const actor = window.qaCurrentActorForQA ?? null;
+			const item  = await qaGetItemForFormula(actor, uuid);
+			const raw   = item?.system?.description?.value ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+
+			const html  = await TextEditor.enrichHTML(raw, {
 				async: true,
 				secrets: game.user.isGM,
 				relativeTo: item ?? undefined,
-				rollData: item?.getRollData?.() ?? undefined,
+				rollData: item?.getRollData?.() ?? {}
 			});
 
-			el.innerHTML = enriched;
-
-			// Optional: ensure listeners are bound in this container (harmless if not needed)
-			if (TextEditor?.bindListeners) TextEditor.bindListeners(el);
+			qaDescCache.set(uuid, html);
+			descEl.innerHTML = html;
 		} catch (err) {
 			debugLog(3, `qaShowFormulaDescription() | ${err?.message ?? err}`);
 		}
@@ -587,7 +634,6 @@ async function sendWeaponAttackMessage(itemUuid) {
 
 }
 
-
 // Function to equip an item by slug
 async function equipItemBySlug(slug, actor) {
 	debugLog(`equipItemBySlug() | slug: ${slug}, actor:${actor.name}`);
@@ -635,7 +681,6 @@ async function clearInfused(actor) {
 		debugLog("clearInfused() | No infused items with quantity 0 found.");
 	}
 }
-
  	
 //	Function to craft "Healing Quick Vial" from the module compendium and add 
 //	"(*Temporary)" to the end of the name and custom flag
@@ -731,7 +776,6 @@ async function craftHealingVial(selectedItem, selectedActor) {
 	}
 }
 
- 	
 //	Function to craft Quick Vial using Quick Alchemy and add "(*Temporary)" 
 //	to the end of the name and custom tag to any item created with this 
 //	Quick Alchmy macro so that it can be removed at the end of the turn 
@@ -1667,7 +1711,6 @@ function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
 	return Promise.resolve(content); // Always return a Promise for consistency
 }
 
-
 //	Function to display healing bomb dialog
 async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = null) {
 	async function displayInventorySelectDialog(actor, filteredEntries) {
@@ -1824,17 +1867,24 @@ async function displayCraftingDialog(actor, itemType) {
 			const options = entries.map(e => `<option value="${e.uuid}">${e.name}</option>`).join("");
 
 			let initialDesc = "";
-			if (showDesc) {
+			if (showDesc && entries.length) {
 				const initialUuid = entries[0]?.uuid ?? "";
-				const initialItem = initialUuid ? fromUuidSync(initialUuid) : null;
-				const initialRaw	= initialItem?.system?.description?.value ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
-				// v12 uses the global TextEditor
-				initialDesc = await TextEditor.enrichHTML(initialRaw, {
-					async: true,
-					secrets: game.user.isGM,
-					relativeTo: initialItem ?? undefined,
-					rollData: initialItem?.getRollData?.() ?? undefined
-				});
+				if (initialUuid) {
+					const cached = qaDescCache.get(initialUuid);
+					if (cached) {
+						initialDesc = cached;
+					} else {
+						const initialItem = await qaGetItemForFormula(actor, initialUuid);
+						const initialRaw  = initialItem?.system?.description?.value ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+						initialDesc = await TextEditor.enrichHTML(initialRaw, {
+							async: true,
+							secrets: game.user.isGM,
+							relativeTo: initialItem ?? undefined,
+							rollData: initialItem?.getRollData?.() ?? {}
+						});
+						qaDescCache.set(initialUuid, initialDesc);
+					}
+				}
 			}
 
 			const content = `
@@ -1844,9 +1894,7 @@ async function displayCraftingDialog(actor, itemType) {
 						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
 						<select id="item-selection" name="item-selection"
 								onchange="qaShowFormulaDescription(this.value)"
-								style="display: inline-block; margin-top: 5px; overflow-y: auto; width: 100%;">
-							${options}
-						</select>
+								style="display: inline-block; margin-top: 5px; overflow-y: auto; width: 100%;">${options}</select>
 						<br/><br/>
 						${showDesc ? `
 							<hr/>
@@ -2502,6 +2550,9 @@ async function displayCraftingDialog(actor, itemType) {
 		// Get list of alchemical entries matching itemType
 		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
 		debugLog(`displayCraftingDialog() | filteredEntries: ${filteredEntries}`);
+		
+		window.qaCurrentActorForQA = actor;	// let the updater know which actor to use
+		await qaPrimeDescCache(actor, filteredEntries);	// warm description cache for all options
 		
 		// Build Content
 		const content = await qaBuildCraftingContent({
