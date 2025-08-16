@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.12.3] - 2025-08-15
 ### Fixed
 - Okay I was wrong, barring any major bugs from now on however, this should be the last v12 update
-- **Quick Alchemy:** Fixed bug preventing Double Brew option from showing. 
+- **Quick Alchemy:** Fixed bug preventing Double Brew option from showing. ([Issue 56](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/56))
 ### Changed
 - **Localization:** Updated Polish translations. Credit: [Lioheart](https://github.com/Lioheart)
 - **Localization:** Updated Chinese translations. Credit [AlphaStarguide](https://github.com/AlphaStarguide)
