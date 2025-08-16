@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.3] - 2025-08-15
+### Fixed
+- Okay I was wrong, barring any major bugs from now on however, this should be the last v12 update
+- **Quick Alchemy:** Fixed bug preventing Double Brew option from showing. 
+### Changed
+- **Localization:** Updated Polish translations. Credit: [Lioheart](https://github.com/Lioheart)
+- **Localization:** Updated Chinese translations. Credit [AlphaStarguide](https://github.com/AlphaStarguide)
+- **Localization:** Updated British Portuguese translation with google translate, if changes needed please submit PR or issue.
+
 ## [2.12.2] - 2025-08-14
 ### Added 
 - **Quick Alchemy:** Added item description on Quick Alchemy when selecting item to craft.
