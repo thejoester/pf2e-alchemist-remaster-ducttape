@@ -1679,33 +1679,31 @@ function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
 		// Return a promise for async processing of formulas
 		return processFormulasWithProgress(actor).then(({ weaponOptions, consumableOptions }) => {
 			return `
-				<form>
-					<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
-					<div>
-						<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
-						<select id="db-item-selection" name="db-item-selection">
-							<option value="none">${LOCALIZED_TEXT.NONE}</option>
-							${weaponOptions}
-							${consumableOptions}
-						</select>
-					</div>
+				<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
+				<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
+				<div>
+					<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
+					<select id="db-item-selection" name="db-item-selection">
+						<option value="none">${LOCALIZED_TEXT.NONE}</option>
+						${weaponOptions}
+						${consumableOptions}
+					</select>
+				</div>
 				<br/>`;
 		});
 	} else if (!isArchetype) {
 		// Static option to create a versatile vial
 		content = `
-			<form>
-				<div>
-					<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
-					<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
-					<select id="db-item-selection" name="db-item-selection">
-						<option value="none">${LOCALIZED_TEXT.NONE}</option>
-						<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
-					</select>
-				</div>
-			</form><br/>`;
+			<div>
+				<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
+				<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
+				<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
+				<select id="db-item-selection" name="db-item-selection">
+					<option value="none">${LOCALIZED_TEXT.NONE}</option>
+					<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
+				</select>
+			</div>
+			<br/>`;
 	}
 
 	return Promise.resolve(content); // Always return a Promise for consistency
@@ -1902,13 +1900,16 @@ async function displayCraftingDialog(actor, itemType) {
 								${initialDesc}
 							</div>
 						` : ""}
+						${itemType !== "food"
+							? (await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }))
+							: ""
+						}
 					</div>
-				</form>
-			`;
+				</form>`;
 			return content;
 		} catch (err) {
 			debugLog(3, `qaBuildCraftingContent() | ${err?.message ?? err}`);
-			return `<form><div class="qa-wrapper"><em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em></div></form>`;
+			return `<form><div class="qa-wrapper"><em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
 		}
 	}
 
@@ -2483,15 +2484,16 @@ async function displayCraftingDialog(actor, itemType) {
 					<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Elixir of Life")}:</h3>
 					<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
 					<br/><br/>
-		`;
+					${itemType !== "food"
+							? (await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }))
+							: ""
+					}
+				</div>
+			</form>
+			`;
 
 		debugLog(`displayCraftingDialog() | ${actor.name} wants to make a healing bomb`);
-		
-		// Show Double Brew content (if applicable)
-		const doubleBrewContent = await getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype });
-		content += doubleBrewContent;
-		content += `</div></form>`;
-
+				
 		const buttons = [{
 			action: "craft",
 			label: LOCALIZED_TEXT.CRAFT,
@@ -2549,7 +2551,7 @@ async function displayCraftingDialog(actor, itemType) {
 		
 		// Get list of alchemical entries matching itemType
 		const { filteredEntries } = await processFilteredFormulasWithProgress(actor, itemType);
-		debugLog(`displayCraftingDialog() | filteredEntries: ${filteredEntries}`);
+		debugLog(`displayCraftingDialog() | filteredEntries: `, filteredEntries );
 		
 		window.qaCurrentActorForQA = actor;	// let the updater know which actor to use
 		await qaPrimeDescCache(actor, filteredEntries);	// warm description cache for all options
