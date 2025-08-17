@@ -1,9 +1,98 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+
+## [2.12.1] - 2025-08-11
+### Fixed 
+- Fixing missing script inclusion in module.json
+
+## [2.12.0] - 2025-08-11
+### Added 
+- **Quick Alchemy:** When applying an effect from an item created with Quick Alchemy, will limit duration of effect to 10 minutes per raw (https://2e.aonprd.com/Actions.aspx?ID=2801) 
+  - Added note to description to apply before use. 
+  - Will only work if effect is applied before clicking on "Use". 
+
+## [2.11.1] - 2025-07-15
+### Added
+- **Localization:** Added Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
+
+## [2.11.0] - 2025-06-21
+### Added
+- **Quick Alchemy:** Added support for [Munition Machinist Feat](https://2e.aonprd.com/Feats.aspx?ID=3172).
+- **Quick Alchemy:** Added support for [Firework Technician Dedication](https://2e.aonprd.com/Archetypes.aspx?ID=119). 
+  - Note: Currently no way to limit crafting to 'firework' items, so will show all formulas. 
+
+## [2.10.0] - 2025-06-19
+### Added
+- **Quick Alchemy:** Added support for [Wandering Chef Dedication](https://2e.aonprd.com/Feats.aspx?ID=7053).
+  - When running Quick Alchemy macro will just open dialog to select food to create from formulas. 
+
+## [2.9.10] - 2025-06-12
+### Fixed
+- **Quick Alchemy:** Fixed bug when sending message to chat, it would link an existing item not the temporary item just created. 
+
+## [2.9.9] - 2025-06-10
+### Fixed
+- **Healing Bomb:** Fixed bug in code preventing healing bomb item to be created correctly. 
+- **Healing Bomb:** Fixed logic in Healing Bombs to match RAW (https://2e.aonprd.com/Feats.aspx?ID=5773):
+  - Splash Healing applies on success or better (was only on Crit Success).
+  - Spash Healing only applies to adjacent creatures, not also to target.
+- **LevelUp:** Fixed bug when prompting to add/remove formulas upon leveling up where closing the prompt window not resolve the dialog causing that code to hang, and that character to possibly not be prompted in the future. 
+- **Quick Alchemy:** Updated Style to prevent wrapping of button text.
+
+## [2.9.8] - 2025-06-09
+### Changed 
+- **Quick Alchemy:** Improved Quick Alchemy macro to be more efficient when pulling list of formulas, now should load instantly! 
+
+## [2.9.7] - 2025-06-06
+### Fixed
+- **Settings:** Fixed jQuery check in settings that was causing error in console in v13, and not disabling "collapse item description in chat" if this was being done by [xdy-pf2e-workbench module](https://github.com/xdy/xdy-pf2e-workbench).
+- **Powerful Alchemy:** Fixed DC replacement for items such as Glue Bomb using newer '/act escape dc=28' format.
+
+## [2.9.6] - 2025-05-29
+### Fixed
+- **Quick Alchemy:** Fixed issue not loading Journal compendium.
+
+## [2.9.5] - 2025-05-29
+### Changed
+- **Localization:** Added Polish translation. Credit: [Lioheart](https://github.com/Lioheart)
+
+## [2.9.4] - 2025-05-26
+### Changed
+- **Debilitating Bomb:** Removed "Debilitating Bomb" support, if you check the option in the actions tab on your character sheet it will add debilitating bomb text to attack. 
+- **Powerful Alchemy:** Will only change items created using the module Quick Alchemy macro. 
+- **Quick Alchemy:** Added "Read me" button to Quick Alchemy macro, can be disabled in settings. This opens read me Journal in Compendium.
+### Fixed 
+- **Quick Alchemy:** [Issue 47](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/47) - Fixed issue with creating healing quick vial or healing bomb with translation modules. 
+
+## [2.9.3] - 2025-05-25
+### Fixed
+- **Level Up:** Updated level-up script and macros to check for higher versions of all formulas not just common when leveling up or running macro. 
+- **Level Up:** Excluding Colorful Coating and Sprite Apple items from being removed if another version is known. 
+
+## [2.9.2] - 2025-05-24
+### Fixed
+- **Level Up:** Fixed issue when removing lower level forumulas that caused all elemental ammunition to be removed. 
+
+## [2.9.1] - 2025-05-01
+### Added
+- **Module:** Tested and verified for Foundry V13.341
+- **Module:** Updated Macro icon! 
+### Fixed
+- **Quick Alchemy:** Fixed slug for Healing Bomb item to be unique. 
+
 ## [2.9.0] - 2025-04-13
 ### Added
 - **Quick Alchemy:** Added support for [Healing Bomb (Feat 4)](https://2e.aonprd.com/Feats.aspx?ID=5773) ([Panda](https://github.com/Jordan-Ireland)).
-
+  - Healing Bomb will create Elixir or use one from inventory. 
+- **Quick Alchemy:** Added support for [Chirurgeon Greater Field Discovery](https://2e.aonprd.com/ResearchFields.aspx?ID=6).
+### Changed
+- Simplified localization files. 
+- Updated macto Icon for Quick Alchemy. 
 
 ## [2.8.3] - 2025-04-07
 ### Fixed

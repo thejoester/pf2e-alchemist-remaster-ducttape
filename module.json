@@ -2,40 +2,43 @@
     "id": "pf2e-alchemist-remaster-ducttape",
     "title": "PF2e Alchemist Remaster Duct Tape",
     "description": "A module to slap together some functionality until the PF2e system is updated to support the Alchmist remaster.",
-    "version": "2.8.10-test",
+    "version": "2.12.1",
     "compatibility": {
         "minimum": "12",
-        "verified": "12"
+        "verified": "13"
     },
     "styles": [
         "styles/adt-styles.css"
     ],
     "esmodules": [
         "scripts/settings.js",
+		"scripts/localization.js",
+		"scripts/AlchIndex.js",
+        "scripts/QAEffects.js",
         "scripts/QuickAlchemy.js",
         "scripts/AlchemistFeats.js",
-		"scripts/HealingBomb.js",
+        "scripts/HealingBomb.js",
         "scripts/FormulaSearch.js",
         "scripts/LevelUp.js",
         "scripts/VialSearch.js"
     ],
-	"media": [
-		{
-		  "type": "setup",
-		  "caption": "PF2e Alchemist Remaster Duct Tape",
-		  "thumbnail": "modules/pf2e-alchemist-remaster-ducttape/assets/banner.png",
-		  "loop": false,
-		  "flags": {}
-		}
-	],
-	"url": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape",
-	"manifest": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/latest/download/module.json",
-	"download": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/download/2.8.9-test/pf2e-alchemist-remaster-ducttape.zip",
-	"readme": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/README.md",
-	"changelog": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/CHANGELOG.md",
-	"license": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/LICENSE.txt",
-	"bugs": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues",
-	"flags": {
+    "media": [
+        {
+            "type": "setup",
+            "caption": "PF2e Alchemist Remaster Duct Tape",
+            "thumbnail": "modules/pf2e-alchemist-remaster-ducttape/assets/banner.png",
+            "loop": false,
+            "flags": {}
+        }
+    ],
+    "url": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape",
+    "manifest": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/latest/download/module.json",
+    "download": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/releases/download/2.12.1/pf2e-alchemist-remaster-ducttape.zip",
+    "readme": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/README.md",
+    "changelog": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/CHANGELOG.md",
+    "license": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/LICENSE.txt",
+    "bugs": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues",
+    "flags": {
         "allowBugReporter": true
     },
     "relationships": {
@@ -44,8 +47,8 @@
                 "id": "pf2e",
                 "type": "system",
                 "compatibility": {
-                    "minimum": "6.8.0",
-                    "verified": "6.11.1"
+                    "minimum": "6.12.4",
+                    "verified": "7.3.1"
                 }
             }
         ]
@@ -54,13 +57,7 @@
         {
             "name": "TheJoester",
             "discord": "thejoester",
-			"url": "https://github.com/thejoester",
-            "flags": {}
-        },
-		{
-            "name": "Panda",
-            "discord": "panduhh.",
-			"url": "https://github.com/Jordan-Ireland",
+            "url": "https://github.com/thejoester",
             "flags": {}
         }
     ],
@@ -86,6 +83,17 @@
                 "ASSISTANT": "OWNER"
             },
             "system": "pf2e"
+        },
+        {
+            "name": "alchemist-duct-tape-journal",
+            "label": "Alchemist Duct Tape Journal",
+            "path": "packs/alchemist-duct-tape-journal.db",
+            "type": "JournalEntry",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "system": "pf2e"
         }
     ],
     "languages": [
@@ -94,15 +102,20 @@
             "name": "English",
             "path": "lang/en.json"
         },
-		{
+        {
             "lang": "pt-BR",
             "name": "Brazilian Portuguese",
             "path": "lang/pt-BR.json"
         },
-		{
+        {
             "lang": "pl",
             "name": "Polish",
             "path": "lang/pl.json"
+        },
+        {
+            "lang": "cn",
+            "name": "简体中文",
+            "path": "lang/cn.json"
         }
     ]
 }

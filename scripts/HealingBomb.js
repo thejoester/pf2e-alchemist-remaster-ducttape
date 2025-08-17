@@ -23,7 +23,7 @@ Hooks.on("renderActorSheet", (app, html, data) => {
 // Hook to add healing buttons to chat message
 Hooks.on('renderChatMessage', async (message, html) => {
 	const origin = message.flags.pf2e?.origin?.uuid?.split(".");
-	if (!origin || !message.flags.pf2e?.context?.domains?.includes("healing-bomb-attack")) return;
+	if (!origin || !message.flags.pf2e?.context?.domains?.includes("healing-bomb-ardt-attack")) return;
 	debugLog(1, "[Healing Bomb] renderChatMessage triggered for ", game.user.name, " on message ", message.id);
 	
 	const actor = game.actors.get(origin[1]);
@@ -86,18 +86,15 @@ Hooks.on('renderChatMessage', async (message, html) => {
 			const dieSize = parseInt(item.system.damage.die.replace("d", ""));
 			const maxHeal = item.system.damage.dice * dieSize + item.system.damage.modifier;
 			healingButtons += `<button type="button" class="success" ${healDisabled} data-action="apply-healing-bomb" data-target="${targetUuid}" data-heal="${maxHeal}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_CHIRURGEON}</button>`;
-			if (outcome === "criticalSuccess") {
-				healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_SPLASH}</button>`;
-			}
+			healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_SPLASH}</button>`;
 		} else {
 			healingButtons += `<button type="button" class="success" ${healDisabled} data-action="roll-healing-bomb" data-target="${targetUuid}" data-formula="${formula}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_HEAL}</button>`;
-			if (outcome === "criticalSuccess") {
-				healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_SPLASH}</button>`;
-			}
+			healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_SPLASH}</button>`;
 		}
 	} else if (outcome === "failure") {
-		const healingAmount = parseInt(item.system.damage.dice || 0);
-		healingButtons += `<button type="button" class="failure" ${failDisabled} data-action="apply-failure-healing" data-target="${targetUuid}" data-heal="${healingAmount}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_FAILURE}</button>`;
+		const splash = parseInt(item.system.splashDamage.value || 0);
+		healingButtons += `<button type="button" class="failure" ${failDisabled} data-action="apply-failure-healing" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_FAILURE}</button>`;
+
 	}
 
 	healingButtons += `</section>`;
@@ -134,7 +131,9 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		const token = actorDoc?.isToken ? actorDoc : actor?.getActiveTokens()[0];
 		if (!actor) return;
 		await actor.applyDamage({ damage: -parseInt(btn.dataset.heal), token, heal: true, skipIWR: true });
-		await actor.applyDamage({ damage: -parseInt(btn.dataset.splash), token, heal: true, skipIWR: true });
+		//	Below line should not be here, splash does not 
+		//  apply to target only adjacent - https://2e.aonprd.com/Feats.aspx?ID=5773
+		//	await actor.applyDamage({ damage: -parseInt(btn.dataset.splash), token, heal: true, skipIWR: true });
 	});
 
 	// Button: Roll healing
@@ -148,7 +147,9 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		await roll.evaluate({ async: true });
 		await roll.toMessage({ flavor: `${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_ROLLED}: ${roll.total}` });
 		await actor.applyDamage({ damage: -roll.total, token, heal: true, skipIWR: true });
-		await actor.applyDamage({ damage: -parseInt(btn.dataset.splash), token, heal: true, skipIWR: true });
+		//	Below line should not be here, splash does not 
+		//  apply to target only adjacent - https://2e.aonprd.com/Feats.aspx?ID=5773
+		//	await actor.applyDamage({ damage: -parseInt(btn.dataset.splash), token, heal: true, skipIWR: true });
 	});
 
 	// Button: Apply splash healing
@@ -213,19 +214,28 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		debugLog(1, "[Healing Bomb] Failure healing button clicked");
 
 		const btn = event.currentTarget;
-		const doc = await fromUuid(btn.dataset.target);
-		const token = doc?.isToken ? doc : doc?.getActiveTokens?.()[0];
-		const actor = token?.actor;
-		if (!actor) return;
-
-		const heal = parseInt(btn.dataset.heal);
-		if (!heal || isNaN(heal)) {
-			debugLog(1, "[Healing Bomb] Invalid failure heal value:", btn.dataset.heal);
+		const targetUuid = btn.dataset.target;
+		const doc = await fromUuid(targetUuid);
+		const token = doc instanceof TokenDocument ? doc.object : doc?.getActiveTokens?.()[0];
+		if (!token) {
+			debugLog(1, "[Healing Bomb] Could not resolve token.");
+			return;
+		}
+		const actor = token.actor;
+		if (!actor) {
+			debugLog(1, "[Healing Bomb] Token has no associated actor.");
+			return;
+		}
+		const splashStr = btn.dataset.splash;
+		const splashHealing = parseInt(btn.dataset.splash);
+		
+		if (!splashHealing || isNaN(splashHealing)) {
+			debugLog(1, "[Healing Bomb] Invalid splash healing value.");
 			return;
 		}
 
-		debugLog(1, `[Healing Bomb] Applying ${heal} healing to ${token.name}`);
-		await actor.applyDamage({ damage: -heal, token, heal: true, skipIWR: true });
+		debugLog(1, `[Healing Bomb] Applying ${splashHealing} healing to ${token.name}`);
+		await actor.applyDamage({ damage: -splashHealing, token, heal: true, skipIWR: true });
 	});
 });
 

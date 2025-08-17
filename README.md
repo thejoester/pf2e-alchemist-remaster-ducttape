@@ -1,6 +1,9 @@
 # ![alt text][logo]
 [logo]: https://github.com/user-attachments/assets/a89b5016-9b46-4e1c-8156-ae0237576c26 "PF2e Alchemist Remaster Duct Tape"
 
+![Latest Release](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/thejoester/pf2e-alchemist-remaster-ducttape/master/module.json&query=$.version&label=Latest%20Release&style=plastic)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fthejoester%2Fpf2e-alchemist-remaster-ducttape%2Fmaster%2Fmodule.json&query=%24.compatibility.verified&style=plastic&label=Foundry%20Version&color=orange)
+
 > [!IMPORTANT]
 > PF2e system has been updated with the Player Core 2 Alchemist features. This module still functions and provides added functionality and quality of life features aimed to streamline playing Alchemist.
 
@@ -16,9 +19,18 @@ For a list of features and settings please view [the Wiki](https://github.com/th
 
 ## Requests
 
-This is still sort of a work in progress, and by no means a full release. I have made changes that affect my players the most at the moment. I expect when the Alchemist Player Core 2 changes are implemented in the PF2e system, parts of this module will be obsolete. 
+This is still a work in progress, if you have a request for a work around fix for an Alchemist feature, please submit one in the [Issues Page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues). 
 
-In the meantime if you have a request for a work around fix for an Alchemist feature, please submit one in the [Issues Page](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues). 
+## Credits
+I would like to extend a thanks to the following people for helping contribute to this module!
+
+### Development
+- Healing Bomb implementation: [Panda](https://github.com/Jordan-Ireland)
+
+### Translations
+- Polish (pl): [Lioheart](https://github.com/Lioheart)
+- Brazilian Portuguese(pt-BR): [Charlinho](https://github.com/Chrystian-Carvalho)
+- Chinese(cn): [AlphaStarguide](https://github.com/AlphaStarguide)
 
 ## Contribute
 

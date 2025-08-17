@@ -217,32 +217,21 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	
 });
 
-/*
-	function to get the max number of versatile vials actor should have in inventory
-	@param {Actor} actor 
-	@returns {number} maximum count of versatile vials
-*/
+//	Function to get the max number of versatile vials actor should have in inventory
 function getMaxVials(actor){
   const maxVials = 2 + actor.system.abilities.int.mod; // 2 + INT modifier
   debugLog(`Actor ${actor.name} max vials calculated as: ${maxVials}`);
   return maxVials;
 }
 
-/*
-	function to get the current count of versatile vials in an actor's inventory
-	@param {Actor} actor 
-	@returns {number} Current count of versatile vials
-*/
+//	function to get the current count of versatile vials in an actor's inventory
 function getCurrentVials(actor) {
     const versatileVials = actor.items.filter((item) => item.slug?.toLowerCase() === "versatile-vial");
     const vialCount = versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
     return vialCount;
 }
 
-/*
-	Custom function to add versatile vials to the actor's inventory
-	@param {number} count - Number of vials to add
-*/
+//	Custom function to add versatile vials to the actor's inventory
 export async function addVialsToActor(actor, count) {
 	
 	// Determine the actor's level

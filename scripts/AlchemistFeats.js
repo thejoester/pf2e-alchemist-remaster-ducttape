@@ -1,13 +1,11 @@
 import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
 
-/**
-	Update item description based on regex pattern and replacement logic. 
-	@param {string} description - The original item description. 
-	@param {RegExp} regexPattern - The regex pattern to match.
-	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
-	@returns {string} - The updated item description.
-*/
+//	Update item description based on regex pattern and replacement logic. 
+//	@param {string} description - The original item description. 
+//	@param {RegExp} regexPattern - The regex pattern to match.
+//	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
+//	@returns {string} - The updated item description.
 function updateDescription(description, regexPattern, replacementFn) {
 	const updatedDescription = description.replace(regexPattern, replacementFn);
 	return updatedDescription;
@@ -43,6 +41,12 @@ Hooks.on("ready", () => {
 			}
 		}
 		
+		// Make sure item was created by Quick Alchemy Macro
+		if (!item?.system?.ductTaped) {
+			debugLog(`Item ${item.name} not created with Duct Tape module... skipping: `, item);
+			return;
+		}
+		
 		// Make sure selected token is an alchemist or has archetype
 		const alchemistCheck = isAlchemist(actor);
 		if (alchemistCheck.qualifies) {
@@ -55,6 +59,13 @@ Hooks.on("ready", () => {
 			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
 			return;
 		}
+		
+		/*
+			*** EFFECT LINK *** 
+			Check if description has an effect link in it and inject note before
+			the link to state "Apply before use" 
+		*/
+		await annotateEffectLinkBeforeUse(item);
 
 		if(item.system.traits.value.includes("healing")) {
 			debugLog("Item is a healing item - Ignoring.");
@@ -80,25 +91,54 @@ Hooks.on("ready", () => {
 			}else{
 				debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 			}
-		}
-		
-		/*
-			*** DEBILITATING BOMB *** 
-			Check if the actor has Debilitating Bomb - if not return with mesactorge in log	
-		*/
-		if (hasFeat(actor, "debilitating-bomb") && !item.system.traits.value.includes("healing")) {
-			debugLog("Debilitating Bomb enabled.");
-			console.log(item)
-			await applyDebilitatingBomb(actor, item, alchemistCheck.dc);
-		}else{
-			debugLog(`Actor (${actor.name}) does not have Debilitating Bomb, ignoring!`);
-		}		
+		}			
 	});
 });
 
 /*
-	Function to apply Powerful Alchemy effects to item created by Alchemist
+	Injects "<strong> Apply before using: </strong>" immediately before the first
+	@UUID[...] {Effect: ...} link in the item's description.
+	Does nothing if it's already injected or no such link exists.
 */
+async function annotateEffectLinkBeforeUse(item) {
+	setTimeout(async () => {
+		try {
+			if (!item) return;
+
+			const desc = item.system?.description?.value ?? '';
+			if (!desc) return;
+
+			// Already injected? bail.
+			if (/>\s*Apply before using\s*:\s*<\/strong>\s*\@UUID\[/i.test(desc)) {
+				debugLog(`annotateEffectLinkBeforeUse: already present for ${item.name}`);
+				return;
+			}
+
+			// Only the @UUID[...] {Effect: ...} pattern
+			const uuidEffectRe = /(\@UUID\[[^\]]+\]\{\s*Effect:\s*[^}]+\})/i;
+
+			if (!uuidEffectRe.test(desc)) {
+				debugLog(`annotateEffectLinkBeforeUse: no @UUID Effect link in ${item.name}`);
+				return;
+			}
+
+			const updated = desc.replace(uuidEffectRe, (_m, g1) => {
+				return `<p><strong> Apply before using: </strong>${g1}</p>`;
+			});
+
+			if (updated !== desc) {
+				await item.update({ 'system.description.value': updated });
+				debugLog(`annotateEffectLinkBeforeUse: injected label for ${item.name}`);
+			}
+		} catch (err) {
+			debugLog(`annotateEffectLinkBeforeUse ERROR: ${err?.message || err}`);
+			console.error(err);
+		}
+	}, 100);
+}
+
+
+//	Function to apply Powerful Alchemy effects to item created by Alchemist
 async function applyPowerfulAlchemy(item,actor,alchemistDC){
 	// Delay to allow item to finish embedding (avoids Foundry V12 timing issues)
 	setTimeout(async () => {
@@ -125,6 +165,10 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 				{
 					pattern: /DC is (\d+)/g,
 					replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistDC}`)
+				},
+				{
+					pattern: /DC is \[\[\/act [^\]]*?dc=(\d+)\]\]\{\d+\}/g,
+					replaceFn: (match, p1) => `DC is [[/act escape dc=${alchemistDC}]]{${alchemistDC}}`
 				}
 			];
 
@@ -165,51 +209,4 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 			console.error(err); // Optional: for debugging during development
 		}
 	}, 100);
-}
-
-async function applyDebilitatingBomb(actor, item, dc){
-	// Ensure the item has the 'alchemical' trait
-	if (!item || !item.system.traits.value.includes("alchemical")) {
-	  debugLog(`Item (${item.name}) does not have the 'alchemical' trait or item is undefined.`);
-	  return;
-	}
-
-	if(item.system.traits.value.includes("healing")) {
-		debugLog("Item is a healing item - Ignoring.");
-		return;
-	}
-	
-	// Ensure Quick Alchemy was used to create item - it will have the "infused" trait
-	if (!item || !item.system.traits.value.includes("infused")) {
-	  debugLog(`Item (${item.name}) does not have the 'infused' trait or item is undefined.`);
-	  return;
-	}
-	
-	// Ensure description exists and is a string
-	let description = item.system.description.value;
-	if (typeof description !== "string") {
-		debugLog("Debilitating Bomb: Item description is not a string:", description);
-		return;
-	}
-
-	// Construct Debilitating Bomb note block (wrap in <p> for HTML safety)
-	const noteBlock = `
-		<p>
-		<ul class="notes">
-			<li class="roll-note" data-item-id="${item.id}">
-				<strong>Debilitating Bomb</strong> The target must succeed at a @Check[fortitude|dc:${dc}], or suffer one of the following effects: dazzled, deafened, off-guard, or take a -5 foot status penalty to Speeds. @UUID[Compendium.pf2e.feat-effects.Item.VTJ8D23sOIfApEt3]{Effect: Debilitating Bomb}
-			</li>
-		</ul>
-		</p>`.trim();
-
-	const updatedDescription = noteBlock + description;
-
-	// Try updating item
-	try {
-		await item.update({ "system.description.value": updatedDescription });
-		debugLog(`Debilitating Bomb: Description updated for item "${item.name}"`);
-	} catch (err) {
-		debugLog("Debilitating Bomb: Failed to update item description:", err);
-		console.error(err);
-	}
 }

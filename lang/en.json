@@ -1,6 +1,5 @@
 {
 	"PF2E_ALCHEMIST_REMASTER_DUCTTAPE": {
-		
 		"MODULE_NAME": "PF2e Alchemist Remaster Duct Tape",
 		"ACID":"Acid",
 		"COLD":"Cold",
@@ -17,8 +16,8 @@
 		"ADD":"Add",
 		"SPECIAL_INGREDIENT":"Select special ingredient",
 		"INJURY_POISON":"Injury Poison",
-		"CRAFT": "Craft",
 		"INVENTORY": "Inventory",
+		"CRAFT": "Craft",
 		"CRAFT_ATTACK":"Craft and Attack",
 		"CRAFT_APPLY_ATTACK":"Craft, Apply & Attack",
 		"VERSATILE_VIAL":"Versatile Vial",
@@ -44,9 +43,7 @@
 		"BTN_USE":"Use",
 		"BTN_CANCEL":"Cancel",
 		"BTN_ROLL_ATK":"Roll Attack",
-		
-		
-		
+
 		"NOTIF_ACTOR_NOTFOUND":"Actor not found.",
 		"NOTIF_ITEM_NOTFOUND":"Item not found.",
 		"NOTIF_ALREADY_MAX_VIALS":"{actorname} already has the maximum number of versatile vials.",
@@ -62,7 +59,6 @@
 		"NOTIF_APPLY_EFFECT_ACTOR":"Applied effect {effectname} to {actorname}",
 		"NOTIF_NO_PERMS":"You do not have permission to modify this actor.",
 		"NOTIF_ACTOR_NOT_ASSOC_ITEM":"No actor associated with this item.",
-
 		
 		"SETTING_WORKBENCH_NOT_FOUND":"Workbench setting key 'xdy-pf2e-workbench.autoCollapseItemChatCardContent' not found.",
 		"SETTING_MANAGE_HOMEBREW_COMPENDIUM":"Manage Homebrew Compendiums",
@@ -109,7 +105,10 @@
 		"SETTING_DEBUG_ALL":"All",
 		"SETTING_COMPENDIUM_CHECK":"Compendiums to Check",
 		"SETTING_COMPENDIUM_CHECK_HINT":"List of compendiums to search for higher-level items when characters level up.",
-		
+		"SETTING_SHOW_HELP":"Show Quick Alchemy Help Button",
+		"SETTING_SHOW_HELP_HINT":"Display a help button in the Quick Alchemy dialog that links to the documentation journal entry.",
+		"SETTING_SHOW_FORMULA_DESC_NAME": "Quick Alchemy: Show description panel",
+		"SETTING_SHOW_FORMULA_DESC_HINT": "When enabled, Quick Alchemy dialogs will show an enriched description that updates with your selection.",
 		
 		"QUICK_ALCHEMY":" Quick Alchemy",
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Quick Alchemy: Select Item Type",
@@ -136,6 +135,7 @@
 		"QUICK_ALCHEMY_DB_CRAFT_VV": "You only have {vialcount} versatile vial, use Double Brew to craft another?",
 		"QUICK_ALCHEMY_NO_VV":"You have no more Versatile Vials.",
 		"QUICK_ALCHEMY_10_MIN":"You must spend 10 minutes searching for reagents to craft more.",
+		"QUICK_ALCHEMY_REOPEN_SHEET":"Try opening character sheet then try again.",
 		
 		"FORMULA_SEARCH_SEARCH":"Search Formulas...",
 		
@@ -161,8 +161,7 @@
 		"VIALSEARCH_ADD_VIALS":"Add Vials",
 		"VIALSEARCH_HAS_MAX_VIALS":"already has the maximum number of versatile vials.",
 		"VIALSEARCH_CHAT_FOUND_VIALS":"{actorname} found {vialcount} versatile vial(s).",
-			
-		
+					
 		"MACRO_ADD_FORMULAS":"Add new formulas?",
 		"MACRO_REMOVE_FORMULAS":"Remove lower level formulas?",
 		"MACRO_PROMPT_STYLE":"Prompt Style:",
@@ -189,7 +188,20 @@
 		"HEALING_BOMB_BUTTON_FAILURE": "Apply Failure Healing",
 		"HEALING_BOMB_SELECT_CRAFT_INVENTORY":"Do you want to craft a new Elixir of Life<br />or<br />use one from your inventory?",
 		"HEALING_BOMB_CRAFT": "Craft Healing Bomb",
-		"HEALING_BOMB_SELECT_INVENTORY":"Select which Elixir of Life to use from the inventory"
+		"HEALING_BOMB_SELECT_INVENTORY":"Select which Elixir of Life to use from the inventory",
 		
+		"INDEX_PROMPT_TITLE": "Update Alchemical Index?",
+		"INDEX_PROMPT_MSG": "Your PF2e system/localization changed.\n\n• System: {oldSystemVersion} → {systemVersion}\n• Language: {oldLocale} → {locale}\n\nRebuilding can take a while the first time or after a locale change. Continue?",
+		"INDEX_PROGRESS_TITLE": "Building Alchemical Index…",
+		"INDEX_PROGRESS_HINT": "You can close this window; indexing will continue.",
+		"INDEX_PROGRESS_PACK": "Scanning {pack}…",
+		"INDEX_DONE_TITLE": "Index Complete",
+		"INDEX_DONE_BODY": "Indexed {count} alchemical item(s).",
+		"GM_ONLY": "GM only.",
+		"INDEX_CLEAR_PROMPT_TITLE": "Clear Alchemical Index?",
+		"INDEX_CLEAR_PROMPT_BODY": "This will remove the cached alchemical item index for this world.\n\nYou'll be prompted to rebuild it next time the world loads or when you run the rebuild.\n\nContinue?",
+		"INDEX_CLEAR_DONE": "Alchemical index cleared.",
+		"INDEX_CLEAR_ABORTED": "Clear cancelled.",
+		"INDEX_CLEAR_FAILED": "Failed to clear the alchemical index."
 	}
 }

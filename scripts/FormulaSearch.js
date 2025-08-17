@@ -3,9 +3,7 @@ import { LOCALIZED_TEXT } from "./localization.js";
 
 console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","color: aqua; font-weight: bold;");
 
-/*
-	function to inject the search input into the Formulas tab.
-*/
+//	function to inject the search input into the Formulas tab.
 function addFormulaSearch(html) {
     debugLog(`addFormulaSearch() called`);
 
