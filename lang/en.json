@@ -190,8 +190,6 @@
 		"HEALING_BOMB_CRAFT": "Craft Healing Bomb",
 		"HEALING_BOMB_SELECT_INVENTORY":"Select which Elixir of Life to use from the inventory",
 		
-		"INDEX_PROMPT_TITLE": "Update Alchemical Index?",
-		"INDEX_PROMPT_MSG": "Your PF2e system/localization changed.\n\n• System: {oldSystemVersion} → {systemVersion}\n• Language: {oldLocale} → {locale}\n\nRebuilding can take a while the first time or after a locale change. Continue?",
 		"INDEX_PROGRESS_TITLE": "Building Alchemical Index…",
 		"INDEX_PROGRESS_HINT": "You can close this window; indexing will continue.",
 		"INDEX_PROGRESS_PACK": "Scanning {pack}…",

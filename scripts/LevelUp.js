@@ -1,4 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
+import { qaGetIndexEntry, qaGetSlugFromUuid, getAlchIndex } from "./AlchIndex.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
@@ -88,6 +89,353 @@ Hooks.once('init', () => {
 
 //	Grant new formulas to Alchemists as they level up.
 async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting, previousLevel) {
+	
+	const loadingDialog = new foundry.applications.api.DialogV2({
+		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
+		content: `
+			<p>${LOCALIZED_TEXT.MACRO_CHECKING_NEW_FORMULAS}</p>
+			<div class="progress-bar-container" style="width: 100%; height: 20px; background: #444; border-radius: 5px; overflow: hidden;">
+				<div id="progress-fill" style="width: 0%; height: 100%; background: #0c8; transition: width 0.2s;"></div>
+			</div>
+			<p id="progress-text" style="text-align: center; font-size: 0.9em; margin-top: 5px;">0%</p>
+			`,
+		buttons: [
+			{
+			  action: "hidden",
+			  label: LOCALIZED_TEXT.OK,
+			  icon: "",
+			  callback: () => {}
+			}
+		],
+		render: (html) => {
+			// Hide the button row with CSS
+			const footer = html[0].querySelector(".window-content-footer");
+			if (footer) footer.style.display = "none";
+		}
+	});
+	loadingDialog.render(true);
+	updateLoadingProgress(10);
+	
+	debugLog(`grantAlchemistFormulas() | mode: ${mode}`);
+    debugLog(`Checking for new formulas for ${actor.name} for level ${newLevel}.`);
+	debugLog(`Previous Level for ${actor.name}: ${previousLevel}.`);
+	updateLoadingProgress(15);
+	
+    
+    // Extract the UUIDs from the actor's known formulas
+    const knownFormulaUUIDs = actor.system.crafting.formulas.map(f => (typeof f.uuid === 'string' ? f.uuid : null)).filter(Boolean);
+    debugLog(`Known formula UUIDs for ${actor.name}:\n ${knownFormulaUUIDs.join('\n')}`);
+	updateLoadingProgress(30);
+	
+    // Extract base slugs from the known UUIDs
+	debugLog(`Starting Task: Extract base slugs from the known UUIDs`);
+    const knownBaseSlugs = await Promise.all(
+        knownFormulaUUIDs.map(async (uuid) => {
+            try {
+                const slug = await qaGetSlugFromUuid(uuid);
+				return slug ? extractBaseSlug(slug) : null;
+            } catch (error) {
+                debugLog(3, `Error extracting item for UUID: ${uuid} | Error: ${error.message}`, error);
+                return null;
+            }
+        })
+    );
+	debugLog(`Finished Task: Extract base slugs from the known UUIDs\n`, knownBaseSlugs);
+	updateLoadingProgress(40);
+
+    // Filter out duplicates and null values
+	debugLog(`Starting Task: Filter out duplicates and null values`);
+    const deduplicatedBaseSlugs = [...new Set(knownBaseSlugs.filter(Boolean))];
+    debugLog("Deduplicated base slugs:", deduplicatedBaseSlugs);
+	debugLog(`Finished Task: Filter out duplicates and null values`);
+    
+	if (deduplicatedBaseSlugs.length === 0) {
+        debugLog(2, `No base formulas found for ${actor.name} \n`, deduplicatedBaseSlugs );
+		loadingDialog.close();
+        return;
+    }
+	updateLoadingProgress(50);
+	// Collect Index items that match base slug of deduplicatedBaseSlugs
+    const itemsToCheck = processIndex(deduplicatedBaseSlugs); 
+	debugLog(`Finished Task: Collect Index items that match base slug of deduplicatedBaseSlugs \n`, itemsToCheck );
+	updateLoadingProgress(80);
+	
+    // 3. Filter items by level, traits, and rarity
+	debugLog(`Starting Task: Filter items by level, traits, and rarity`);
+    previousLevel ??= actor.getFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel') || 1;
+	debugLog(`Previous level for ${actor.name}: ${previousLevel} | New Level: ${newLevel}`);
+
+    const filteredItems = itemsToCheck.filter(item => {
+		const isAlchemical = item.traits?.includes('alchemical');
+        const isCommon = item.rarity === 'common';
+        const levelCheck = item.level <= newLevel && item.level > previousLevel;
+        // return isAlchemical && isCommon && levelCheck;
+		return isAlchemical && levelCheck;
+    });
+	
+	debugLog(`Finished Task: Filter items by level, traits, and rarity: \n`, filteredItems);
+    debugLog(`Filtered items for ${actor.name}:`, filteredItems);
+	updateLoadingProgress(90);
+	loadingDialog.close();
+	
+	debugLog(`Starting Task: let newFormulaUUIDs = filteredItems.map(item => item.uuid)`);
+    let newFormulaUUIDs = filteredItems.map(item => item.uuid);
+    debugLog(`New formula UUIDs:\n${newFormulaUUIDs.join('\n')}`);
+	
+	
+    if (newFormulaUUIDs.length === 0) {
+        debugLog(`No new formulas to add for ${actor.name}.`);
+        return;
+    }
+	
+	// Filter out already known fomrulas by UUID
+	let skippedFormulas = [];
+    const newFilteredFormulaUUIDs = [];
+	for (const uuid of newFormulaUUIDs) {
+	  if (!knownFormulaUUIDs.includes(uuid)) {
+		newFilteredFormulaUUIDs.push(uuid);
+	  } else {
+		skippedFormulas.push(uuid);
+	  }
+	}
+	debugLog(`Skipping already known formulas:\n${skippedFormulas.join('\n')}`);
+	newFormulaUUIDs = newFilteredFormulaUUIDs;
+    debugLog(`Adding the following new formulas to ${actor.name}:\n${newFormulaUUIDs.join('\n')}`);
+	
+	const overlap = newFormulaUUIDs.filter(f => knownFormulaUUIDs.includes(f));
+	debugLog(`Found ${overlap.length} overlapping UUIDs:\n${overlap.join("\n")}`);
+
+    // Collect added formulas for the chat message
+    let addedFormulas = [];
+	
+	updateLoadingProgress(100);
+	
+    // Check setting to see if we are asking for each formula
+    if (mode === "ask_each") {
+		loadingDialog.close();
+        for (const uuid of newFormulaUUIDs) {
+            const item = await qaGetIndexEntry(uuid);
+            if (!item) continue;
+
+            const confirmed = await showFormulaDialog(actor, item, item.level.value);
+            if (confirmed) {
+                const newFormulaObject = { uuid };
+                const updatedFormulaObjects = [...actor.system.crafting.formulas, newFormulaObject];
+                try {
+                    await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+                } catch (error) {
+                    debugLog(`Error updating formulas for ${actor.name}: ${error.message}`);
+                }
+                debugLog(`${actor.name} has learned the formula for ${item.name}.`);
+                addedFormulas.push(item.name);
+            } else {
+                debugLog(`User declined to add formula ${item.name} to ${actor.name}.`);
+            }
+        }
+        // Send new formula list to chat
+        newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
+    } else if (mode === "ask_all") { // If we are asking for all at once
+		loadingDialog.close();
+        const formulasToPrompt = [];
+        for (const uuid of newFormulaUUIDs) {
+            const item = await qaGetIndexEntry(uuid);
+            if (!item) continue;
+            formulasToPrompt.push({ uuid, name: item.name, level: item.level });
+        }
+        if (formulasToPrompt.length > 0) { // Make sure list is not empty
+            const formulaNames = formulasToPrompt.map(f => f.name);
+            // Add the formula names to the list
+            addedFormulas.push(...formulaNames);
+
+            // Show dialog with all formulas to add
+            const confirmed = await showFormulaListDialog(actor, formulasToPrompt);
+            if (confirmed) { // If player clicked "yes"
+                const newFormulaObjects = formulasToPrompt.map(f => ({ uuid: f.uuid }));
+                const existingUUIDs = new Set(actor.system.crafting.formulas.map(f => f.uuid));
+				const updatedFormulaObjects = [
+					...actor.system.crafting.formulas,
+					...newFormulaUUIDs.filter(uuid => !existingUUIDs.has(uuid)).map(uuid => ({ uuid }))
+				];
+                await actor.update({ 'system.crafting.formulas': updatedFormulaObjects });
+                debugLog(`${actor.name} has learned ${formulasToPrompt.length} new formulas.`);
+                // Send new formula list to chat
+                newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
+            } else {
+                debugLog(`User declined to add formulas to ${actor.name}.`);
+            }
+        }
+    } else if (mode === "auto") {
+        const newFormulaObjects = newFormulaUUIDs.map(uuid => ({ uuid }));
+        const updatedFormulaObjects = [...actor.system.crafting.formulas, ...newFormulaObjects];
+        const validUUIDs = updatedFormulaObjects.filter(obj => obj && obj.uuid && typeof obj.uuid === 'string' && obj.uuid.startsWith('Compendium.'));
+        try {
+            await actor.update({ 'system.crafting.formulas': validUUIDs });
+            debugLog(`${actor.name} has learned ${newFormulaUUIDs.length} new formulas.`);
+            // Get the names of the added formulas
+            const formulaNames = await Promise.all(newFormulaUUIDs.map(async (uuid) => {
+                const item = await qaGetIndexEntry(uuid);
+                return item?.name ?? 'Unknown Formula';
+            }));
+            // Add the formula names to the list
+            addedFormulas.push(...formulaNames);
+            // Send new formula list to chat
+            newFormulasChatMsg(actor.name, addedFormulas.join('<br>'), addedFormulas.length);
+        } catch (error) {
+            debugLog(3, `Error updating formulas for ${actor.name}: ${error.message}`);
+        }
+    }
+}
+
+
+//	Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
+async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevelUp) {
+	
+	debugLog(`removeLowerLevelFormulas() | mode: ${mode}`);
+    debugLog(`Checking for lower level formulas for ${actor.name}`);
+	
+	// Display dialog
+	const loadingDialog = new foundry.applications.api.DialogV2({
+		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
+		content: `
+			<p>${LOCALIZED_TEXT.MACRO_CHECKING_LOWER_FORMULAS}</p>
+			<div class="progress-bar-container" style="width: 100%; height: 20px; background: #444; border-radius: 5px; overflow: hidden;">
+				<div id="progress-fill" style="width: 0%; height: 100%; background: #0c8; transition: width 0.2s;"></div>
+			</div>
+			<p id="progress-text" style="text-align: center; font-size: 0.9em; margin-top: 5px;">0%</p>
+		`,
+		buttons: [
+			{
+			  action: "hidden",
+			  label: LOCALIZED_TEXT.OK,
+			  icon: "",
+			  callback: () => {}
+			}
+		],
+		render: (html) => {
+			// Hide the button row with CSS
+			const footer = html[0].querySelector(".window-content-footer");
+			if (footer) footer.style.display = "none";
+		}
+	});
+	loadingDialog.render(true);
+	
+    const knownFormulas = actor.system.crafting.formulas;
+    const formulaMap = new Map(); // Map to store the highest-level version of each base formula
+    let removedFormulas = []; // Track removed formulas
+	
+
+    const total = knownFormulas.length;
+	for (let i = 0; i < total; i++) {
+		const formula = knownFormulas[i];
+
+		const item = await fromUuidSync(formula.uuid);
+		if (!item) {
+			debugLog(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
+			continue;
+		}
+
+		const baseSlug = extractBaseSlug(item.system.slug);
+		if (!baseSlug) {
+			debugLog(`Skipping formula with invalid slug: ${item.name}`);
+			continue;
+		}
+		
+		// Skip if this is non-standard alchemical item
+		if (isNonStandardVariant(baseSlug)){
+			debugLog(`Skipping formula ${item.name}: non-standard slug naming`);
+			continue;
+		}
+
+		const level = Number(item.system.level.value);
+		const currentLevel = formulaMap.has(baseSlug) ? formulaMap.get(baseSlug).level : null;
+
+		if (!formulaMap.has(baseSlug) || currentLevel < level) {
+			if (formulaMap.has(baseSlug)) {
+				const lowerLevelFormula = formulaMap.get(baseSlug);
+				removedFormulas.push(lowerLevelFormula);
+				debugLog(`Replacing ${lowerLevelFormula.name} (Level ${lowerLevelFormula.level}) with ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
+			}
+			formulaMap.set(baseSlug, { uuid: formula.uuid, level, name: item.name });
+			debugLog(`Setting ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
+		} else {
+			removedFormulas.push({ uuid: formula.uuid, name: item.name, level, baseSlug });
+			debugLog(`Marking ${item.name} (Level ${level}) for removal.`);
+		}
+
+		// ✅ Progress update
+		const progress = Math.round(((i + 1) / total) * 100);
+		updateLoadingProgress(progress);
+	}
+
+    // If no formulas to remove, exit early
+    if (removedFormulas.length === 0) {
+        debugLog(`No lower-level formulas to remove for ${actor.name}.`);
+		loadingDialog.close();
+		return;
+    }
+	
+	// Close Dialog if open
+	loadingDialog.close();
+	
+    // Handle ask_all_lower: Compile and prompt for all at once
+    if (mode === "ask_all_lower") {
+        const confirmed = await showFormulaListDialog(actor, removedFormulas.map(f => ({
+            uuid: f.uuid,
+            name: f.name,
+            level: f.level
+        })), true);
+
+        if (!confirmed) {
+            debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
+			return; // Exit if user cancels
+        }
+    } else if (mode === "ask_each_lower") {
+		// Handle ask_each_lower: Prompt for each formula individually
+		const keptFormulas = [];
+		for (const formula of removedFormulas) {
+			const confirmed = await showFormulaDialog(actor, { name: formula.name, level: formula.level }, formula.level, true);
+			if (!confirmed) {
+				debugLog(`Chose to keep ${formula.uuid} ${formula.name} (${formula.level})`);
+				keptFormulas.push(formula); // Keep formulas user declined to remove
+			}
+		}
+		debugLog(`Kept formulas:\n${keptFormulas.map(f => f.name).join('\n')}`);
+
+		// Filter out formulas to remove
+		removedFormulas = removedFormulas.filter(f => {
+			if (keptFormulas.some(kf => kf.uuid === f.uuid)) {
+				debugLog(`Keeping formula: ${f.name} (Level ${f.level})`);
+				formulaMap.set(f.uuid, { uuid: f.uuid, level: f.level, name: f.name });
+				return false; // Exclude from removal
+			} else {
+				debugLog(`Removing formula: ${f.name} (Level ${f.level})`);
+				return true; // Include in removal
+			}
+		});
+	}
+
+    // Filter out formulas to keep
+    const uuidsToKeep = Array.from(formulaMap.values()).map(entry => entry.uuid);
+    const updatedFormulas = knownFormulas.filter(f => uuidsToKeep.includes(f.uuid));
+
+    // Update the actor's formulas if changes were made
+    if (updatedFormulas.length !== knownFormulas.length) {
+        await actor.update({ 'system.crafting.formulas': updatedFormulas });
+        debugLog(`Updated formulas for ${actor.name}: Removed lower-level versions:\n${updatedFormulas.map(f => f.name).join('\n')}`);
+    }
+
+    // Output to chat if enabled
+    if (addNewFormulasToChat && removedFormulas.length > 0) {
+        const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
+        ChatMessage.create({
+            content: `<strong>${actor.name}</strong> ${LOCALIZED_TEXT.LEVELUP_REMOVEDLOWER_CHAT_MSG}:<br><br>${removedFormulaNames}`
+        });
+    }
+}
+
+// Old function for macro (for now 
+async function grantAlchemistFormulasOld(actor, newLevel, mode = addFormulasSetting, previousLevel) {
+	
 	const loadingDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
 		content: `
@@ -133,9 +481,9 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
     const knownBaseSlugs = await Promise.all(
         knownFormulaUUIDs.map(async (uuid) => {
             try {
-                const item = await fromUuidSync(uuid);
+                const item = await qaGetIndexEntry(uuid);
 				//debugLog(`processing uuid: ${uuid}...`);
-                return item ? extractBaseSlug(item.system.slug) : null;
+                return item ? extractBaseSlug(item.slug) : null;
             } catch (error) {
                 debugLog(3, `Error extracting item for UUID: ${uuid} | Error: ${error.message}`, error);
                 return null;
@@ -342,152 +690,6 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
         } catch (error) {
             debugLog(3, `Error updating formulas for ${actor.name}: ${error.message}`);
         }
-    }
-}
-
-//	Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
-async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevelUp) {
-	
-	debugLog(`removeLowerLevelFormulas() | mode: ${mode}`);
-    debugLog(`Checking for lower level formulas for ${actor.name}`);
-	
-	// Display dialog
-	const loadingDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
-		content: `
-			<p>${LOCALIZED_TEXT.MACRO_CHECKING_LOWER_FORMULAS}</p>
-			<div class="progress-bar-container" style="width: 100%; height: 20px; background: #444; border-radius: 5px; overflow: hidden;">
-				<div id="progress-fill" style="width: 0%; height: 100%; background: #0c8; transition: width 0.2s;"></div>
-			</div>
-			<p id="progress-text" style="text-align: center; font-size: 0.9em; margin-top: 5px;">0%</p>
-		`,
-		buttons: [
-			{
-			  action: "hidden",
-			  label: LOCALIZED_TEXT.OK,
-			  icon: "",
-			  callback: () => {}
-			}
-		],
-		render: (html) => {
-			// Hide the button row with CSS
-			const footer = html[0].querySelector(".window-content-footer");
-			if (footer) footer.style.display = "none";
-		}
-	});
-	loadingDialog.render(true);
-	
-    const knownFormulas = actor.system.crafting.formulas;
-    const formulaMap = new Map(); // Map to store the highest-level version of each base formula
-    let removedFormulas = []; // Track removed formulas
-	
-
-    const total = knownFormulas.length;
-	for (let i = 0; i < total; i++) {
-		const formula = knownFormulas[i];
-
-		const item = await fromUuidSync(formula.uuid);
-		if (!item) {
-			debugLog(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
-			continue;
-		}
-
-		const baseSlug = extractBaseSlug(item.system.slug);
-		if (!baseSlug) {
-			debugLog(`Skipping formula with invalid slug: ${item.name}`);
-			continue;
-		}
-		
-		// Skip if this is non-standard alchemical item
-		if (isNonStandardVariant(baseSlug)){
-			debugLog(`Skipping formula ${item.name}: non-standard slug naming`);
-			continue;
-		}
-
-		const level = Number(item.system.level.value);
-		const currentLevel = formulaMap.has(baseSlug) ? formulaMap.get(baseSlug).level : null;
-
-		if (!formulaMap.has(baseSlug) || currentLevel < level) {
-			if (formulaMap.has(baseSlug)) {
-				const lowerLevelFormula = formulaMap.get(baseSlug);
-				removedFormulas.push(lowerLevelFormula);
-				debugLog(`Replacing ${lowerLevelFormula.name} (Level ${lowerLevelFormula.level}) with ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
-			}
-			formulaMap.set(baseSlug, { uuid: formula.uuid, level, name: item.name });
-			debugLog(`Setting ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
-		} else {
-			removedFormulas.push({ uuid: formula.uuid, name: item.name, level, baseSlug });
-			debugLog(`Marking ${item.name} (Level ${level}) for removal.`);
-		}
-
-		// ✅ Progress update
-		const progress = Math.round(((i + 1) / total) * 100);
-		updateLoadingProgress(progress);
-	}
-
-    // If no formulas to remove, exit early
-    if (removedFormulas.length === 0) {
-        debugLog(`No lower-level formulas to remove for ${actor.name}.`);
-		loadingDialog.close();
-		return;
-    }
-	
-	// Close Dialog if open
-	loadingDialog.close();
-	
-    // Handle ask_all_lower: Compile and prompt for all at once
-    if (mode === "ask_all_lower") {
-        const confirmed = await showFormulaListDialog(actor, removedFormulas.map(f => ({
-            uuid: f.uuid,
-            name: f.name,
-            level: f.level
-        })), true);
-
-        if (!confirmed) {
-            debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
-			return; // Exit if user cancels
-        }
-    } else if (mode === "ask_each_lower") {
-		// Handle ask_each_lower: Prompt for each formula individually
-		const keptFormulas = [];
-		for (const formula of removedFormulas) {
-			const confirmed = await showFormulaDialog(actor, { name: formula.name, level: formula.level }, formula.level, true);
-			if (!confirmed) {
-				debugLog(`Chose to keep ${formula.uuid} ${formula.name} (${formula.level})`);
-				keptFormulas.push(formula); // Keep formulas user declined to remove
-			}
-		}
-		debugLog(`Kept formulas:\n${keptFormulas.map(f => f.name).join('\n')}`);
-
-		// Filter out formulas to remove
-		removedFormulas = removedFormulas.filter(f => {
-			if (keptFormulas.some(kf => kf.uuid === f.uuid)) {
-				debugLog(`Keeping formula: ${f.name} (Level ${f.level})`);
-				formulaMap.set(f.uuid, { uuid: f.uuid, level: f.level, name: f.name });
-				return false; // Exclude from removal
-			} else {
-				debugLog(`Removing formula: ${f.name} (Level ${f.level})`);
-				return true; // Include in removal
-			}
-		});
-	}
-
-    // Filter out formulas to keep
-    const uuidsToKeep = Array.from(formulaMap.values()).map(entry => entry.uuid);
-    const updatedFormulas = knownFormulas.filter(f => uuidsToKeep.includes(f.uuid));
-
-    // Update the actor's formulas if changes were made
-    if (updatedFormulas.length !== knownFormulas.length) {
-        await actor.update({ 'system.crafting.formulas': updatedFormulas });
-        debugLog(`Updated formulas for ${actor.name}: Removed lower-level versions:\n${updatedFormulas.map(f => f.name).join('\n')}`);
-    }
-
-    // Output to chat if enabled
-    if (addNewFormulasToChat && removedFormulas.length > 0) {
-        const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
-        ChatMessage.create({
-            content: `<strong>${actor.name}</strong> ${LOCALIZED_TEXT.LEVELUP_REMOVEDLOWER_CHAT_MSG}:<br><br>${removedFormulaNames}`
-        });
     }
 }
 
@@ -792,9 +994,9 @@ async function handleFormSubmit(actor,options,currentLevel){
 	if (options.action === "add_formulas"){
 		// grant formulas
 		const prevLevel = options.prevLevel;
-		await grantAlchemistFormulas(actor, currentLevel, mode, prevLevel)
+		await grantAlchemistFormulasOld(actor, currentLevel, mode, prevLevel)
 	}else if (options.action === "remove_formulas"){
-		await removeLowerLevelFormulas(actor, mode);
+		await removeLowerLevelFormulasOLd(actor, mode);
 	}
 }
 
@@ -828,30 +1030,32 @@ async function promptTokenFormulaAdd() {
 	}
 	
 	const formContent = `
-		<form>
-			<div class="form-group">
-				<label>${LOCALIZED_TEXT.MACRO_ADD_FORMULAS}</label>
-				<select name="addFormulas">
-					<option value="yes">${LOCALIZED_TEXT.BTN_YES}</option>
-					<option value="no">${LOCALIZED_TEXT.BTN_NO}</option>
-				</select>
-			</div>
-			
-			<div class="form-group">
-				<label>${LOCALIZED_TEXT.MACRO_PROMPT_STYLE}</label>
-				<select name="mode">
-					${defaultAddMode}
-					<option value="auto">${LOCALIZED_TEXT.AUTO}</option>
-					<option value="ask_each">${LOCALIZED_TEXT.ASK_EACH}</option>
-					<option value="ask_all">${LOCALIZED_TEXT.ASK_ALL}</option>
-				</select>
-			</div>
-			
-			<div class="form-group">
-				<label for="level">${LOCALIZED_TEXT.MACRO_START_LEVEL}</label>
-				<input type="number" name="startlevel" id="startlevel" value="${prevLevel}" min="1" max="20" />
-			</div>
-		</form>
+		<div style="min-width: 400px; overflow-y: auto; padding-right: 1em;">
+			<form>
+				<div class="form-group">
+					<label>${LOCALIZED_TEXT.MACRO_ADD_FORMULAS}</label>
+					<select name="addFormulas">
+						<option value="yes">${LOCALIZED_TEXT.BTN_YES}</option>
+						<option value="no">${LOCALIZED_TEXT.BTN_NO}</option>
+					</select>
+				</div>
+				<br />
+				<div class="form-group">
+					<label>${LOCALIZED_TEXT.MACRO_PROMPT_STYLE}</label>
+					<select name="mode">
+						${defaultAddMode}
+						<option value="auto">${LOCALIZED_TEXT.AUTO}</option>
+						<option value="ask_each">${LOCALIZED_TEXT.ASK_EACH}</option>
+						<option value="ask_all">${LOCALIZED_TEXT.ASK_ALL}</option>
+					</select>
+				</div>
+				<br />
+				<div class="form-group">
+					<label for="level">${LOCALIZED_TEXT.MACRO_START_LEVEL}</label>
+					<input type="number" name="startlevel" id="startlevel" value="${prevLevel}" min="1" max="20" />
+				</div>
+			</form>
+		</div>
 	`;
 
 	const dialog = new foundry.applications.api.DialogV2({
@@ -880,7 +1084,7 @@ async function promptTokenFormulaAdd() {
 		],
 		submit: async (result) => {
 			if (result?.addFormulas !== undefined) {
-				dialog.close(); // ✅ Close immediately
+				dialog.close(); // Close immediately
 				await handleFormSubmit(actor, result,currentLevel);
 			}
 		}
@@ -890,6 +1094,7 @@ async function promptTokenFormulaAdd() {
 }
 
 //	Function to use as a macro to prompt to remove lower level formulas for alchemist
+// 	Finds items whose baseSlug matches deduplicatedBaseSlugs
 async function promptTokenFormulaRemove() {
 	
 	const token = canvas.tokens.controlled[0];
@@ -961,4 +1166,38 @@ async function promptTokenFormulaRemove() {
 	});
 
 	dialog.render(true);
+}
+
+// Process the AlchIndex instead of fetching compendiums directly.
+function processIndex(deduplicatedBaseSlugs) {
+	debugLog("processIndex() | Start");
+	
+	const idx = getAlchIndex();
+
+	if (!idx?.items) {
+		debugLog(2, "processIndex() | No items in index.");
+		return;
+	}
+
+	const relevantItems = [];
+	let logRelevantItems = "relevantItems[]: ";
+
+	for (const [uuid, entry] of Object.entries(idx.items)) {
+		if (!entry?.slug) {
+			logRelevantItems += `\n -> Skipping index entry ${entry.name} (${uuid}) missing slug`;
+			continue;
+		}
+
+		const baseSlug = extractBaseSlug(entry.slug);
+		if (deduplicatedBaseSlugs.includes(baseSlug)) {
+			logRelevantItems += `\n -> Adding ${entry.name} to logRelevantItems[]`;
+			relevantItems.push(entry);
+		}
+	}
+
+	debugLog(logRelevantItems);
+	debugLog(`processIndex() | Found ${relevantItems.length} matching entries`);
+	debugLog(`processIndex() | Returning: `, relevantItems);
+
+	return relevantItems;
 }

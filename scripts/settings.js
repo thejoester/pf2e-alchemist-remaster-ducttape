@@ -291,12 +291,13 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 */
 	Hooks.once("init", () => {
 		
+		/*
 		// Configure compendiums to have slug and traits indexable
 		const fields = new Set(CONFIG.Item.compendiumIndexFields ?? []);
 		fields.add("system.slug");
 		fields.add("system.traits.value");
 		CONFIG.Item.compendiumIndexFields = Array.from(fields);
-		
+		*/
 	//	=== Saved Data Settings ===
 
 		// Alchemical Index blob (uuid -> { name, desc, updatedAt })
@@ -792,6 +793,8 @@ Hooks.once("ready", async () => {
 	//	Logging
 	debugLog("settings.js | Ready hook triggered.");
 	
+	
+	/*
 	//	Index Compendiums
 	const compendiumIds = [
 		"pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items",
@@ -828,6 +831,7 @@ Hooks.once("ready", async () => {
 			debugLog(3, `Error preloading compendium ${id}: ${err?.message ?? err}`);
 		}
 	}
+	*/
 	
     //	Adjust collapseChatDesc based on the Workbench setting
     adjustCollapseSettingBasedOnWorkbench();

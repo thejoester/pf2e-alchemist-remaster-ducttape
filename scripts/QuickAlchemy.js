@@ -324,6 +324,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 Hooks.on("ready", async () => {
 	console.log("%cPF2e Alchemist Remaster Duct Tape QuickAlchemy.js loaded", "color: aqua; font-weight: bold;");
 	
+	/*
 	//	Preload compendium
 	try {
 		await game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items")?.getDocuments();
@@ -331,10 +332,11 @@ Hooks.on("ready", async () => {
 	} catch (err) {
 		debugLog(3, "Error preloading compendium alchemist-duct-tape-items: ", err);
 	}
+	*/
 	
 	// Attach function to the global window object
 	window.qaCraftAttack = qaCraftAttack;
-
+	
 });
 
 //	function to close popup from rollActionMacro
@@ -407,77 +409,113 @@ async function getActorSize(actor) {
 
 // Function to send a message with a link to use a consumable item
 async function sendConsumableUseMessage(itemUuid) {
-	const item = await fromUuid(itemUuid);
-	if (!item) {
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
-		return;
+	debugLog(`sendConsumableUseMessage(${itemUuid}) called`);
+	const NS = "pf2e-alchemist-remaster-ducttape";
+	let item = null;
+	let name = "";
+	let img = "";
+	let description = "";
+	let actor = null;
+	let traits = [];
+
+	// Branch: Compendium UUID - pulling from index
+	if (itemUuid.startsWith("Compendium.")) {
+		debugLog(`sendConsumableUseMessage() | Pulling from index`);
+		const idx = game.settings.get(NS, "alchIndex") || {};
+		const entry = idx.items?.[itemUuid] ?? null;
+
+		if (entry) {
+			name = entry.name ?? "(no name)";
+			img = entry.img ?? "icons/svg/mystery-man.svg";
+			description = entry.description ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+			traits = entry.traits ?? [];
+		} else {
+			// fallback: actually load it
+			item = await fromUuid(itemUuid);
+			if (!item) {
+				ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
+				return;
+			}
+			name = item.name;
+			img = item.img;
+			description = item.system?.description?.value ?? "";
+			traits = item.system?.traits?.value ?? [];
+		}
+
+	// Branch: Actor-owned item UUID
+	} else if (itemUuid.startsWith("Actor.")) {
+		debugLog(`sendConsumableUseMessage() | Pulling from item path`);
+		item = fromUuidSync(itemUuid) ?? await fromUuid(itemUuid);
+		if (!item) {
+			ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
+			return;
+		}
+		actor = item.actor ?? null;
+		name = item.name;
+		img = item.img;
+		description = item.system?.description?.value ?? "";
+		traits = item.system?.traits?.value ?? [];
 	}
 
-	const actor = item.actor;
-	if (!actor) {
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ACTOR_NOT_ASSOC_ITEM);
-		return;
-	}
-	
-	// If item has coagulant trait
-	const traits = item.system.traits?.value ?? [];
-	const slug = item.slug ?? "";
+	// Extra: Coagulant note (same as before)
+	const slug = item?.slug ?? "";
 	const showCoagulantNote = (slug === "healing-quick-vial-temp" || traits.includes("coagulant"));
 	let coagulantLink = "";
 	if (showCoagulantNote) {
 		const enrichedLink = await TextEditor.enrichHTML(
-			"This applies @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.htVOAKfVmVYafFrQ]{Coagulant Immunity} for 10 minutes, If the target is already under the effect of <strong>Coagulant Immunity</strong>, this healing has no effect.",
+			"This applies @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.htVOAKfVmVYafFrQ]{Coagulant Immunity} for 10 minutes. " +
+			"If the target is already under the effect of <strong>Coagulant Immunity</strong>, this healing has no effect.",
 			{ async: true }
 		);
 		coagulantLink = `<div class="card-flavor">${enrichedLink}</div>`;
 	}
-	
 
+	// Build Chat Content
 	const collapseChatDesc = getSetting("collapseChatDesc");
-	const itemName = item.name;
-	const itemImg = item.img || "path/to/default-image.webp";
-	const itemDescription = item.system?.description?.value || LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC;
-	const itemId = item.id; // Add item ID for tracking
+	const itemId = item?.id ?? "";
+	const actorId = actor?.id ?? "";
 
 	const content = `
-        <div class="pf2e chat-card item-card">
-            <header class="card-header flexrow">
-                <h3 class="chat-portrait-text-size-name-pf2e">
-                    <img src="${itemImg}" alt="${itemName}" width="36" height="36" class="chat-portrait-image-size-name-pf2e">
-                    ${itemName}
-                </h3>
-            </header>
-			
+		<div class="pf2e chat-card item-card">
+			<header class="card-header flexrow">
+				<h3 class="chat-portrait-text-size-name-pf2e">
+					<img src="${img}" alt="${name}" width="36" height="36" class="chat-portrait-image-size-name-pf2e">
+					${name}
+				</h3>
+			</header>
+
 			${coagulantLink}
 
-            ${collapseChatDesc ? `
-                <div class="collapsible-message">
-                    <i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
-                    <div class="collapsible-content" style="display: none;">
-                        <div class="card-content">
-                            <p>${itemDescription}</p>
-                        </div>
-                    </div>
-                </div>
-            ` : `
-                <div class="card-content">
-                    <p>${itemDescription}</p>
-                </div>
-            `}
+			${collapseChatDesc ? `
+				<div class="collapsible-message">
+					<i class="fas fa-eye toggle-icon" style="cursor: pointer;"></i>
+					<div class="collapsible-content" style="display: none;">
+						<div class="card-content">
+							<p>${description}</p>
+						</div>
+					</div>
+				</div>
+			` : `
+				<div class="card-content">
+					<p>${description}</p>
+				</div>
+			`}
 
-            <div class="card-buttons">
-                <button type="button" class="use-consumable" data-item-id="${item.id}" data-actor-id="${actor.id}">
-                    ${LOCALIZED_TEXT.BTN_USE}
-                </button>
-            </div>
-        </div>
-    `;
+			${actor ? `
+				<div class="card-buttons">
+					<button type="button" class="use-consumable" data-item-id="${itemId}" data-actor-id="${actorId}">
+						${LOCALIZED_TEXT.BTN_USE}
+					</button>
+				</div>
+			` : ""}
+		</div>
+	`;
 
-	// Create the chat message
+	// Post Chat Message
 	ChatMessage.create({
 		user: game.user.id,
-		speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY, actor: actor.id }, // Ensure the actor ID is available in speaker
-		content: content,
+		speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY, actor: actor?.id ?? null },
+		content
 	});
 }
 
@@ -499,12 +537,12 @@ function sendAlreadyConsumedChat() {
 	});
 }
 
-//	Function to create chat message after creating Versatile Vial prompting to 
+//	Function to create chat message after creating Quick Vial prompting to 
 //	attack or open QuickAlchemy dialog
 async function sendVialAttackMessage(itemUuid, actor) {
 	
-	// DEBUG: Log the UUID
-	debugLog(`sendVialAttackMessage() | Attempting to fetch item with UUID: ${itemUuid}`);
+	//Log the UUID
+	debugLog(`sendVialAttackMessage(${itemUuid}, actor) `);
 
 	// Fetch the item (weapon) from the provided full UUID
 	const item = await fromUuid(itemUuid);
@@ -625,7 +663,6 @@ async function sendWeaponAttackMessage(itemUuid) {
 
 }
 
-
 // Function to equip an item by slug
 async function equipItemBySlug(slug, actor) {
 	debugLog(`equipItemBySlug() | slug: ${slug}, actor:${actor.name}`);
@@ -674,7 +711,6 @@ async function clearInfused(actor) {
 	}
 }
 
- 	
 //	Function to craft "Healing Quick Vial" from the module compendium and add 
 //	"(*Temporary)" to the end of the name and custom flag
 async function craftHealingVial(selectedItem, selectedActor) {
@@ -1317,14 +1353,11 @@ async function processFilteredInventoryWithProgress(actor, type, slug) {
 		if (item.type === type) {
 			if (slug) {
 				if (item.slug.toLowerCase().includes(slug.toLowerCase())) {
-					listProcessedInventory = `${listProcessedInventory} added to filteredEntries`;
+					listProcessedInventory += `\n -> added ${item.slug} to filteredEntries`;
 					filteredEntries.push(item);
 				}
 				continue;
 			}
-		}
-		else {
-			listProcessedInventory = `${listProcessedInventory} skipping`;
 		}
 	}
 
@@ -1527,12 +1560,13 @@ async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`craftHealingBomb() | Item Selection: ${elixirUuid}`);
 	var healingSlug = "healing-bomb";
 	var elixir = await fromUuid(elixirUuid);
+	debugLog(`elixir: `, elixir);
 	if (!elixir) {
 		debugLog(`craftHealingBomb() | Actor not found`);
 		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
 		return;
 	}
-	const elixirStrength = elixir.slug.split("-").at(-1).toLowerCase();
+	const elixirStrength = (elixir.system?.slug ?? "").split("-").at(-1).toLowerCase();
 	debugLog(`craftHealingBomb() | elixirStrength: ${elixirStrength}`);
 
 	// Get base item from compendium
@@ -1554,8 +1588,8 @@ async function craftHealingBomb(actor, elixirUuid) {
 		}
 
 		// Find the item in the compendium
-		const compendiumIndex = await compendium.getIndex();
-		const healingItemEntry = compendiumIndex.find(entry => entry.system.slug === "healing-bomb-ardt");
+		const compendiumIndex = await compendium.getIndex({ fields: ["system.slug"] });
+		const healingItemEntry = compendiumIndex.find(e => e.system?.slug === "healing-bomb-ardt");
 		if (!healingItemEntry) {
 			debugLog(3, "craftHealingBomb() | Healing Quick Vial not found in compendium.");
 			return;
@@ -1703,7 +1737,6 @@ function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
 
 	return Promise.resolve(content); // Always return a Promise for consistency
 }
-
 
 //	Function to display healing bomb dialog
 async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = null) {

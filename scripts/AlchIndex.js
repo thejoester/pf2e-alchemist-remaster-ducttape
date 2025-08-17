@@ -10,6 +10,22 @@ window.PF2E_ARDT_INDEX ??= {};
 
 */
 	
+	// Function to search index by uuid and return slug
+	export async function qaGetIndexEntry(uuid) {
+		const index = game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndex") || {};
+		const entry = index?.items?.[uuid] ?? null;
+		debugLog(`AlchIndex.js: qaGetIndexEntry(${uuid}} \n`, entry);
+		return entry;
+	}
+	
+	// Function to search index by uuid and return slug
+	export async function qaGetSlugFromUuid(uuid){
+		const entry = getAlchIndex();
+		debugLog(`AlchIndex.js: qaGetSlugFromUuid(${uuid}) \n`, entry?.items?.[uuid]?.slug);
+		return entry?.items?.[uuid]?.slug ?? null;
+	}
+	
+	
 	//	Get Alchemical items Index
 	export function getAlchIndex() {
 		return game.settings.get("pf2e-alchemist-remaster-ducttape","alchIndex") ?? { items: {}, meta: {} };
@@ -52,18 +68,17 @@ window.PF2E_ARDT_INDEX ??= {};
 			});
 
 			if (!silent) {
-				ui.notifications.info(LOCALIZED_TEXT.INDEX_DONE_BODY?.(0) ?? "Alchemical index rebuilt.");
+				debugLog(LOCALIZED_TEXT.INDEX_DONE_BODY?.(0) ?? "Alchemical index rebuilt.");
 			}
 
 			debugLog("AlchIndex.js: qaForceRebuildAlchIndex complete");
 		} catch (err) {
-			debugLog(`AlchIndex.js: qaForceRebuildAlchIndex error: ${err?.message ?? err}`);
+			debugLog(`AlchIndex.js: qaForceRebuildAlchIndex error: \nMessage: ${err?.message ?? err} \n`);
 		}
 }
 	
 /*	===== Macro Functions =====
 */
-
 	// GM-only: confirm, then clear the built index + meta
 	PF2E_ARDT_INDEX.clearIndexWithPrompt = async function () {
 		const NS = "pf2e-alchemist-remaster-ducttape";
@@ -101,50 +116,17 @@ window.PF2E_ARDT_INDEX ??= {};
 
 	//	Function to build/rebuild index
 	async function qaBuildOrUpdateAlchIndex({ fullRebuild, meta }) {
+		const start = performance.now();
 		debugLog("AlchIndex.js: qaBuildOrUpdateAlchIndex start");
-
+		
 		// Packs to scan
 		const userPacks = (game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") ?? [])
 			.filter(Boolean);
-		const packs = ["pf2e.equipment-srd", ...userPacks];
-
-		// Open non-blocking progress dialog
-		let progressRoot = null;
-		const progressDlg = new foundry.applications.api.DialogV2({
-			window: { title: LOCALIZED_TEXT.INDEX_PROGRESS_TITLE },
-			classes: ["quick-alchemy-dialog"],
-			content: `
-				<form>
-					<div class="qa-wrapper" style="min-width:320px;max-width:520px">
-						<p>${LOCALIZED_TEXT.INDEX_PROGRESS_HINT}</p>
-						<div id="qa-idx-status" style="margin:.5em 0 1em 0"></div>
-						<progress id="qa-idx-progress" max="100" value="0" style="width:100%"></progress>
-						<button type="button" data-action="close" style="display:none"></button>
-					</div>
-				</form>
-			`,
-			buttons: [
-				{ action: "close", label: LOCALIZED_TEXT.CLOSE, callback: () => {} }
-			],
-			render: (_ev, dialog) => {
-				const host = dialog.element;
-				progressRoot = host?.shadowRoot ?? host;
-			}
-		});
-		progressDlg.render(true);
+		const packs = ["pf2e.equipment-srd", "pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items", ...userPacks];
 
 		// Load existing index (or start fresh)
 		const prev = game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndex") ?? { meta: {}, items: {} };
 		const items = fullRebuild ? {} : (prev.items ?? {});
-
-		const setStatus = (msg) => {
-			const el = progressRoot?.querySelector("#qa-idx-status");
-			if (el) el.textContent = msg;
-		};
-		const setProgress = (pct) => {
-			const el = progressRoot?.querySelector("#qa-idx-progress");
-			if (el) el.value = Math.max(0, Math.min(100, pct));
-		};
 
 		// First pass: count items
 		let total = 0;
@@ -164,21 +146,23 @@ window.PF2E_ARDT_INDEX ??= {};
 			const pack = game.packs.get(key);
 			if (!pack) continue;
 
-			setStatus(LOCALIZED_TEXT.INDEX_PROGRESS_PACK(key));
+			debugLog(`AlchIndex.js: Processing pack ${key}`);
 
 			const idx = await pack.getIndex({
-				fields: ["name", "system.slug", "system.traits.value", "system.description.value"]
+				fields: ["name", "img", "system.slug", "system.traits.value", "system.traits.rarity", "system.description.value", "system.level.value"]
 			});
 
 			for (const e of idx) {
 				done++;
-				setProgress((done / Math.max(1, total)) * 100);
 
+				// Fields to store in Index
 				const traits = e.system?.traits?.value ?? [];
-				if (!traits.includes("alchemical")) continue;
-
+				if (!traits.includes("alchemical")) continue; // filter only Alchemical items
 				let html = e.system?.description?.value ?? "";
 				let slug = e.system?.slug ?? "";
+				const img = e.img ?? "";
+				const level = e.system?.level?.value ?? null;
+				const rarity = e.system.traits?.rarity ?? null;
 
 				if (!html || !slug) {
 					const doc = await fromUuid(`Compendium.${pack.collection}.Item.${e._id}`);
@@ -187,7 +171,7 @@ window.PF2E_ARDT_INDEX ??= {};
 				}
 
 				const uuid = `Compendium.${pack.collection}.Item.${e._id}`;
-				items[uuid] = { uuid, name: e.name, slug, description: html };
+				items[uuid] = { uuid, name: e.name, slug, description: html, traits, img, level, rarity  };
 
 				// Yield occasionally to keep UI responsive
 				if (performance.now() - lastYield > 16) {
@@ -200,58 +184,32 @@ window.PF2E_ARDT_INDEX ??= {};
 		// Save index with meta
 		const final = { meta, items };
 		await game.settings.set("pf2e-alchemist-remaster-ducttape", "alchIndex", final);
-		debugLog(`AlchIndex.js: Saved index with ${Object.keys(items).length} entries`);
+		const elapsed = ((performance.now() - start) / 1000).toFixed(2);
 
-		// Close progress window and toast “done”
-		progressDlg.close({ force: true });
-		ui.notifications.info(
-			`${LOCALIZED_TEXT.INDEX_DONE_TITLE}: ${LOCALIZED_TEXT.INDEX_DONE_BODY(Object.keys(items).length)}`
-		);
+		debugLog(`AlchIndex.js: Saved index with ${Object.keys(items).length} entries in ${elapsed}s`);
 	}
-
 
 /*	===== Hooks =====
 */
 
 Hooks.once("ready", async () => {
-	
-	//	make macros accessible
+	// Make macros accessible
 	window.qaForceRebuildAlchIndex = qaForceRebuildAlchIndex;
 	window.PF2E_ARDT_INDEX.qaForceRebuildAlchIndex = qaForceRebuildAlchIndex;
-	
+
 	try {
 		debugLog("AlchIndex.js: ready hook hit");
 		if (!game.user.isGM) return;
 
-		const NS = "pf2e-alchemist-remaster-ducttape";
-		const meta = game.settings.get(NS, "alchIndexMeta") ?? {};
-		const systemVersion = game.system?.version ?? "0.0.0";
-		const locale = game.i18n?.lang ?? "en";
-		const changed =
-			!meta.systemVersion || !meta.locale ||
-			meta.systemVersion !== systemVersion || meta.locale !== locale;
+		const start = performance.now();
+		debugLog("AlchIndex.js: Auto rebuild triggered at startup");
+		
+		await qaForceRebuildAlchIndex({ reason: "startup auto-rebuild" });
 
-		debugLog(`AlchIndex.js: meta=${JSON.stringify(meta)} | sys=${systemVersion} | locale=${locale} | changed=${changed}`);
-		if (!changed) return;
-
-		const msg = typeof LOCALIZED_TEXT?.INDEX_PROMPT_MSG === "function"
-			? LOCALIZED_TEXT.INDEX_PROMPT_MSG(meta.systemVersion || "-", systemVersion, meta.locale || "-", locale)
-			: game.i18n.format("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.INDEX_PROMPT_MSG", {
-				oldSystemVersion: meta.systemVersion || "-",
-				systemVersion,
-				oldLocale: meta.locale || "-",
-				locale
-			});
-
-		const ok = await foundry.applications.api.DialogV2.confirm({
-			window: { title: LOCALIZED_TEXT.INDEX_PROMPT_TITLE },
-			content: `<p style="white-space:pre-wrap">${msg}</p>`
-		});
-		debugLog(`AlchIndex.js: Dialog choice: ${ok ? "OK" : "Cancel"}`);
-		if (!ok) return;
-
-		await qaForceRebuildAlchIndex({ reason: "auto-prompt" });
+		const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+		debugLog(`AlchIndex.js: Auto rebuild finished in ${elapsed}s`);
 	} catch (err) {
 		debugLog(`AlchIndex.js: ready hook error: ${err?.message ?? err}`);
 	}
+	
 });
