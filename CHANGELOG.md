@@ -5,14 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2025-08-17
+### Added
+- **Quick Alchemy:** Added item description on Quick Alchemy macro when selecting item to craft vor v13.
+  - Can disable in settings. 
+- **Module:** Module is no longer supporting Foundry v12. 
+### Changed
+- **Module:** Made several changes to improve performance. 
+- **Level Up:** For performance, when leveling up it will only prompt for/add highter level formulas for Alchemical items. If you want to manually run a full check on all items the "Update Formulas" macro in the module compendium will do so, but is slower. 
+- **Module:** Updated module Journal to have more details on features, settings, etc. 
+
 ## [2.12.3] - 2025-08-15
 ### Fixed
 - Okay I was wrong, barring any major bugs from now on however, this should be the last v12 update
 - **Quick Alchemy:** Fixed bug preventing Double Brew option from showing. ([Issue 56](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/56))
 ### Changed
 - **Localization:** Updated Polish translations. Credit: [Lioheart](https://github.com/Lioheart)
-- **Localization:** Updated Chinese translations. Credit [AlphaStarguide](https://github.com/AlphaStarguide)
-- **Localization:** Updated British Portuguese translation with google translate, if changes needed please submit PR or issue.
+- **Localization:** Updated Chinese translations. Credit: [AlphaStarguide](https://github.com/AlphaStarguide)
+- **Localization:** Updated British Portuguese translation with google translate, if changes needed please submit PR or issue. Original Credit: [Charlinho](https://github.com/Chrystian-Carvalho)
 
 ## [2.12.2] - 2025-08-14
 ### Added 

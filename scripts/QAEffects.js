@@ -33,8 +33,8 @@ function isQuickAlchemyItem(item) {
 // Limit duration on QA effects
 Hooks.on('preCreateItem', async (effect, data) => {
 	try {
-		if (!game.user.isGM) return;
-		if (data?.type !== 'effect') return;
+		if (!game.user.isGM) return;			// Only process as GM
+		if (data?.type !== 'effect') return;	// Only process for Effects
 
 		const actor = effect.actor;
 		if (!actor) return;
@@ -66,7 +66,7 @@ Hooks.on('preCreateItem', async (effect, data) => {
 			originUuid,
 		});
 
-		// If we have no origin UUID at all, we can't verify—bail early.
+		// If we have no origin UUID at all, we can't verify... bail early.
 		if (!originUuid) {
 			debugLog('QAEffects.js: no origin UUID on effect – skipping limit', {});
 			return;
@@ -75,7 +75,7 @@ Hooks.on('preCreateItem', async (effect, data) => {
 		let isQA = false;
 		let via = null;
 
-		// (1) Try resolving the origin item live
+		// Try resolving the origin item live
 		let sourceItem = null;
 		try { sourceItem = await fromUuid(originUuid); } catch { /* ignore */ }
 

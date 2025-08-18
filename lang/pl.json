@@ -107,8 +107,6 @@
 		"SETTING_COMPENDIUM_CHECK_HINT":"Lista kompendiów, w których można szukać przedmiotów wyższego poziomu podczas awansowania postaci.",
 		"SETTING_SHOW_HELP":"Pokaż przycisk pomocy Szybkiej Alchemii",
 		"SETTING_SHOW_HELP_HINT":"Wyświetl przycisk pomocy w oknie dialogowym Szybka Alchemia, który prowadzi do wpisu w dzienniku dokumentacji.",
-		"SETTING_SHOW_FORMULA_DESC_NAME": "Szybka Alchemia: Wyświetl panel opisu",
-		"SETTING_SHOW_FORMULA_DESC_HINT": "Po włączeniu okna dialogowe Szybka Alchemia będą wyświetlać rozszerzony opis, który aktualizuje się wraz z wyborem użytkownika.",
 		
 		"QUICK_ALCHEMY":" Szybka Alchemia",
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Szybka Alchemia: Wybierz rodzaj przedmiotu",
@@ -135,7 +133,6 @@
 		"QUICK_ALCHEMY_DB_CRAFT_VV": "Masz tylko {vialcount} uniwersalnych fiolek, użyć Podwójny Napar, aby stworzyć kolejną?",
 		"QUICK_ALCHEMY_NO_VV":"Nie masz więcej Uniwersalnych Fiolek.",
 		"QUICK_ALCHEMY_10_MIN":"Musisz poświęcić 10 minut na poszukiwanie odczynników, aby stworzyć więcej.",
-		"QUICK_ALCHEMY_REOPEN_SHEET":"Spróbuj otworzyć kartę postaci, a następnie spróbuj ponownie.",
 		
 		"FORMULA_SEARCH_SEARCH":"Wyszukiwanie formuł...",
 		

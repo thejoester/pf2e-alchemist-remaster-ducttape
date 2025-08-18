@@ -2,9 +2,9 @@
     "id": "pf2e-alchemist-remaster-ducttape",
     "title": "PF2e Alchemist Remaster Duct Tape",
     "description": "A module to slap together some functionality until the PF2e system is updated to support the Alchmist remaster.",
-    "version": "2.12.3",
+    "version": "2.13.0",
     "compatibility": {
-        "minimum": "12",
+        "minimum": "13",
         "verified": "13"
     },
     "styles": [
@@ -12,6 +12,8 @@
     ],
     "esmodules": [
         "scripts/settings.js",
+		"scripts/localization.js",
+		"scripts/AlchIndex.js",
 		"scripts/QAEffects.js",
         "scripts/QuickAlchemy.js",
         "scripts/AlchemistFeats.js",
@@ -22,11 +24,11 @@
     ],
 	"media": [
 		{
-		  "type": "setup",
-		  "caption": "PF2e Alchemist Remaster Duct Tape",
-		  "thumbnail": "modules/pf2e-alchemist-remaster-ducttape/assets/banner.png",
-		  "loop": false,
-		  "flags": {}
+			"type": "setup",
+			"caption": "PF2e Alchemist Remaster Duct Tape",
+			"thumbnail": "modules/pf2e-alchemist-remaster-ducttape/assets/banner.png",
+			"loop": false,
+			"flags": {}
 		}
 	],
 	"url": "https://github.com/thejoester/pf2e-alchemist-remaster-ducttape",
@@ -45,7 +47,7 @@
                 "id": "pf2e",
                 "type": "system",
                 "compatibility": {
-                    "minimum": "6.12.4",
+                    "minimum": "7.0.0",
                     "verified": "7.3.1"
                 }
             }

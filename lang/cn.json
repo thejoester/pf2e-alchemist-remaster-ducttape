@@ -176,9 +176,6 @@
         "QUICK_ALCHEMY_PROCESSING_MSG": "正在处理{formulacount}个配方，首次运行时可能需要一段时间…<br>如果该窗口未自动关闭，您可以手动将其关闭。",
         "SETTING_VIAL_SEARCH_REMINDER_HINT": "当非战斗的游戏时间流逝至少10分钟后，提醒炼金术士玩家获取万用制剂。",
         "QUICK_ALCHEMY_APPLY_INJURY_POISON": "你要将该制剂作为伤口毒素，还是作为速调制剂（炸弹）使用？",
-        "SETTING_LEVELUP_HANDLE_LOWER_LEVEL_HINT": "升级后，将检查是否有低等级配方可用，若有则将其移除以保持配方列表简洁。添加低等级版本=将添加已知配方的低等级版本；移除低等级版本（默认）=如果已知配方有高等级版本，则会移除其低等级版本。",
-        "SETTING_SHOW_FORMULA_DESC_NAME": "高速炼金：显示描述面板",
-        "QUICK_ALCHEMY_REOPEN_SHEET": "请重新打开角色卡并再尝试使用一次高速炼金。",
-        "SETTING_SHOW_FORMULA_DESC_HINT": "启用时，高速炼金对话框将显示一个随你的选择更新的详情描述。"
+        "SETTING_LEVELUP_HANDLE_LOWER_LEVEL_HINT": "升级后，将检查是否有低等级配方可用，若有则将其移除以保持配方列表简洁。添加低等级版本=将添加已知配方的低等级版本；移除低等级版本（默认）=如果已知配方有高等级版本，则会移除其低等级版本。"
     }
 }

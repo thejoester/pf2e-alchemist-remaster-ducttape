@@ -107,8 +107,6 @@
 		"SETTING_COMPENDIUM_CHECK_HINT": "Lista de compêndios para procurar itens de nível mais alto quando os personagens subirem de nível.", 
 		"SETTING_SHOW_HELP": "Mostrar botão de ajuda da Alquimia Rápida",
 		"SETTING_SHOW_HELP_HINT": "Exibe um botão de ajuda no diálogo de Alquimia Rápida que abre a entrada de diário com a documentação."
-		"SETTING_SHOW_FORMULA_DESC_NAME": "Alquimia Rápida: Mostrar painel de descrição",
-		"SETTING_SHOW_FORMULA_DESC_HINT": "Quando ativado, os diálogos de Alquimia Rápida mostrarão uma descrição detalhada que será atualizada conforme sua seleção.",
 		
 		"QUICK_ALCHEMY": "Alquimia Rápida", 
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE": "Alquimia Rápida: Selecione o Tipo de Item",
@@ -135,7 +133,6 @@
 		"QUICK_ALCHEMY_DB_CRAFT_VV": "Você possui um total de {vialcount} Ampolas Versáteis, gostaria de usar Produção Dupla para fabricar outro item?",
 		"QUICK_ALCHEMY_NO_VV":"Você não possui mais Ampolas Versáteis.",
 		"QUICK_ALCHEMY_10_MIN":"Você deve passar 10 minutos buscando por reagentes para poder fabricar mais.",
-		"QUICK_ALCHEMY_REOPEN_SHEET": "Tente abrir a ficha do personagem e tente novamente.",
 		
 		"FORMULA_SEARCH_SEARCH":"Buscando Fórmulas...",
 		
