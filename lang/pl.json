@@ -107,6 +107,8 @@
 		"SETTING_COMPENDIUM_CHECK_HINT":"Lista kompendiów, w których można szukać przedmiotów wyższego poziomu podczas awansowania postaci.",
 		"SETTING_SHOW_HELP":"Pokaż przycisk pomocy Szybkiej Alchemii",
 		"SETTING_SHOW_HELP_HINT":"Wyświetl przycisk pomocy w oknie dialogowym Szybka Alchemia, który prowadzi do wpisu w dzienniku dokumentacji.",
+		"SETTING_SHOW_FORMULA_DESC_NAME": "Szybka Alchemia: Wyświetl panel opisu",
+		"SETTING_SHOW_FORMULA_DESC_HINT": "Po włączeniu okna dialogowe Szybka Alchemia będą wyświetlać rozszerzony opis, który aktualizuje się wraz z wyborem użytkownika.",
 		
 		"QUICK_ALCHEMY":" Szybka Alchemia",
 		"QUICK_ALCHEMY_PROMPT_ITEM_TYPE":"Szybka Alchemia: Wybierz rodzaj przedmiotu",
@@ -133,6 +135,7 @@
 		"QUICK_ALCHEMY_DB_CRAFT_VV": "Masz tylko {vialcount} uniwersalnych fiolek, użyć Podwójny Napar, aby stworzyć kolejną?",
 		"QUICK_ALCHEMY_NO_VV":"Nie masz więcej Uniwersalnych Fiolek.",
 		"QUICK_ALCHEMY_10_MIN":"Musisz poświęcić 10 minut na poszukiwanie odczynników, aby stworzyć więcej.",
+		"QUICK_ALCHEMY_REOPEN_SHEET":"Spróbuj otworzyć kartę postaci, a następnie spróbuj ponownie.",
 		
 		"FORMULA_SEARCH_SEARCH":"Wyszukiwanie formuł...",
 		
@@ -185,6 +188,18 @@
 		"HEALING_BOMB_BUTTON_FAILURE": "Zastosuj porażkę leczenia",
 		"HEALING_BOMB_SELECT_CRAFT_INVENTORY":"Chcesz stworzyć nowy Eliksir Życia <br />lub<br /> użyć jednego z posiadanych w ekwipunku?",
 		"HEALING_BOMB_CRAFT": "Wytwarzanie Bomby Uzdrawiającej",
-		"HEALING_BOMB_SELECT_INVENTORY":"Wybierz z ekwipunku Eliksir Życia, którego chcesz użyć"
+		"HEALING_BOMB_SELECT_INVENTORY":"Wybierz z ekwipunku Eliksir Życia, którego chcesz użyć",
+		
+		"INDEX_PROGRESS_TITLE": "Budowanie indeksu alchemicznego...",
+		"INDEX_PROGRESS_HINT": "Możesz zamknąć to okno; indeksowanie będzie kontynuowane.",
+		"INDEX_PROGRESS_PACK": "Skanowanie {pack}...",
+		"INDEX_DONE_TITLE": "Indeks zakończony",
+		"INDEX_DONE_BODY": "Indeksowanie {count} przedmiotów alchemicznych.",
+		"GM_ONLY": "Tylko MG",
+		"INDEX_CLEAR_PROMPT_TITLE": "Wyczyścić indeks alchemiczny?",
+		"INDEX_CLEAR_PROMPT_BODY": "Spowoduje to usunięcie buforowanego indeksu przedmiotów alchemicznych dla tego świata.\n\nZostaniesz poproszony o jego odbudowę przy następnym załadowaniu świata lub po uruchomieniu odbudowy.\n\nKontynuować?",
+		"INDEX_CLEAR_DONE": "Indeks alchemiczny wyczyszczony.",
+		"INDEX_CLEAR_ABORTED": "Anulowano.",
+		"INDEX_CLEAR_FAILED": "Nie udało się wyczyścić indeksu alchemicznego."
 	}
 }
