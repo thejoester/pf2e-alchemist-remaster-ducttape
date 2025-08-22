@@ -106,7 +106,6 @@ body:
     attributes:
       label: Attach character .json / files (optional)
       description: >
-        Drag and drop files here (Actor export .json, minimal repro world ZIP, screenshots).
-        To export an actor: right-click the actor in the Actors tab → **Export Data**.
+        Drag and drop Actor .json here (To export an actor: right-click the actor in the Actors tab → **Export Data**).
       placeholder: >
         Drop files here or paste links. GitHub will upload and insert links automatically.
