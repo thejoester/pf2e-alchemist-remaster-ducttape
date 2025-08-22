@@ -7,41 +7,9 @@ body:
     attributes:
       value: |
         ## Thanks for reporting a bug!
-
         Please complete the form below to help us diagnose the issue.
-  - type: input
-    id: foundry-version
-    attributes:
-      label: Foundry VTT Version
-      placeholder: e.g., 12.999
-    validations:
-      required: true
-  - type: input
-    id: pf2e-version
-    attributes:
-      label: Pathfinder 2E System Version
-      placeholder: e.g., 5.9.3
-    validations:
-      required: true
-  - type: input
-    id: module-version
-    attributes:
-      label: Module Version
-      placeholder: e.g., 1.2.0
-    validations:
-      required: true
-  - type: textarea
-    id: description
-    attributes:
-      label: What happened?
-      placeholder: Describe the bug and what you expected to happen.
-    validations:
-      required: true
-  - type: textarea
-    id: steps
-    attributes:
-      label: Steps to Reproduce
-      placeholder: 1. Go to... 2. Click on... 3. See error
+
+  # Confirm they've read the troubleshooting page
   - type: checkboxes
     id: read-troubleshooting
     attributes:
@@ -49,19 +17,88 @@ body:
       description: Please confirm you have reviewed the troubleshooting steps in our wiki.
       options:
         - label: "I have read the [Troubleshooting](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki/Troubleshooting) page."
-          required: false
+          required: true
+
+  # Screening questions
+  - type: dropdown
+    id: in-party-folder
+    attributes:
+      label: Is this Alchemist in the Party folder?
+      options: [Yes, No]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: imported-from-pathbuilder
+    attributes:
+      label: Was this Alchemist imported from Pathbuilder using a tool like Pathmuncher?
+      options: [Yes, No]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pre-remaster
+    attributes:
+      label: Was the character built pre-remaster or before PF2e v6.8.0?
+      options: [Yes, No]
+    validations:
+      required: true
+
+  - type: input
+    id: foundry-version
+    attributes:
+      label: Foundry VTT Version
+      placeholder: e.g., 12.999
+    validations:
+      required: true
+
+  - type: input
+    id: pf2e-version
+    attributes:
+      label: Pathfinder 2E System Version
+      placeholder: e.g., 6.9.3
+    validations:
+      required: true
+
+  - type: input
+    id: module-version
+    attributes:
+      label: Module Version
+      placeholder: e.g., 1.2.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      placeholder: Describe the bug and what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. See error
+
   - type: textarea
     id: console
     attributes:
       label: Relevant Debug Logs or Errors
       description: Paste any relevant debugLog output or browser console errors here.
       render: shell
-  - type: attachments
+
+  # Use a textarea to accept drag-and-drop uploads (GitHub will insert links)
+  - type: textarea
     id: attachments
     attributes:
-      label: Attach character .json (optional)
+      label: Attach character .json / files (optional)
       description: >
-        Upload your exported Actor (.json), minimal reproduction world, or logs/screenshots.
-        to export, right click on actor in actor tab, and choose 'Export Data'. 
-    validations:
-      required: false
+        Drag and drop files here (Actor export .json, minimal repro world ZIP, screenshots).
+        To export an actor: right-click the actor in the Actors tab → **Export Data**.
+      placeholder: >
+        Drop files here or paste links. GitHub will upload and insert links automatically.
