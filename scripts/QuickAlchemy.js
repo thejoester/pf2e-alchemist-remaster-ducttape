@@ -715,7 +715,7 @@ async function clearInfused(actor) {
 //	"(*Temporary)" to the end of the name and custom flag
 async function craftHealingVial(selectedItem, selectedActor) {
 	// Define the slug for the healing quick vial
-	const healingSlug = "healing-quick-vial";
+	const healingSlug = "healing-quick-vial-temp";
 	const alchemyMode = getSetting("enableSizeBasedAlchemy", "disabled");
 
 	// Get actor size to use for new item size
@@ -804,7 +804,6 @@ async function craftHealingVial(selectedItem, selectedActor) {
 		}
 	}
 }
-
  	
 //	Function to craft Quick Vial using Quick Alchemy and add "(*Temporary)" 
 //	to the end of the name and custom tag to any item created with this 

@@ -793,30 +793,25 @@ Hooks.once("ready", async () => {
 	//	Logging
 	debugLog("settings.js | Ready hook triggered.");
 	
-	
-	/*
-	//	Index Compendiums
-	const compendiumIds = [
-		"pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items",
-		"pf2e.equipment-srd"
-	];
-	// Get user-defined compendiums from settings
-	const userDefinedCompendiums = game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") || [];
-	compendiumIds.push(...userDefinedCompendiums);
-	
+	//	Index module item Compendiums
 	try {
+		const compendiumIds = [
+			"pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items",
+			...(game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") || [])
+		];
+
 		for (const id of compendiumIds) {
 			const pack = game.packs.get(id);
 			if (!pack) {
-				debugLog(3, `Compendium not found: ${id}`);
+				debugLog(3, `settings.js: Compendium not found: ${id}`);
 				continue;
 			}
-			// Force reindex with the new fields (traits) BEFORE any getDocuments()
-			await pack.getIndex({ reload: true });
-			debugLog(`Reindexed compendium: ${id}`);
+			// v13: request fields so players get slug in the index
+			await pack.getIndex({ fields: ["slug", "system.slug", "name"], reload: true });
+			debugLog(`settings.js: Reindexed with fields: ${id}`);
 		}
 	} catch (err) {
-		debugLog(3, `Error reindexing compendiums: ${err?.message ?? err}`);
+		debugLog(3, `settings.js: Error reindexing compendiums: ${err?.message ?? err}`);
 	}
 
 	// preload 
@@ -825,13 +820,12 @@ Hooks.once("ready", async () => {
 			const pack = game.packs.get(id);
 			if (pack) {
 				await pack.getDocuments();
-				debugLog(`Preloaded compendium: ${id}`);
+				debugLog(`settings.js: Preloaded compendium: ${id}`);
 			}
 		} catch (err) {
-			debugLog(3, `Error preloading compendium ${id}: ${err?.message ?? err}`);
+			debugLog(3, `settings.js: Error preloading compendium ${id}: ${err?.message ?? err}`);
 		}
 	}
-	*/
 	
     //	Adjust collapseChatDesc based on the Workbench setting
     adjustCollapseSettingBasedOnWorkbench();
