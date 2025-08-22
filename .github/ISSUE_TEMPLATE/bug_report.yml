@@ -25,6 +25,7 @@ body:
     attributes:
       label: Is this Alchemist in the Party folder?
       options:
+        - ""
         - "Yes"
         - "No"
     validations:
@@ -35,6 +36,7 @@ body:
     attributes:
       label: Was this Alchemist imported from Pathbuilder using a tool like Pathmuncher?
       options:
+        - ""
         - "Yes"
         - "No"
     validations:
@@ -45,6 +47,7 @@ body:
     attributes:
       label: Was the character built pre-remaster or before PF2e v6.8.0?
       options:
+        - ""
         - "Yes"
         - "No"
     validations:
