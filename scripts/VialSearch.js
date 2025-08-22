@@ -97,9 +97,13 @@ Hooks.once('init', () => {
 					Checking that actor is Alchemist
 					!!!Archetype does not qualify for this feature!!!
 				*/
-				const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
-				if (!isAlchemist) continue; // actor is not alchemist, stop
-
+				
+				// old broken way
+				// const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
+				
+				const alchemistCheck = isAlchemist(actor);
+				if (!alchemistCheck.qualifies) continue; // actor is not alchemist, stop
+				debugLog(`VialSearch.js | processing actor: `, actor);
 				// Avoid processing the same actor multiple times
 				if (processedActorIds.has(actor.id)) continue;
 				processedActorIds.add(actor.id);

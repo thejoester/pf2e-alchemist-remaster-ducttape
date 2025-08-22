@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.13.1] - 2025-08-22
 ### Fixed
+- **Vial Search:** Fixed error that prevented Vial Search from working properly for Archetypes or dedication based alchemists. 
+
+## [2.13.1] - 2025-08-22
+### Fixed
 - **Quick Alchemy:** Fixed but preventing player from creating Healing Quick Vial.
 
 ## [2.13.0] - 2025-08-17
