@@ -24,7 +24,9 @@ body:
     id: in-party-folder
     attributes:
       label: Is this Alchemist in the Party folder?
-      options: [Yes, No]
+      options:
+        - "Yes"
+        - "No"
     validations:
       required: true
 
@@ -32,7 +34,9 @@ body:
     id: imported-from-pathbuilder
     attributes:
       label: Was this Alchemist imported from Pathbuilder using a tool like Pathmuncher?
-      options: [Yes, No]
+      options:
+        - "Yes"
+        - "No"
     validations:
       required: true
 
@@ -40,7 +44,9 @@ body:
     id: pre-remaster
     attributes:
       label: Was the character built pre-remaster or before PF2e v6.8.0?
-      options: [Yes, No]
+      options:
+        - "Yes"
+        - "No"
     validations:
       required: true
 
@@ -92,7 +98,6 @@ body:
       description: Paste any relevant debugLog output or browser console errors here.
       render: shell
 
-  # Use a textarea to accept drag-and-drop uploads (GitHub will insert links)
   - type: textarea
     id: attachments
     attributes:
