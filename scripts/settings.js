@@ -162,6 +162,7 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 
 	//	Function to dynamically manage collapseChatDesc setting based on Workbench's setting
 	function adjustCollapseSettingBasedOnWorkbench() {
+		if (!game.user.isGM) return;
 		const settingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
 		const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
 		const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;

@@ -1213,8 +1213,9 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 			if (!entry || !(entry?.traits?.length || entry?.system?.traits?.value?.length)) {
 				try {
 					entry = await fromUuid(formula.uuid);
+					debugLog(2, `processFilteredFormulasWithProgress() | Index fetch failed for ${formula.uuid}, possibly not Alchemical`);
 				} catch (e) {
-					debugLog(3, `processFilteredFormulasWithProgress() | fromUuid fallback failed for ${formula.uuid}: ${e?.message ?? e}`);
+					debugLog(2, `processFilteredFormulasWithProgress() | fromUuid fallback failed for ${formula.uuid}: ${e?.message ?? e}`);
 					entry = null;
 				}
 			}
@@ -1314,7 +1315,7 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	});
 
 	// TEMP DEBUG
-	debugLog(`processFilteredFormulasWithProgress() | Returning ${filteredEntries.length} filteredEntries | slugs:\n ->[${filteredEntries.map(i => i.slug ?? i.system?.slug ?? i.name).join("\n ->")}]`);
+	debugLog(`processFilteredFormulasWithProgress() | Returning ${filteredEntries.length} filteredEntries | slugs:\n -> ${filteredEntries.map(i => i.slug ?? i.system?.slug ?? i.name).join("\n -> ")}]`);
 	return { filteredEntries };
 
 	// Close progress dialog - just in case
