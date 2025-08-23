@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.4] - 2025-08-23
+### Fixed
+- **Module:** accident caused bad versions of multiple files to be packaged. Rolled back to 2.13.0 and then updated to include all subsequent features. 
+### Changed
+- **Journal:** Updated Journal in compendium with more information on the module and features. 
+
 ## [2.13.3] - 2025-08-22
 ### Fixed
 - **Quick Alchemy:** Fixed mistake on last update that reverted Quick Alchemy macro. 

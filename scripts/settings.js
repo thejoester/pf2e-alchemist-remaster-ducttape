@@ -807,7 +807,7 @@ Hooks.once("ready", async () => {
 				continue;
 			}
 			// v13: request fields so players get slug in the index
-			await pack.getIndex({ fields: ["slug", "system.slug", "name"], reload: true });
+			await pack.getIndex({ fields: ["slug", "system.slug", "name", , "system.traits.value"], reload: true });
 			debugLog(`settings.js: Reindexed with fields: ${id}`);
 		}
 		

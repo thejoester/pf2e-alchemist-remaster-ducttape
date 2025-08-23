@@ -1,5 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
-import { getAlchIndex, setAlchIndex } from "./AlchIndex.js";
+import { getAlchIndex, setAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 
 let isArchetype = false;
@@ -715,7 +715,7 @@ async function clearInfused(actor) {
 //	"(*Temporary)" to the end of the name and custom flag
 async function craftHealingVial(selectedItem, selectedActor) {
 	// Define the slug for the healing quick vial
-	const healingSlug = "healing-quick-vial-temp";
+	const healingSlug = "healing-quick-vial";
 	const alchemyMode = getSetting("enableSizeBasedAlchemy", "disabled");
 
 	// Get actor size to use for new item size
@@ -804,6 +804,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 		}
 	}
 }
+
  	
 //	Function to craft Quick Vial using Quick Alchemy and add "(*Temporary)" 
 //	to the end of the name and custom tag to any item created with this 
@@ -1039,12 +1040,12 @@ async function processFormulasWithProgress(actor) {
 		`,
 		buttons: [
 			{
-				action: "noop",
-				label: LOCALIZED_TEXT.OK,
-				icon: "",
-				callback: () => {},
-				disabled: true
-			}
+                action: "noop",
+                label: LOCALIZED_TEXT.OK,
+                icon: "",
+                callback: () => {},
+                disabled: true
+            }
 		],
 		close: () => {}
 	});
@@ -1058,7 +1059,18 @@ async function processFormulasWithProgress(actor) {
 	let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
 		try {
-			const entry = fromUuidSync(formula.uuid);
+			// ---------- INDEX FIRST, THEN ASYNC DOC FALLBACK ----------
+			let entry = await qaGetIndexEntry(formula.uuid);
+
+			if (!entry || !(entry?.traits?.length || entry?.system?.traits?.value?.length)) {
+				try {
+					entry = await fromUuid(formula.uuid);
+				} catch (e) {
+					debugLog(3, `processFormulasWithProgress() | fromUuid fallback failed for ${formula.uuid}: ${e?.message ?? e}`);
+					entry = null;
+				}
+			}
+			// ----------------------------------------------------------
 
 			// Update progress
 			progress++;
@@ -1071,8 +1083,9 @@ async function processFormulasWithProgress(actor) {
 				continue;
 			}
 
-			const itemSlug = entry.slug ?? entry.system?.slug ?? entry.name ?? "";
-			listProcessedFormulas += `\n-> slug: ${itemSlug} | uuid: ${entry.uuid}`;
+			// Normalize slug to work for both index rows and full docs
+			const itemSlug = entry?.slug ?? entry?.system?.slug ?? game?.pf2e?.system?.sluggify?.(entry?.name) ?? entry?.name ?? "";
+			listProcessedFormulas += `\n-> slug: ${itemSlug} | uuid: ${entry.uuid ?? formula.uuid}`;
 
 			// Skip versatile vial
 			if (itemSlug === "versatile-vial") {
@@ -1080,10 +1093,11 @@ async function processFormulasWithProgress(actor) {
 				continue;
 			}
 
-			// Pull traits (lowercased); works with indexed docs
+			// Pull traits (lowercased); support index rows (entry.traits) and full docs (system.traits.value)
 			const traitsRaw =
 				entry?.system?.traits?.value ??
-				entry?.traits?.value ??
+				entry?.traits?.value ??			// some docs use this shape
+				entry?.traits ??				// <- your AlchIndex rows store plain array here
 				entry?._source?.system?.traits?.value ??
 				[];
 			const traits = Array.isArray(traitsRaw) ? traitsRaw.map(t => String(t).toLowerCase()) : [];
@@ -1092,7 +1106,7 @@ async function processFormulasWithProgress(actor) {
 			// For Double Brew, include ONLY alchemical weapons/consumables
 			if (entry.type === "weapon") {
 				if (!isAlchemical) {
-					listProcessedFormulas = ` | skipped (weapon not alchemical)`;
+					listProcessedFormulas += ` | skipped (weapon not alchemical)`;
 					continue;
 				}
 				weaponEntries.push(entry);
@@ -1106,7 +1120,7 @@ async function processFormulasWithProgress(actor) {
 				listProcessedFormulas += ` | added to consumableEntries`;
 			} else {
 				// not a weapon/consumable
-				listProcessedFormulas = ` | ignoring.`;
+				listProcessedFormulas += ` | ignoring.`;
 			}
 		} catch (err) {
 			debugLog(3, `\n -> processFormulasWithProgress() | error at i=${index}, uuid=${formula?.uuid}: ${err?.message ?? err}`);
@@ -1126,8 +1140,8 @@ async function processFormulasWithProgress(actor) {
 			const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
 			const nameComparison = nameA.localeCompare(nameB);
 			if (nameComparison !== 0) return nameComparison;
-			const levelA = a.system.level?.value || 0;
-			const levelB = b.system.level?.value || 0;
+			const levelA = (a.system?.level?.value ?? a.level ?? 0);
+			const levelB = (b.system?.level?.value ?? b.level ?? 0);
 			return levelB - levelA;
 		});
 	};
@@ -1195,7 +1209,15 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 	//let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
 		try {
-			const entry = fromUuidSync(formula.uuid);
+			let entry = await qaGetIndexEntry(formula.uuid);
+			if (!entry || !(entry?.traits?.length || entry?.system?.traits?.value?.length)) {
+				try {
+					entry = await fromUuid(formula.uuid);
+				} catch (e) {
+					debugLog(3, `processFilteredFormulasWithProgress() | fromUuid fallback failed for ${formula.uuid}: ${e?.message ?? e}`);
+					entry = null;
+				}
+			}
 
 			// Update progress
 			progress++;
@@ -1209,14 +1231,18 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 			}
 
 			// compute once per entry (BEFORE any logs/use)
-			const itemSlug = entry.slug ?? entry.system?.slug ?? entry.name ?? "";
+			const itemSlug = entry?.slug ?? entry?.system?.slug ?? entry?.name ?? "";
+			const entryType = entry?.type ?? entry?.system?.type?.value ?? "";	
 			const traitsRaw =
 				entry?.system?.traits?.value ??
-				entry?.traits?.value ??
+				entry?.traits?.value ??			// some docs
+				entry?.traits ??				// ← your AlchIndex rows store plain array here
 				entry?._source?.system?.traits?.value ??
 				[];
 			const traits = Array.isArray(traitsRaw) ? traitsRaw.map(t => String(t).toLowerCase()) : [];
+			// debugLog(`${entry.name} traits = `, traits);
 			const isAlchemical = traits.includes("alchemical");
+			// debugLog(`isAlchemical = ${isAlchemical}`);
 			
 			//listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}`;
 
@@ -1240,7 +1266,7 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 					filteredEntries.push(entry);
 					//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
 				}
-			} else if (entry.type === type) {
+			} else if (entryType === type) {
 				// Require the "alchemical" trait when selecting weapons or consumables
 				const requireAlchemical = type === "weapon" || type === "consumable";
 				if (requireAlchemical && !isAlchemical) {
@@ -1282,8 +1308,8 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 		const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
 		const nameComparison = nameA.localeCompare(nameB);
 		if (nameComparison !== 0) return nameComparison; // Sort by name if names differ
-		const levelA = a.system.level?.value || 0; // Default to 0 if undefined
-		const levelB = b.system.level?.value || 0;
+		const levelA = (a.system?.level?.value ?? a.level ?? 0);
+		const levelB = (b.system?.level?.value ?? b.level ?? 0);
 		return levelB - levelA; // Otherwise, sort by item level descending
 	});
 
@@ -1374,8 +1400,8 @@ async function processFilteredInventoryWithProgress(actor, type, slug) {
 		const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
 		const nameComparison = nameA.localeCompare(nameB);
 		if (nameComparison !== 0) return nameComparison; // Sort by name if names differ
-		const levelA = a.system.level?.value || 0; // Default to 0 if undefined
-		const levelB = b.system.level?.value || 0;
+		const levelA = (a.system?.level?.value ?? a.level ?? 0);
+		const levelB = (b.system?.level?.value ?? b.level ?? 0);
 		return levelB - levelA; // Otherwise, sort by item level descending
 	});
 
