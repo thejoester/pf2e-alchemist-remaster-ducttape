@@ -2,6 +2,8 @@ name: 🌍 Translation Tracking
 description: ⚠️ **Internal Use Only** Track translation status for a specific language.
 title: "[Translation] <LANG-CODE> Translation Status"
 labels: [localization, tracking]
+assignees:
+  - thejoester
 body:
   - type: markdown
     attributes:
