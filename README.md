@@ -9,6 +9,8 @@
 
 A quality of life module to automate features for the Alchmist remaster from Player Core 2.
 
+<br><a href='https://ko-fi.com/X8X817QMZQ' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
 ## Known issues
 
 - If multiple players are owner of an actor they will also get prompted to add vials and learn formulas.
@@ -32,10 +34,22 @@ I would like to extend a thanks to the following people for helping contribute t
 - Brazilian Portuguese(pt-BR): [Charlinho](https://github.com/Chrystian-Carvalho)
 - Chinese(cn): [AlphaStarguide](https://github.com/AlphaStarguide)
 
-## Contribute
+## Contribute  
 
-If you would like to contribute to the localization, the best way is to [fork the repository](https://www.youtube.com/watch?v=f5grYMXbAV0) (copy master branch only). Then download the [en.json](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/lang/en.json) file, rename it to the language code or language (for example es.json or spanish.json for Spanish language), then edit the file translating the text in quotes on the RIGHT SIDE of the colon. When done upload the new language file to your fork in the **lang** folder, then click the "Contribute" button and "Open Pull Request".
+If you would like to contribute to the localization, you can do so in one of these ways: 
 
-If you do not want to go through the fork process, you can also open up an [Issue](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues) and upload the file there. 
+#### Translate through [Gitlocalize](https://gitlocalize.com/repo/10410). 
 
-<a href='https://ko-fi.com/X8X817QMZQ' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+#### Fork and Submit a Pull Request:
+1. [Fork the repository](https://www.youtube.com/watch?v=f5grYMXbAV0) (copy **master** branch only).
+2. Download the [en.json](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/lang/en.json) file,
+3. Rename it to the [proper language code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) (for example es.json for Spanish language).
+4. Edit the file translating the text in quotes on the RIGHT SIDE of the colon.
+5. Upload the new language file to your fork in the **lang/** folder.
+6. Click the "Contribute" button and "Open Pull Request".
+   
+#### Open an issue 
+1. Download the [en.json](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/blob/master/lang/en.json) file.
+2. Rename it to the [proper language code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes).
+3. Open up an [Issue](https://github.com/thejoester/bbmm/issues) and attach the file. 
+
