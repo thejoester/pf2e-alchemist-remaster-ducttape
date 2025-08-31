@@ -280,6 +280,13 @@ function _unstableMutateRawItemData(raw) {
 			const idx = order.indexOf(d.toLowerCase());
 			return idx >= 0 ? order[Math.min(idx + 1, order.length - 1)] : d;
 		};
+		const bumpAllDiceInString = (s) => {
+			try {
+				return String(s).replace(/d(4|6|8|10|12)\b/ig, (m) => bumpDieToken(m));
+			} catch {
+				return s;
+			}
+		};
 		const bumpFirstInString = (s) => {
 			try {
 				let done = false;
@@ -322,14 +329,28 @@ function _unstableMutateRawItemData(raw) {
 				}
 			}
 		}
-		// leave persistent & splash alone (initial-only per feat)
-		// e.g., raw.system.persistent, raw.system.splashDamage.value — no change
 
-		// 5) fallback: description inline @Damage[...] or plain "XdY"
+		// 5) description: bump ALL dice inside @Damage[...] blocks (but skip persistent/splash)
 		const descPath = "system.description.value";
 		const curDesc = String(foundry.utils.getProperty(raw, descPath) ?? "");
-		let nextDesc = curDesc;
-		if (/\d+d(4|6|8|10|12)/i.test(curDesc)) nextDesc = bumpFirstInString(curDesc);
+
+		
+
+		// upgrade all non-persistent/non-splash @Damage blocks
+		let nextDesc = curDesc.replace(/@Damage\[(.+?)\]/gis, (full, inner) => {
+			// if tags include persistent or splash, leave as-is
+			if (/\bpersistent\b/i.test(inner) || /\bsplash\b/i.test(inner)) return full;
+			// otherwise bump all dice inside this block
+			const bumpedInner = bumpAllDiceInString(inner);
+			return `@Damage[${bumpedInner}]`;
+		});
+
+		// 6) append Unstable note once
+		if (!/Unstable:\s/i.test(nextDesc)) {
+			const lvl = Number(raw?.system?.level?.value ?? raw?.system?.level ?? 0) || 0;
+			nextDesc += `<p><em>Unstable:</em> When this item is activated, the creature activating it must succeed at a @Check[type:flat|dc:10] or take @Damage[${lvl}][acid].</p>`;
+		}
+		foundry.utils.setProperty(raw, descPath, nextDesc);
 
 		// 6) append Unstable note once
 		if (!/Unstable:\s/i.test(nextDesc)) {
