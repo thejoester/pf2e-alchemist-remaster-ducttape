@@ -1,5 +1,6 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
 import { getAlchIndex, setAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
+import { displayUnstableConcoctionDialog } from "./AlchemistFeats.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 
 let isArchetype = false;
@@ -22,13 +23,13 @@ Hooks.once("init", () => {
 });
 
 //	DialogV2 opener
-async function qaOpenDialogV2(opts) {
+export async function qaOpenDialogV2(opts) {
 	const D2 = foundry.applications.api.DialogV2;
 	return await D2.wait(opts);
 }
 
 // 	Clamp an ApplicationV2/DialogV2 window width (V13-safe) and also cap inner content.
-function qaClampDialog(dialog, maxPx = 820) {
+export function qaClampDialog(dialog, maxPx = 820) {
 	try {
 		const host = dialog?.element;
 		if (!host) return;
@@ -408,7 +409,7 @@ async function getActorSize(actor) {
 }
 
 // Function to send a message with a link to use a consumable item
-async function sendConsumableUseMessage(itemUuid) {
+export async function sendConsumableUseMessage(itemUuid) {
 	debugLog(`sendConsumableUseMessage(${itemUuid}) called`);
 	const NS = "pf2e-alchemist-remaster-ducttape";
 	let item = null;
@@ -593,7 +594,7 @@ async function sendVialAttackMessage(itemUuid, actor) {
 }
 
 // Function to send a message with a link to roll an attack with a weapon
-async function sendWeaponAttackMessage(itemUuid) {
+export async function sendWeaponAttackMessage(itemUuid) {
 	// Log the UUID for debugging purposes
 	debugLog(`sendWeaponAttackMessage() | Attempting to fetch item with UUID: ${itemUuid}`);
 
@@ -986,7 +987,7 @@ export function getVersatileVialCount(actor) {
 }
 
 //	Function to consume a versatile vial when crafting with quick alchemy
-async function consumeVersatileVial(actor, slug, count = 1) {
+export async function consumeVersatileVial(actor, slug, count = 1) {
 	if (!actor) {
 		debugLog(3, "consumeVersatileVial(): Actor not found.");
 		return false;
@@ -1015,7 +1016,7 @@ async function consumeVersatileVial(actor, slug, count = 1) {
 }
 
 //	Function to process formulas with a progress bar
-async function processFormulasWithProgress(actor) {
+export async function processFormulasWithProgress(actor) {
 	// Get known formulas
 	const formulas = actor?.system.crafting?.formulas || [];
 	const formulaCount = formulas.length;
@@ -1160,7 +1161,7 @@ async function processFormulasWithProgress(actor) {
 }
 
 //	Function to process FILTERED formulas with a progress bar
-async function processFilteredFormulasWithProgress(actor, type, slug) {
+export async function processFilteredFormulasWithProgress(actor, type, slug) {
 	if (!type) {
 		debugLog(3, "processFilteredFormulasWithProgress(): No type passed");
 		return { filteredEntries: [] };
@@ -1324,7 +1325,7 @@ async function processFilteredFormulasWithProgress(actor, type, slug) {
 
 //	Function to process Filtered inventory with progress bar
 //	This is to find Elixir of life to make Healing Bomb
-async function processFilteredInventoryWithProgress(actor, type, slug) {
+export async function processFilteredInventoryWithProgress(actor, type, slug) {
 	
 	//	Make sure type was passed
 	if (!type) {
@@ -1528,7 +1529,7 @@ async function handleCrafting(uuid, actor, { quickVial = false, doubleBrew = fal
 };
 
 //	Function to process craft button
-async function craftButton(actor, itemUuid, dbItemUuid, itemType, {selectedType = "acid", specialIngredient = "none", sendMsg = true} = {}) {
+export async function craftButton(actor, itemUuid, dbItemUuid, itemType, {selectedType = "acid", specialIngredient = "none", sendMsg = true} = {}) {
 	const selectedUuid = itemUuid;
 	const dbSelectedUuid = dbItemUuid;
 	debugLog(`craftButton() | Item Selection: ${selectedUuid}`);
@@ -1724,7 +1725,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 }
 
 //	Function to display Double Brew content in dialogs
-function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
+export function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype }) {
 	let content = "";
 
 	if (!doubleBrewFeat) return content;
@@ -2043,6 +2044,108 @@ async function displayCraftingDialog(actor, itemType) {
 			return bestDamageType;
 		}
 
+		// Apply Toxicologist poison Effect from compendium and let the Effect prompt for weapon.
+		// damageType retrieved from getBestDamageType(target).
+		async function applyToxicologistPoisonEffectPrompt(actor, damageType = "poison") {
+			try {
+				if (!actor) return;
+
+				// effect UUIDs
+				const UUID_FIELD = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.BaklfPmQqwS0wOca"; // effect-field-vial-poison
+				const UUID_ADV   = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.EoZVxuHxf6qbHVP1"; // effect-advanced-vial-poison
+
+				// Pick which effect to apply
+				const useAdvanced = hasFeat(actor, "advanced-vials-toxicologist");
+				const effectUuid  = useAdvanced
+					? UUID_ADV
+					: hasFeat(actor, "toxicologist")
+						? UUID_FIELD
+						: null;
+
+				if (!effectUuid) {
+					debugLog("applyToxicologistPoisonEffectPrompt() | Actor lacks Toxicologist feats.");
+					return;
+				}
+
+				// Remove any existing copies so they don't stack
+				const poisonSlugs = new Set(["effect-field-vial-poison", "effect-advanced-vial-poison"]);
+				const toRemove = actor.items
+					.filter(it => it.type === "effect" && poisonSlugs.has(it.slug))
+					.map(it => it.id);
+				if (toRemove.length) await actor.deleteEmbeddedDocuments("Item", toRemove);
+
+				// Load the effect from compendium
+				const src = await fromUuid(effectUuid);
+				if (!src) {
+					debugLog(3, `applyToxicologistPoisonEffectPrompt() | Effect not found: ${effectUuid}`);
+					return;
+				}
+
+				// Prepare for embedding
+				const eff = src.toObject();
+				eff.system ??= {};
+
+				// Expire at the end of the CURRENT turn
+				eff.system.duration = { value: 0, unit: "rounds", expiry: "turn-end" };
+				if (game.combat?.combatant?.actor?.id === actor.id) {
+					eff.system.start = {
+						value: game.time.worldTime,
+						initiative: game.combat.combatant.initiative
+					};
+				}
+				eff.system.tokenIcon = { show: true };
+
+				// ---- Localization labels (your keys) ----
+				const FIELD_LABEL = LOCALIZED_TEXT?.FIELDVIAL_LBL
+					?? game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.FIELDVIAL_LBL");
+				const ADV_LABEL = LOCALIZED_TEXT?.ADVFIELDVIAL_LBL
+					?? game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ADVFIELDVIAL_LBL");
+				const ADV_PERSIST_LABEL = LOCALIZED_TEXT?.ADVFIELDVIAL_PERSISTENT_LBL
+					?? game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ADVFIELDVIAL_PERSISTENT_LBL");
+
+				// If the pack stored names as keys, force-localize the item name
+				if (typeof eff.name === "string") {
+					eff.name = useAdvanced ? ADV_LABEL : FIELD_LABEL;
+				}
+
+				// ensure ChoiceSet RE flag matches selectors
+				// Also set the damage type on all DamageDice rules (acid vs poison)
+				for (const r of eff.system.rules ?? []) {
+					if (r?.key === "ChoiceSet") {
+						r.flag = r.flag ?? "injuryPoisonWeapon";
+						delete r.selection; // keep prompt
+						// Optional: localize prompt if you stored a key there
+						if (typeof r.prompt === "string") {
+							r.prompt = game.i18n.localize(r.prompt);
+						}
+					}
+					if (r?.key === "DamageDice") {
+						r.damageType = damageType; // swap poison → acid if needed
+
+						// Localize rule labels for chat clarity
+						if (typeof r.label === "string") {
+							if (useAdvanced && r.category === "persistent") {
+								r.label = ADV_PERSIST_LABEL;
+							} else {
+								r.label = useAdvanced ? ADV_LABEL : FIELD_LABEL;
+							}
+						}
+					}
+				}
+
+				const [created] = await actor.createEmbeddedDocuments("Item", [eff]);
+				if (!created) {
+					debugLog(3, "applyToxicologistPoisonEffectPrompt() | Failed to create effect.");
+					return;
+				}
+
+				debugLog(`Applied ${created.name} (${damageType}) to ${actor.name}`);
+				ui.notifications.info(LOCALIZED_TEXT.NOTIF_SELECT_WEAPON_FOR_POISON ?? "Select a weapon for the Toxicologist poison, then make your Strike.");
+			} catch (err) {
+				debugLog(3, "applyToxicologistPoisonEffectPrompt() | Error:", err);
+			}
+		}
+
 		// If actor has chirurgeon feat
 		if (hasFeat(actor, "chirurgeon")) {
 			const userConfirmed = await foundry.applications.api.DialogV2.confirm({
@@ -2118,144 +2221,6 @@ async function displayCraftingDialog(actor, itemType) {
 			selectedType = "poison"; // change default to poison
 			debugLog(`displayCraftingDialog() | Toxicologist feat detected | vial damage type changed to ${selectedType}`);
 
-			/*
-				Helper Function to create injury poison
-			*/
-			async function craftInjuryPoison(actor, selectedType) {
-
-				// Get list of weapons and ammunition, exclude bombs or vials
-				const weapons = actor.items.filter(i =>
-					(i.type === "weapon") &&
-					!["bomb", "vial"].includes(i.system.category) &&
-					// !i.system.traits?.value?.includes("alchemical") &&
-					["piercing", "slashing"].includes(i.system.damage?.damageType)
-				);
-
-				if (weapons.length === 0) {
-					debugLog(`craftInjuryPoison() | No valid weapons available to apply poison.`);
-					return;
-				}
-
-				// Let the player select a weapon
-				const selectedWeapon = await new Promise((resolve) => {
-					new foundry.applications.api.DialogV2({
-						window: { title: LOCALIZED_TEXT.INJURY_POISON },
-						classes: ["quick-alchemy-dialog"],
-						content: `
-								<form>
-									<div class="form-group">
-										<label for="weapon">${LOCALIZED_TEXT.SELECT_WEAPON}:</label>
-										<select id="weapon" name="weapon">
-											${weapons.map(w => `<option value="${w.id}">${w.name}</option>`).join("")}
-										</select>
-									</div>
-									<br>
-								</form>
-							`,
-						buttons: [
-							{
-								action: "attack",
-								label: LOCALIZED_TEXT.CRAFT_APPLY_ATTACK,
-								icon: `systems/pf2e/icons/actions/ThreeActions.webp`,
-								callback: (event, button, dialog) => {
-									const id = button.form.elements.weapon.value;
-									resolve(weapons.find(w => w.id === id));
-								}
-							},
-							{
-								action: "back",
-								label: LOCALIZED_TEXT.BACK,
-								icon: "fas fa-arrow-left",
-								callback: () => {
-									displayCraftingDialog(actor, itemType);
-									resolve(null);
-								}
-							}
-						],
-						default: "attack"
-					}).render(true);
-				});
-
-
-				if (!selectedWeapon) {
-					debugLog(`craftInjuryPoison() | No weapon selected for poison application.`);
-					return;
-				}
-
-				// Get Player level to determin stats
-				const playerLevel = actor.level || 1;
-				// Calculate initial damage dice (how many dice)
-				const initialDamageDice = playerLevel >= 18 ? 4 : playerLevel >= 12 ? 3 : playerLevel >= 4 ? 2 : 1;
-				// Calculate persistent damage based on actor level
-				const persistentDamage = playerLevel >= 18 ? 4 : playerLevel >= 12 ? 3 : playerLevel >= 4 ? 2 : 1;
-
-				// Create a temporary copy of the weapon with poison damage added
-				const tempWeapon = duplicate(selectedWeapon);
-				tempWeapon.name = `${selectedWeapon.name} (*Poisoned)`;
-
-				// Check for feat advanced-vials-toxicologist to add persistent damage
-				if (hasFeat(actor, "advanced-vials-toxicologist")) {
-					// Append poison and persistent damages
-					tempWeapon.system.damage.persistent = {
-						type: selectedType,
-						number: persistentDamage,
-					};
-				}
-
-				// Add Poison Damage
-				tempWeapon.system.property1 = {
-					value: "Quick Vial Poison",
-					damageType: selectedType,
-					dice: initialDamageDice,
-					die: "d6",
-					critDamageType: selectedType,
-					critDice: initialDamageDice * 2,
-					critDie: "d6",
-				};
-
-				tempWeapon.system.reload = {
-					consume: true,
-				};
-
-				// Mark the temporary weapon as temporary
-				tempWeapon.flags = tempWeapon.flags || {};
-				tempWeapon.flags.pf2e = tempWeapon.flags.pf2e || {};
-				tempWeapon.flags.pf2e.temporary = true;
-				tempWeapon.flags.pf2e.sourceWeapon = selectedWeapon.id;
-
-				// Add custom module tags
-				tempWeapon.system.ductTaped = true;
-				tempWeapon.system.publication.authors = "TheJoester";
-				tempWeapon.system.publication.license = "ORC";
-				tempWeapon.system.publication.title = "PF2e Alchemist Remaster Duct Tape module";
-				tempWeapon.system.publication.remaster = true;
-
-				tempWeapon.system.traits?.value.push("infused", "poison", "injury");
-				tempWeapon.system.traits.value = tempWeapon.system.traits.value.filter(trait => trait !== "acid");
-
-				// Add the temporary weapon to the actor
-				const createdWeapon = await actor.createEmbeddedDocuments("Item", [tempWeapon]);
-
-				if (createdWeapon.length > 0) {
-					debugLog(`${LOCALIZED_TEXT.DEBUG_CREATED_TEMP_POISONED_WPN}: ${createdWeapon[0].name}`);
-					try {
-						// Call the rollActionMacro method for the temporary weapon
-						game.pf2e.rollActionMacro({
-							actorUUID: `Actor.${actor.id}`,
-							type: "strike",
-							itemId: createdWeapon[0].id,
-							item: createdWeapon[0],
-							slug: tempWeapon.system.slug,
-						});
-					} catch (err) {
-						debugLog(3, `craftInjuryPoison() | Error performing attack roll with temporary weapon:`, err);
-						ui.notifications.error(LOCALIZED_TEXT.NOTIF_FAIL_ATK_TEMP_POISONED_WPN);
-					}
-				} else {
-					debugLog(`craftInjuryPoison() | Failed to create temporary poisoned weapon.`);
-				}
-			}
-
 			// Prompt for injury poison or Quick Vial bomb
 			const isInjuryPoison = await new Promise((resolve) => {
 				new foundry.applications.api.DialogV2({
@@ -2294,9 +2259,9 @@ async function displayCraftingDialog(actor, itemType) {
 			debugLog(`displayCraftingDialog() | selectedType: ${selectedType} | uuid: ${uuid}`);
 
 			if (isInjuryPoison) {
-				debugLog(`displayCraftingDialog() | Creating vial as an injury poison.`);
+				debugLog(`displayCraftingDialog() | Applying Toxicologist injury poison Effect (prompts for weapon).`);
 
-				craftInjuryPoison(actor, selectedType);
+				await applyToxicologistPoisonEffectPrompt(actor, selectedType);
 				return;
 			}
 		}
@@ -2774,7 +2739,7 @@ async function displayCraftingDialog(actor, itemType) {
 }
 
 //	Function to display Quick Alchemy Dialog
-async function qaDialog(actor) {
+export async function qaDialog(actor) {
 	window.qaCurrentActorForQA = actor;
 	const vialCount = getVersatileVialCount(actor);
 	debugLog(`qaDialog() | Versatile Vial count for ${actor.name}: ${vialCount}`);
@@ -2810,6 +2775,23 @@ async function qaDialog(actor) {
 				icon: "fas fa-hospital",
 				callback: () => displayHealingBombDialog(actor)
 			});
+		}
+		
+		// Unstable Concoction feat button
+		try {
+			if (hasFeat(actor, "unstable-concoction")) {
+				buttons.push({
+					action: "unstable-concoction",
+					label: LOCALIZED_TEXT.UNSTABLE_CONCOCTION_BTN,
+					icon: "fas fa-flask",
+					callback: (_ev, _btn, dialog) => {
+						try { dialog?.close?.(); } catch {}
+						displayUnstableConcoctionDialog(actor);
+					}
+				});
+			}
+		} catch (e) {
+			debugLog(3, `qaDialog() | unstable-concoction button failed: ${e?.message ?? e}`);
 		}
 		
 		// Help Button
@@ -2854,6 +2836,22 @@ async function qaDialog(actor) {
 				callback: () => displayHealingBombDialog(actor)
 			});
 		}
+		// Unstable Concoction feat button
+		try {
+			if (hasFeat(actor, "unstable-concoction")) {
+				buttons.push({
+					action: "unstable-concoction",
+					label: LOCALIZED_TEXT.UNSTABLE_CONCOCTION_BTN,
+					icon: "fas fa-flask",
+					callback: (_ev, _btn, dialog) => {
+						try { dialog?.close?.(); } catch {}
+						displayUnstableConcoctionDialog(actor);
+					}
+				});
+			}
+		} catch (e) {
+			debugLog(3, `qaDialog() | unstable-concoction button failed: ${e?.message ?? e}`);
+		}
 		// Help Button
 		if (getSetting("showQuickAlchemyHelp")){
 			buttons.push({
@@ -2892,7 +2890,7 @@ async function qaDialog(actor) {
 }
 
 //	Main crafting function
-async function qaCraftAttack() {
+export async function qaCraftAttack() {
 
 	// Check if a token is selected, if not default to game.user.character
 	// If both do not exist display message to select token

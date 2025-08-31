@@ -292,13 +292,13 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 */
 	Hooks.once("init", () => {
 		
-		/*
+	/*
 		// Configure compendiums to have slug and traits indexable
 		const fields = new Set(CONFIG.Item.compendiumIndexFields ?? []);
 		fields.add("system.slug");
 		fields.add("system.traits.value");
 		CONFIG.Item.compendiumIndexFields = Array.from(fields);
-		*/
+	*/
 	//	=== Saved Data Settings ===
 
 		// Alchemical Index blob (uuid -> { name, desc, updatedAt })
