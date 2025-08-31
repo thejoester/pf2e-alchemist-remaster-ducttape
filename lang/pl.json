@@ -21,6 +21,7 @@
 		"CRAFT_ATTACK":"Wytwarzanie i atak",
 		"CRAFT_APPLY_ATTACK":"Wytwarzanie, zastosowanie i atak",
 		"VERSATILE_VIAL":"Uniwersalna Fiolka",
+		"VERSATILE_VIALS": "Uniwersalne Fiolki",
 		"QUICK_VIAL":"Szybka Fiolka",
 		"QUICK_VIAL_BOMB":"Bomba Szybkiej Fiolki",
 		"DOUBLE_BREW_FEAT":"Atut Podwójny Napar",
@@ -59,6 +60,7 @@
 		"NOTIF_APPLY_EFFECT_ACTOR":"Zastosowano efekt {effectname} na {actorname}.",
 		"NOTIF_NO_PERMS":"Nie masz uprawnień do modyfikowania tego aktora.",
 		"NOTIF_ACTOR_NOT_ASSOC_ITEM":"Brak aktora powiązanego z tym przedmiotem.",
+		"NOTIF_SELECT_WEAPON_FOR_POISON": "Wybierz broń dla trucizny Toksykologa, a następnie wykonaj Atak.",
 		
 		"SETTING_WORKBENCH_NOT_FOUND":"Nie znaleziono klucza ustawień Workbench 'xdy-pf2e-workbench.autoCollapseItemChatCardContent'.",
 		"SETTING_MANAGE_HOMEBREW_COMPENDIUM":"Zarządzanie kompendiami Homebrew",
@@ -137,6 +139,19 @@
 		"QUICK_ALCHEMY_10_MIN":"Musisz poświęcić 10 minut na poszukiwanie odczynników, aby stworzyć więcej.",
 		"QUICK_ALCHEMY_REOPEN_SHEET":"Spróbuj otworzyć kartę postaci, a następnie spróbuj ponownie.",
 		
+		"FIELDVIAL_LBL": "Polowa Fiolka Toksykologa z trucizną",
+		"ADVFIELDVIAL_LBL": "Zaawansowana Polowa Fiolka Toksykologa z trucizną",
+		"CHOOSE_WEAPON": "Wybierz broń, którą chcesz zatruć",
+		"ADV_PERSIST_LABEL": "Zaawansowana Polowa Fiolka Toksykologa z trucizną (Trwałe)",
+		
+		"UNSTABLE_CONCOCTION_BTN": "Niestabilna mikstura",
+		"UNSTABLE_CONCOCTION_TITLE": "Niestabilna mikstura",
+		"UNSTABLE_CONCOCTION_DESC": "Zwiększa początkową wartość kości alchemicznego przedmiotu zużywalnego o jeden poziom. Po aktywacji należy wykonać płaski test ST 10 lub otrzymać obrażenia kwasowe równe poziomowi przedmiotu.",
+		"UNSTABLE_NOTE": "<strong>Niestabilny:</strong> początkowa kostka +1 rozmiar; po aktywacji wykonaj płaski test ST 10 lub otrzymaj obrażenia kwasowe równe poziomowi przedmiotu.",
+		"SELECT_FROM_INVENTORY": "Wybierz z ekwipunku",
+		"UNSTABLE_CONCOCTION_SELECT_ITEM": "Wybierz przedmiot do modyfikacji:",
+		"UNSTABLE_ACID_DMG": "Niestabilny odrzut od {itemName}: {amount} obrażeń od kwasu (nieudany płaski test).",
+				
 		"FORMULA_SEARCH_SEARCH":"Wyszukiwanie formuł...",
 		
 		"LEVELUP_REMOVEDLOWER_CHAT_MSG":"usunął następujące formuły niższego poziomu",
