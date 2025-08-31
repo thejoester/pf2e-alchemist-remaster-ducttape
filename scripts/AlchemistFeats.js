@@ -390,7 +390,7 @@ export async function displayUnstableInventoryDialog(actor) {
 			content: `
 				<form>
 					<div class="qa-wrapper">
-						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Alchemical Consumable")}</h3>
+						<h3>${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_SELECT_ITEM}</h3>
 						<select id="unstable-inv" style="display:inline-block;margin-top:5px;width:100%;">${options}</select>
 						<hr/>
 						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
