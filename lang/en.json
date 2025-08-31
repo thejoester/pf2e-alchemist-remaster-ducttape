@@ -59,6 +59,7 @@
 		"NOTIF_APPLY_EFFECT_ACTOR":"Applied effect {effectname} to {actorname}",
 		"NOTIF_NO_PERMS":"You do not have permission to modify this actor.",
 		"NOTIF_ACTOR_NOT_ASSOC_ITEM":"No actor associated with this item.",
+		"NOTIF_SELECT_WEAPON_FOR_POISON": "Select a weapon for the Toxicologist poison, then make your Strike.",
 		
 		"SETTING_WORKBENCH_NOT_FOUND":"Workbench setting key 'xdy-pf2e-workbench.autoCollapseItemChatCardContent' not found.",
 		"SETTING_MANAGE_HOMEBREW_COMPENDIUM":"Manage Homebrew Compendiums",
@@ -80,7 +81,7 @@
 		"SETTING_LEVELUP_ADD_HIGHER_HINT":"If enabled, when leveled up will add higher level version of known formulas.Ask for each = will prompt for each formula; Ask for all = will prompt for all formulas at once; Auto = will automatically add formulas.",
 		"SETTING_LEVELUP_HANDLE_LOWER_LEVEL":"Level Up: Lower level formula handling:",
 		"SETTING_LEVELUP_HANDLE_LOWER_LEVEL_HINT":"Upon level up, will check for available lower level formulas, or remove them to keep your formula list small. Add lower level versions = Will add lower level versions of known formulas; Remove lower level versions (default) = Will Remove lower level formulas if a higher level is known.",
-		"SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL":"Level Up: Prompt setting for lower level forumulas",
+		"SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL":"Level Up: Prompt setting for lower level formulas",
 		"SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL_HINT":"'Auto': Automatically removes lower level formulas, 'Ask for All': ask once for all, 'Ask for Each': Ask for each formula",
 		"SETTING_LEVELUP_PERMISSION_LEVEL":"Level Up: Permission level to add/remove formulas to actor:",
 		"SETTING_LEVELUP_PERMISSION_LEVEL_HINT":"(If actor owner is not logged in, GM will be prompted)",
@@ -137,6 +138,20 @@
 		"QUICK_ALCHEMY_10_MIN":"You must spend 10 minutes searching for reagents to craft more.",
 		"QUICK_ALCHEMY_REOPEN_SHEET":"Try opening character sheet then try again.",
 		
+		"FIELDVIAL_LBL": "Toxicologist Field Vial Poison",
+		"ADVFIELDVIAL_LBL": "Toxicologist Advanced Vial Poison",
+		"CHOOSE_WEAPON": "Choose a weapon to poison",
+		"ADV_PERSIST_LABEL": "Toxicologist Advanced Vial Poison (Persistent)",
+		
+		"UNSTABLE_CONCOCTION_BTN": "Unstable Concoction",
+		"UNSTABLE_CONCOCTION_TITLE": "Unstable Concoction",
+		"UNSTABLE_CONCOCTION_DESC": "Boost the initial dice of an alchemical consumable by one size. On activation, DC 10 flat check or take acid damage equal to the item's level.",
+		"UNSTABLE_NOTE": "Unstable: initial dice +1 size; on activation DC 10 flat check or take acid damage equal to item level.",
+		"SELECT_FROM_INVENTORY": "Select from Inventory",
+		"UNSTABLE_CONCOCTION_SELECT_ITEM": "Select Item to modify:",
+		"UNSTABLE_ACID_DMG": "Unstable backlash from {itemName}: {amount} acid damage (flat check failed).",
+
+			
 		"FORMULA_SEARCH_SEARCH":"Search Formulas...",
 		
 		"LEVELUP_REMOVEDLOWER_CHAT_MSG":"has removed the following lower-level formulas",

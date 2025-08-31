@@ -14,7 +14,7 @@ window.PF2E_ARDT_INDEX ??= {};
 	export async function qaGetIndexEntry(uuid) {
 		const index = game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndex") || {};
 		const entry = index?.items?.[uuid] ?? null;
-		debugLog(`AlchIndex.js: qaGetIndexEntry(${uuid}} \n`, entry);
+		// debugLog(`AlchIndex.js: qaGetIndexEntry(${uuid}} \n`, entry);
 		return entry;
 	}
 	
@@ -75,7 +75,7 @@ window.PF2E_ARDT_INDEX ??= {};
 		} catch (err) {
 			debugLog(`AlchIndex.js: qaForceRebuildAlchIndex error: \nMessage: ${err?.message ?? err} \n`);
 		}
-}
+	}
 	
 /*	===== Macro Functions =====
 */
@@ -149,7 +149,7 @@ window.PF2E_ARDT_INDEX ??= {};
 			debugLog(`AlchIndex.js: Processing pack ${key}`);
 
 			const idx = await pack.getIndex({
-				fields: ["name", "img", "system.slug", "system.traits.value", "system.traits.rarity", "system.description.value", "system.level.value"]
+				fields: ["name", "img", "system.slug", "system.traits.value", "system.traits.rarity", "system.description.value", "system.level.value", "type"]
 			});
 
 			for (const e of idx) {
@@ -158,11 +158,14 @@ window.PF2E_ARDT_INDEX ??= {};
 				// Fields to store in Index
 				const traits = e.system?.traits?.value ?? [];
 				if (!traits.includes("alchemical")) continue; // filter only Alchemical items
-				let html = e.system?.description?.value ?? "";
-				let slug = e.system?.slug ?? "";
+				
+				
 				const img = e.img ?? "";
-				const level = e.system?.level?.value ?? null;
+				let slug = e.system?.slug ?? "";
 				const rarity = e.system.traits?.rarity ?? null;
+				let html = e.system?.description?.value ?? "";
+				const level = e.system?.level?.value ?? null;
+				const type = e.type;
 
 				if (!html || !slug) {
 					const doc = await fromUuid(`Compendium.${pack.collection}.Item.${e._id}`);
@@ -171,7 +174,7 @@ window.PF2E_ARDT_INDEX ??= {};
 				}
 
 				const uuid = `Compendium.${pack.collection}.Item.${e._id}`;
-				items[uuid] = { uuid, name: e.name, slug, description: html, traits, img, level, rarity  };
+				items[uuid] = { uuid, name: e.name, slug, description: html, traits, img, level, rarity, type  };
 
 				// Yield occasionally to keep UI responsive
 				if (performance.now() - lastYield > 16) {

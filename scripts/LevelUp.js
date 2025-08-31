@@ -286,7 +286,6 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
     }
 }
 
-
 //	Removes lower-level versions of formulas from the actor's known formulas if higher-level versions are present.
 async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevelUp) {
 	
@@ -434,7 +433,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 }
 
 // Old function for macro (for now 
-async function grantAlchemistFormulasOld(actor, newLevel, mode = addFormulasSetting, previousLevel) {
+async function grantFormulasFull(actor, newLevel, mode = addFormulasSetting, previousLevel) {
 	
 	const loadingDialog = new foundry.applications.api.DialogV2({
 		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
@@ -982,21 +981,34 @@ function updateLoadingProgress(percent) {
   if (text) text.textContent = `${percent}%`;
 }
 
-
 //	Function to handle form submission
 async function handleFormSubmit(actor,options,currentLevel){
 	debugLog(`Options chosen: ${JSON.stringify(options)}`);
 	
-	// get mode
-	const mode = options.mode;
+	const method = await qaChooseFormulaGrantMethod();
+	if (!method) {
+		debugLog("handleFormSubmit() | Grant formulas canceled by user.");
+		return;
+	}
 	
-	// see if we are adding or removing
-	if (options.action === "add_formulas"){
-		// grant formulas
-		const prevLevel = options.prevLevel;
-		await grantAlchemistFormulasOld(actor, currentLevel, mode, prevLevel)
-	}else if (options.action === "remove_formulas"){
-		await removeLowerLevelFormulasOLd(actor, mode);
+	try {
+		// get mode
+		const mode = options.mode;
+		
+		// see if we are adding or removing
+		if (options.action === "add_formulas"){
+			const prevLevel = options.prevLevel;
+			// See which method we are using, fast (alchemical only) or full (all formulas)
+			if (method === "fast") {
+				await grantAlchemistFormulas(actor, currentLevel, mode, prevLevel);
+			} else {
+				await grantFormulasFull(actor, currentLevel, mode, prevLevel);
+			}
+		}else if (options.action === "remove_formulas"){
+			await removeLowerLevelFormulasOLd(actor, mode);
+		}
+	} catch (err) {
+		debugLog(`handleFormSubmit() | Grant formulas error: ${err?.message ?? err}`);
 	}
 }
 
@@ -1166,6 +1178,63 @@ async function promptTokenFormulaRemove() {
 	});
 
 	dialog.render(true);
+}
+
+//	Prompt user to choose how to grant formulas (fast vs full)
+async function qaChooseFormulaGrantMethod() {
+	return new Promise((resolve) => {
+		let resolved = false;
+
+		const dlg = new foundry.applications.api.DialogV2({
+			window: { title: "Grant Formulas" },
+			content: `
+				<div style="min-width: 450px; overflow-y: auto; padding-right: 1em;">
+					<p><strong>How do you want to grant formulas?</strong></p>
+					<p>• <em>Fast</em>: Alchemical items only (uses the Index; much faster).</p>
+					<p>• <em>Full</em>: Check all items (slower; legacy behavior).</p>
+				</div>
+			`,
+			buttons: [
+				{
+					action: "fast",
+					label: "Fast (Alchemical Only)",
+					icon: "fas fa-bolt",
+					callback: () => {
+						if (!resolved) {
+							resolved = true;
+							resolve("fast");
+						}
+					}
+				},
+				{
+					action: "full",
+					label: "Full (All Items)",
+					icon: "fas fa-list",
+					callback: () => {
+						if (!resolved) {
+							resolved = true;
+							resolve("full");
+						}
+					}
+				},
+				{
+					action: "cancel",
+					label: "Cancel",
+					icon: "fas fa-times",
+					callback: () => {
+						if (!resolved) {
+							resolved = true;
+							resolve(null);
+						}
+					}
+				}
+			],
+			classes: ["quick-alchemy-dialog"],
+			default: "fast",
+		});
+
+		dlg.render(true);
+	});
 }
 
 // Process the AlchIndex instead of fetching compendiums directly.

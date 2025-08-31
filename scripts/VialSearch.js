@@ -97,8 +97,8 @@ Hooks.once('init', () => {
 					Checking that actor is Alchemist
 					!!!Archetype does not qualify for this feature!!!
 				*/
-				const isAlchemist = actor.class?.name?.toLowerCase() === 'alchemist'; 
-				if (!isAlchemist) continue; // actor is not alchemist, stop
+				const alchemistCheck = isAlchemist(actor);
+				if (!alchemistCheck.qualifies) continue; // actor is not alchemist, stop
 
 				// Avoid processing the same actor multiple times
 				if (processedActorIds.has(actor.id)) continue;
