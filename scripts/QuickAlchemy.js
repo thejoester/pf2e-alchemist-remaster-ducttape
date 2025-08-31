@@ -29,7 +29,7 @@ export async function qaOpenDialogV2(opts) {
 }
 
 // 	Clamp an ApplicationV2/DialogV2 window width (V13-safe) and also cap inner content.
-function qaClampDialog(dialog, maxPx = 820) {
+export function qaClampDialog(dialog, maxPx = 820) {
 	try {
 		const host = dialog?.element;
 		if (!host) return;
@@ -409,7 +409,7 @@ async function getActorSize(actor) {
 }
 
 // Function to send a message with a link to use a consumable item
-async function sendConsumableUseMessage(itemUuid) {
+export async function sendConsumableUseMessage(itemUuid) {
 	debugLog(`sendConsumableUseMessage(${itemUuid}) called`);
 	const NS = "pf2e-alchemist-remaster-ducttape";
 	let item = null;
@@ -594,7 +594,7 @@ async function sendVialAttackMessage(itemUuid, actor) {
 }
 
 // Function to send a message with a link to roll an attack with a weapon
-async function sendWeaponAttackMessage(itemUuid) {
+export async function sendWeaponAttackMessage(itemUuid) {
 	// Log the UUID for debugging purposes
 	debugLog(`sendWeaponAttackMessage() | Attempting to fetch item with UUID: ${itemUuid}`);
 

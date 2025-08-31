@@ -1,6 +1,6 @@
 import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
+import { qaOpenDialogV2, qaClampDialog, getVersatileVialCount, consumeVersatileVial, sendConsumableUseMessage, sendWeaponAttackMessage } from "./QuickAlchemy.js";
 import { qaGetIndexEntry } from "./AlchIndex.js";
-import { qaOpenDialogV2, getVersatileVialCount, consumeVersatileVial } from "./QuickAlchemy.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 
 const __unstableProcessedMsgs = new Set();
@@ -18,8 +18,8 @@ function updateDescription(description, regexPattern, replacementFn) {
 Hooks.on("ready", () => {
 
 
-  
-  console.log("%cPF2e Alchemist Remaster Duct Tape: AlchemistFeats.js loaded","color: aqua; font-weight: bold;");
+
+  	console.log("%cPF2e Alchemist Remaster Duct Tape: AlchemistFeats.js loaded","color: aqua; font-weight: bold;");
 		
 	Hooks.on("createItem", async (item) => {
 		debugLog(`Item ${item.name} Created!`);
@@ -219,6 +219,46 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 /* Unstable Concoction — minimal flow (chooser + inventory + craft)           */
 /* ========================================================================== */
 
+// After we create/embed the Unstable copy, call the right QA helper to post a use card.
+async function _unstablePostCreateUse(actor, itemDoc) {
+	try {
+		if (!actor || !itemDoc) return;
+		const uuid = itemDoc?.uuid ?? itemDoc?.parent?.uuid ?? null;
+		if (!uuid) return;
+
+		// prefer type, then traits as a fallback
+		const t = String(itemDoc?.type ?? "").toLowerCase();
+		if (t === "consumable" && typeof sendConsumableUseMessage === "function") {
+			await sendConsumableUseMessage(uuid);
+			return;
+		}
+		if (t === "weapon" && typeof sendWeaponAttackMessage === "function") {
+            await sendWeaponAttackMessage(uuid);
+			return;
+		}
+
+		// fallback by trait (some bombs can be ‘weapon’-ish)
+		const traits = itemDoc?.system?.traits?.value ?? [];
+		if (Array.isArray(traits)) {
+			if (traits.includes("consumable") && typeof sendConsumableUseMessage === "function") {
+				await sendConsumableUseMessage(uuid);
+				return;
+			}
+			if (traits.includes("bomb") || traits.includes("alchemical-bomb")) {
+				if (typeof sendWeaponAttackMessage === "function") {
+					await sendWeaponAttackMessage(uuid);
+					return;
+				}
+			}
+		}
+
+		debugLog(2, `_unstablePostCreateUse() | no matching sender for ${itemDoc.name} (type=${t})`);
+	} catch (e) {
+		debugLog(3, `_unstablePostCreateUse() failed: ${e?.message ?? e}`);
+	}
+}
+
+
 /*	Mutate RAW item data to be “Unstable”:
 	- rename
 	- mark a flag (namespace this module)
@@ -307,7 +347,7 @@ export async function displayUnstableConcoctionDialog(actor) {
 			buttons: [
 				{
 					action: "inventory",
-					label: LOCALIZED_TEXT.INVENTORY,
+					label: LOCALIZED_TEXT.SELECT_FROM_INVENTORY,
 					icon: "fas fa-box-open",
 					callback: (_ev, _btn, dialog) => {
 						try { dialog?.close?.(); } catch {}
@@ -319,7 +359,7 @@ export async function displayUnstableConcoctionDialog(actor) {
 					label: LOCALIZED_TEXT.CRAFT,
 					icon: "fas fa-hammer",
 					disabled: !canCraft,
-					tooltip: canCraft ? "" : (LOCALIZED_TEXT.NO_VIALS_TOOLTIP ?? "No Versatile Vials available"),
+					tooltip: canCraft ? "" : (LOCALIZED_TEXT.NOTIF_NO_VIAL_AVAIL ?? "No Versatile Vials available"),
 					callback: (_ev, _btn, dialog) => {
 						if (!canCraft) return;
 						try { dialog?.close?.(); } catch {}
@@ -338,19 +378,8 @@ export async function displayUnstableConcoctionDialog(actor) {
 			],
 			default: "inventory",
 			render: (_ev, dialog) => {
-                try {
-					if (typeof qaClampDialog === "function") qaClampDialog(dialog, 400);
-					const host = dialog?.element;
-					const root = host?.shadowRoot ?? host;
-					if (!root) return;
-					const craftBtn = root.querySelector('button[data-action="craft"]');
-					if (craftBtn && !canCraft) {
-						craftBtn.disabled = true;
-						craftBtn.title = LOCALIZED_TEXT.NO_VIALS_TOOLTIP ?? "No Versatile Vials available";
-						craftBtn.style.opacity = "0.6";
-					}
-				} catch (err) {
-					debugLog(3, `displayUnstableConcoctionDialog(): render failed: ${err?.message ?? err}`);
+				try { qaClampDialog(dialog, 400); } catch (err) {
+					debugLog(3, `displayUnstableConcoctionDialog(): clamp failed: ${err?.message ?? err}`);
 				}
 			}
 		});
@@ -426,12 +455,9 @@ export async function displayUnstableInventoryDialog(actor) {
 
 						const [ownedTmp] = await actor.createEmbeddedDocuments("Item", [raw]);
 						if (!ownedTmp) return;
-
 						try { dialog?.close?.(); } catch {}
-						await ChatMessage.create({
-							speaker: ChatMessage.getSpeaker({ actor }),
-							content: `<p><strong>${ownedTmp.name}</strong> added to inventory (Unstable).</p>`
-						});
+						await _unstablePostCreateUse(actor, ownedTmp);
+						
 					}
 				},
 				{
@@ -533,10 +559,7 @@ export async function displayUnstableCraftDialog(actor) {
 									const [ownedTmp] = await actor.createEmbeddedDocuments("Item", [raw]);
 									if (ownedTmp) {
 										try { dialog?.close?.(); } catch {}
-										await ChatMessage.create({
-											speaker: ChatMessage.getSpeaker({ actor }),
-											content: `<p><strong>${ownedTmp.name}</strong> crafted and added to inventory (Unstable).</p>`
-										});
+										await _unstablePostCreateUse(actor, ownedTmp);
 									}
 									return;
 								}
@@ -556,10 +579,7 @@ export async function displayUnstableCraftDialog(actor) {
 							const [ownedTmp] = await actor.createEmbeddedDocuments("Item", [raw]);
 							if (ownedTmp) {
 								try { dialog?.close?.(); } catch {}
-								await ChatMessage.create({
-									speaker: ChatMessage.getSpeaker({ actor }),
-									content: `<p><strong>${ownedTmp.name}</strong> crafted and added to inventory (Unstable).</p>`
-								});
+								await _unstablePostCreateUse(actor, ownedTmp);
 							}
 						} catch (e) {
 							debugLog(3, `displayUnstableCraftDialog() | embed fallback failed: ${e?.message ?? e}`);
