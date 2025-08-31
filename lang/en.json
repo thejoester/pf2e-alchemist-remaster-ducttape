@@ -21,6 +21,7 @@
 		"CRAFT_ATTACK":"Craft and Attack",
 		"CRAFT_APPLY_ATTACK":"Craft, Apply & Attack",
 		"VERSATILE_VIAL":"Versatile Vial",
+		"VERSATILE_VIALS": "Versatile Vials",
 		"QUICK_VIAL":"Quick Vial",
 		"QUICK_VIAL_BOMB":"Quick Vial Bomb",
 		"DOUBLE_BREW_FEAT":"Double Brew Feat",
@@ -150,8 +151,7 @@
 		"SELECT_FROM_INVENTORY": "Select from Inventory",
 		"UNSTABLE_CONCOCTION_SELECT_ITEM": "Select Item to modify:",
 		"UNSTABLE_ACID_DMG": "Unstable backlash from {itemName}: {amount} acid damage (flat check failed).",
-
-			
+				
 		"FORMULA_SEARCH_SEARCH":"Search Formulas...",
 		
 		"LEVELUP_REMOVEDLOWER_CHAT_MSG":"has removed the following lower-level formulas",

@@ -2029,10 +2029,10 @@ async function displayCraftingDialog(actor, itemType) {
 			const immunities = attributes.immunities || [];
 			if (immunities.some(imm => imm.type === "poison")) {
 				bestDamageType = "acid";
-				if (game.user.isGM) debugLog(LOCALIZED_TEXT.DEBUG_TARGET_IMMUNE_POISON);
+				if (game.user.isGM) debugLog("Target is immune to poison; choosing Acid.");
 			} else if (immunities.some(imm => imm.type === "acid")) {
 				bestDamageType = "poison";
-				if (game.user.isGM) debugLog(LOCALIZED_TEXT.DEBUG_TARGET_IMMUNE_ACID);
+				if (game.user.isGM) debugLog("Target is immune to acid; choosing Poison.");
 			} else if (acidModifier > poisonModifier) {
 				bestDamageType = "acid";
 				if (game.user.isGM) debugLog(`getBestDamageType() | Target is immune to poison selecting acid damage. | Poison Modifier = ${poisonModifier} | Acid Modifier = ${acidModifier}`);
