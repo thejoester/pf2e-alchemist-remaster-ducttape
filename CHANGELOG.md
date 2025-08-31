@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.7] - 2025-08-30
+### Added 
+- **Quick Alchemy:** Added support for [Unstable Concoction](https://2e.aonprd.com/Feats.aspx?ID=5790). 
+### Fixed
+- **Quick Alchemy:** Fixed support for [Toxicologist Field Benefit](https://2e.aonprd.com/ResearchFields.aspx?ID=8), instead of making duplicate of item now applies Rule Element to actor that applies Quick Vial poison damage for selected weapon. 
+
 ## [2.13.6] - 2025-08-27
 - **Localization:** Updated Chinese translations. Credit: [AlphaStarguide](https://github.com/AlphaStarguide).
 
