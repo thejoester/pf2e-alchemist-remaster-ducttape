@@ -2,7 +2,7 @@
     "id": "pf2e-alchemist-remaster-ducttape",
     "title": "PF2e Alchemist Remaster Duct Tape",
     "description": "A module to slap together some functionality until the PF2e system is updated to support the PF2e Alchemist remaster.",
-    "version": "2.13.8",
+    "version": "2.14.0  ",
     "compatibility": {
         "minimum": "13",
         "verified": "13"
@@ -47,8 +47,8 @@
                 "id": "pf2e",
                 "type": "system",
                 "compatibility": {
-                    "minimum": "7.0.0",
-                    "verified": "7.4.2"
+                    "minimum": "7.4.0",
+                    "verified": "7.4.3"
                 }
             }
         ]

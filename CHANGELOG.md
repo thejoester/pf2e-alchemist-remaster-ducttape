@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.0] - 2025-09-01
+### Fixed
+- **Quick Alchemy:** fixed bug in Unstable concoction that posted note in chat card about Flat check twice, and completed localization for additions. 
+
 ## [2.13.8] - 2025-08-31
 ### Fixed
 - **Quick Alchemy:** fixed bug in Unstable Concoction that only replaced first damage dice imbed in description.

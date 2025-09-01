@@ -348,16 +348,12 @@ function _unstableMutateRawItemData(raw) {
 		// 6) append Unstable note once
 		if (!/Unstable:\s/i.test(nextDesc)) {
 			const lvl = Number(raw?.system?.level?.value ?? raw?.system?.level ?? 0) || 0;
-			nextDesc += `<p><em>Unstable:</em> When this item is activated, the creature activating it must succeed at a @Check[type:flat|dc:10] or take @Damage[${lvl}][acid].</p>`;
+			const dcCheck = "@Check[type:flat|dc:10]";
+			const dmgval = `@Damage[${lvl}][acid]`;
+			nextDesc += `<p>${LOCALIZED_TEXT.UNSTABLE_NOTE(dcCheck, dmgval)}</p>`;
 		}
 		foundry.utils.setProperty(raw, descPath, nextDesc);
 
-		// 6) append Unstable note once
-		if (!/Unstable:\s/i.test(nextDesc)) {
-			const lvl = Number(raw?.system?.level?.value ?? raw?.system?.level ?? 0) || 0;
-			nextDesc += `<p><em>Unstable:</em> When this item is activated, the creature activating it must succeed at a @Check[type:flat|dc:10] or take @Damage[${lvl}][acid].</p>`;
-		}
-		foundry.utils.setProperty(raw, descPath, nextDesc);
 	} catch (e) {
 		debugLog(3, `_unstableMutateRawItemData() failed: ${e?.message ?? e}`);
 	}
@@ -383,7 +379,6 @@ export async function displayUnstableConcoctionDialog(actor) {
 				<div class="qa-wrapper" style="display:flex;flex-direction:column;gap:.5rem;">
 					<h3 style="margin:0;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_TITLE}</h3>
 					<p style="margin:0;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
-					<p style="margin:0;opacity:.85;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
 					${hasVialFns ? `<p style="margin:0;opacity:.85;">${LOCALIZED_TEXT.VERSATILE_VIALS ?? "Versatile Vials"}: <strong>${vialCount}</strong></p>` : ""}
 				</div>
 			`,
@@ -467,7 +462,7 @@ export async function displayUnstableInventoryDialog(actor) {
 						<h3>${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_SELECT_ITEM}</h3>
 						<select id="unstable-inv" style="display:inline-block;margin-top:5px;width:100%;">${options}</select>
 						<hr/>
-						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
+						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
 					</div>
 				</form>
 			`,
@@ -567,10 +562,10 @@ export async function displayUnstableCraftDialog(actor) {
 			content: `
 				<form>
 					<div class="qa-wrapper">
-						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Alchemical Consumable")}</h3>
+						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(`${LOCALIZED_TEXT.HEALING_BOMB_TRAIT_ALCHEMICAL} ${LOCALIZED_TEXT.HEALING_BOMB_TRAIT_CONSUMABLE}`)}</h3>
 						<select id="unstable-formula" style="display:inline-block;margin-top:5px;width:100%;">${options}</select>
 						<hr/>
-						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
+						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
 					</div>
 				</form>
 			`,
