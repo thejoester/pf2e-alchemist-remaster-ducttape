@@ -1,7 +1,3 @@
-2025/09/01-02:00:06.857664 71c602ffd640 Recovering log #431
-2025/09/01-02:00:06.861797 71c602ffd640 Delete type=3 #429
-2025/09/01-02:00:06.861921 71c602ffd640 Delete type=0 #431
-2025/09/01-02:04:44.087994 71c0db3ff640 Level-0 table #436: started
-2025/09/01-02:04:44.088043 71c0db3ff640 Level-0 table #436: 0 bytes OK
-2025/09/01-02:04:44.089428 71c0db3ff640 Delete type=0 #434
-2025/09/01-02:04:44.089587 71c0db3ff640 Manual compaction at level-0 from '!folders!vsc8kgpLB8at8Ww9' @ 72057594037927935 : 1 .. '!macros!tt34u0zjjMG1wyhX' @ 0 : 0; will stop at (end)
+2025/08/29-16:11:12.994234 72b24a7fc640 Recovering log #419
+2025/08/29-16:11:12.998775 72b24a7fc640 Delete type=0 #419
+2025/08/29-16:11:12.998830 72b24a7fc640 Delete type=3 #417
