@@ -1,5 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
-import { qaOpenDialogV2, qaClampDialog, getVersatileVialCount, consumeVersatileVial, sendConsumableUseMessage, sendWeaponAttackMessage } from "./QuickAlchemy.js";
+import { qaOpenDialogV2, qaClampDialog, qaCraftAttack, getVersatileVialCount, consumeVersatileVial, sendConsumableUseMessage, sendWeaponAttackMessage } from "./QuickAlchemy.js";
 import { qaGetIndexEntry } from "./AlchIndex.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 
@@ -258,68 +258,104 @@ async function _unstablePostCreateUse(actor, itemDoc) {
 	}
 }
 
+const __UC_DIE_ORDER = ["d4","d6","d8","d10","d12"];
+function bumpDieToken(d) {
+	if (typeof d !== "string") return d;
+	const i = __UC_DIE_ORDER.indexOf(d.toLowerCase());
+	return i >= 0 ? __UC_DIE_ORDER[Math.min(i + 1, __UC_DIE_ORDER.length - 1)] : d;
+}
+function bumpFirstInString(s) {
+	try {
+		let done = false;
+		return String(s).replace(/d(4|6|8|10|12)\b/ig, m => {
+			if (done) return m;
+			done = true;
+			return bumpDieToken(m);
+		});
+	} catch { return s; }
+}
+function bumpAllDiceInString(s) {
+	try {
+		return String(s).replace(/d(4|6|8|10|12)\b/ig, m => bumpDieToken(m));
+	} catch { return s; }
+}
 
-/*	Mutate RAW item data to be “Unstable”:
-	- rename
-	- mark a flag (namespace this module)
-	- bump the FIRST dice step found in healing/damage formula, else in description (@Damage[(XdY+…)]
-	- append the Unstable note (DC 10 flat; @Damage[level][acid])
-*/
+//	Mutate RAW item data to be “Unstable”:
 function _unstableMutateRawItemData(raw) {
 	try {
-		// name
-		raw.name = `${raw.name} (Unstable)`;
 
-		// flag
+		// mark as duct-taped + add 'infused' trait
+		foundry.utils.setProperty(raw, "system.ductTaped", true);
+		let tr = foundry.utils.getProperty(raw, "system.traits.value");
+		if (!Array.isArray(tr)) tr = [];
+		if (!tr.includes("infused")) tr.push("infused");
+		foundry.utils.setProperty(raw, "system.traits.value", Array.from(new Set(tr)));
+
+		// rename + flag
+		raw.name = `${raw.name} (Unstable)`;
 		raw.flags = raw.flags ?? {};
 		raw.flags["pf2e-alchemist-remaster-ducttape"] = raw.flags["pf2e-alchemist-remaster-ducttape"] ?? {};
 		raw.flags["pf2e-alchemist-remaster-ducttape"].unstableConcoction = true;
 
-		// bump first dice group (d4→d6→d8→d10→d12) once
-		const bumpFirst = (s) => {
-			try {
-                const order = ["d4","d6","d8","d10","d12"];
-				let done = false;
-				return String(s).replace(/d(4|6|8|10|12)\b/i, (m) => {
-					if (done) return m;
-					done = true;
-					const i = order.indexOf(m.toLowerCase());
-					return order[Math.min(i + 1, order.length - 1)];
-				});
-			} catch { return s; }
-		};
-
-		// try explicit formula fields first
+		// structured formulas (healing/damage): bump first dice only
 		const healPath = "system.healing.formula";
-		const dmgPaths = ["system.damage.formula", "system.damage.value"];
 		const heal = foundry.utils.getProperty(raw, healPath);
 		if (typeof heal === "string" && heal.trim()) {
-			foundry.utils.setProperty(raw, healPath, bumpFirst(heal));
+			foundry.utils.setProperty(raw, healPath, bumpFirstInString(heal));
 		}
-		for (const p of dmgPaths) {
+		for (const p of ["system.damage.formula", "system.damage.value"]) {
 			const cur = foundry.utils.getProperty(raw, p);
 			if (typeof cur === "string" && cur.trim()) {
-				foundry.utils.setProperty(raw, p, bumpFirst(cur));
-				break;
+				foundry.utils.setProperty(raw, p, bumpFirstInString(cur));
+				break; // only bump one structured damage string
 			}
 		}
 
-		// fallback: bump first dice in description (covers @Damage[(5d6+12)[healing]])
+		// weapons/bombs: bump structured die (initial hit only)
+		// DO NOT touch splash/persistent values
+		const diePaths = [
+			"system.damage.die",           // primary for bombs
+			"system.damage.base.die",      // some items
+			"system.damage.primary.die"    // schema variants
+		];
+
+		const existingPath = diePaths.find(p => foundry.utils.hasProperty(raw, p));
+		if (existingPath) {
+			const d = foundry.utils.getProperty(raw, existingPath);
+			if (typeof d === "string" && /^(d4|d6|d8|d10|d12)$/i.test(d)) {
+				const bumped = bumpDieToken(d);
+				if (bumped !== d) {
+					foundry.utils.setProperty(raw, existingPath, bumped);
+				}
+			}
+		}
+
+		// description: bump ALL dice inside @Damage[...] (skip persistent/splash)
 		const descPath = "system.description.value";
 		const curDesc = String(foundry.utils.getProperty(raw, descPath) ?? "");
-		let nextDesc = curDesc;
-		if (/\d+d(4|6|8|10|12)/i.test(curDesc)) nextDesc = bumpFirst(curDesc);
+		let nextDesc = curDesc.replace(/@Damage\[(.+?)\]/gis, (full, inner) => {
+			if (/\bpersistent\b/i.test(inner) || /\bsplash\b/i.test(inner)) return full;
+			return `@Damage[${bumpAllDiceInString(inner)}]`;
+		});
+		// also catch plain XdY remnants outside @Damage (rare)
+		if (nextDesc === curDesc && /\d+d(4|6|8|10|12)/i.test(curDesc)) {
+			nextDesc = bumpAllDiceInString(curDesc);
+		}
 
-		// append Unstable note once
+		// append Unstable note 
 		if (!/Unstable:\s/i.test(nextDesc)) {
 			const lvl = Number(raw?.system?.level?.value ?? raw?.system?.level ?? 0) || 0;
-			nextDesc += `<p><em>Unstable:</em> When this item is activated, the creature activating it must succeed at a @Check[type:flat|dc:10] or take @Damage[${lvl}][acid].</p>`;
+			const checkDC = "@Check[type:flat|dc:10]";
+			const dmgVal = `@Damage[${lvl}][acid]`;
+			nextDesc += LOCALIZED_TEXT.UNSTABLE_NOTE(checkDC, dmgVal);
 		}
 		foundry.utils.setProperty(raw, descPath, nextDesc);
+
 	} catch (e) {
 		debugLog(3, `_unstableMutateRawItemData() failed: ${e?.message ?? e}`);
 	}
 }
+
 
 //	Chooser (two buttons): Use from Inventory / Craft Item
 export async function displayUnstableConcoctionDialog(actor) {
@@ -340,7 +376,6 @@ export async function displayUnstableConcoctionDialog(actor) {
 				<div class="qa-wrapper" style="display:flex;flex-direction:column;gap:.5rem;">
 					<h3 style="margin:0;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_TITLE}</h3>
 					<p style="margin:0;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
-					<p style="margin:0;opacity:.85;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
 					${hasVialFns ? `<p style="margin:0;opacity:.85;">${LOCALIZED_TEXT.VERSATILE_VIALS ?? "Versatile Vials"}: <strong>${vialCount}</strong></p>` : ""}
 				</div>
 			`,
@@ -372,7 +407,7 @@ export async function displayUnstableConcoctionDialog(actor) {
 					icon: "fas fa-arrow-left",
 					callback: (_ev, _btn, dialog) => {
 						try { dialog?.close?.(); } catch {}
-						try { if (typeof qaDialog === "function") qaDialog(actor); } catch {}
+						try { if (typeof qaCraftAttack === "function") qaCraftAttack(); } catch {}
 					}
 				}
 			],
@@ -396,15 +431,25 @@ export async function displayUnstableInventoryDialog(actor) {
 	try {
 		if (!actor) return;
 
-		// match: actor inventory items with traits alchemical + consumable, EXCLUDING already-unstable
+		// match: actor inventory items with traits alchemical + consumable + infused,
+		// EXCLUDING already-unstable and EXCLUDING Versatile Vial by slug
 		const items = (actor.items ?? []).filter(i => {
 			const tr = i?.system?.traits?.value ?? [];
-			const isMatch = i?.type === "consumable" && tr.includes("alchemical") && tr.includes("consumable");
+			const isMatch = Array.isArray(tr)
+				&& tr.includes("alchemical")
+				&& tr.includes("consumable")
+				&& tr.includes("infused");
 			if (!isMatch) return false;
+
 			const flagged = !!i.getFlag?.("pf2e-alchemist-remaster-ducttape", "unstableConcoction");
 			const named = String(i?.name ?? "").toLowerCase().includes("(unstable)");
-			return !(flagged || named);
+			const isVV = (i?.system?.slug === "versatile-vial");
+			return !(flagged || named || isVV);
 		});
+
+		// sort alphabetically by name
+		items.sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
+		
 
 		if (!items.length) {
 			debugLog(2, "displayUnstableInventoryDialog() | no eligible alchemical consumables on actor");
@@ -422,7 +467,7 @@ export async function displayUnstableInventoryDialog(actor) {
 						<h3>${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_SELECT_ITEM}</h3>
 						<select id="unstable-inv" style="display:inline-block;margin-top:5px;width:100%;">${options}</select>
 						<hr/>
-						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
+						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
 					</div>
 				</form>
 			`,
@@ -510,6 +555,9 @@ export async function displayUnstableCraftDialog(actor) {
 			}
 		}
 
+		// sort alphabetically by name
+		craftChoices.sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
+		
 		if (!craftChoices.length) {
 			debugLog(2, "displayUnstableCraftDialog() | no matching formulas");
 		}
@@ -525,7 +573,7 @@ export async function displayUnstableCraftDialog(actor) {
 						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Alchemical Consumable")}</h3>
 						<select id="unstable-formula" style="display:inline-block;margin-top:5px;width:100%;">${options}</select>
 						<hr/>
-						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_NOTE}</p>
+						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
 					</div>
 				</form>
 			`,

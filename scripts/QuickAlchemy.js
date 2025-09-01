@@ -2029,10 +2029,10 @@ async function displayCraftingDialog(actor, itemType) {
 			const immunities = attributes.immunities || [];
 			if (immunities.some(imm => imm.type === "poison")) {
 				bestDamageType = "acid";
-				if (game.user.isGM) debugLog(LOCALIZED_TEXT.DEBUG_TARGET_IMMUNE_POISON);
+				if (game.user.isGM) debugLog("Target is immune to poison; choosing Acid.");
 			} else if (immunities.some(imm => imm.type === "acid")) {
 				bestDamageType = "poison";
-				if (game.user.isGM) debugLog(LOCALIZED_TEXT.DEBUG_TARGET_IMMUNE_ACID);
+				if (game.user.isGM) debugLog("Target is immune to acid; choosing Poison.");
 			} else if (acidModifier > poisonModifier) {
 				bestDamageType = "acid";
 				if (game.user.isGM) debugLog(`getBestDamageType() | Target is immune to poison selecting acid damage. | Poison Modifier = ${poisonModifier} | Acid Modifier = ${acidModifier}`);
@@ -2784,7 +2784,10 @@ export async function qaDialog(actor) {
 					action: "unstable-concoction",
 					label: LOCALIZED_TEXT.UNSTABLE_CONCOCTION_BTN,
 					icon: "fas fa-flask",
-					callback: () => displayUnstableConcoctionDialog(actor)
+					callback: (_ev, _btn, dialog) => {
+						try { dialog?.close?.(); } catch {}
+						displayUnstableConcoctionDialog(actor);
+					}
 				});
 			}
 		} catch (e) {
@@ -2840,7 +2843,10 @@ export async function qaDialog(actor) {
 					action: "unstable-concoction",
 					label: LOCALIZED_TEXT.UNSTABLE_CONCOCTION_BTN,
 					icon: "fas fa-flask",
-					callback: () => displayUnstableConcoctionDialog(actor)
+					callback: (_ev, _btn, dialog) => {
+						try { dialog?.close?.(); } catch {}
+						displayUnstableConcoctionDialog(actor);
+					}
 				});
 			}
 		} catch (e) {
@@ -2884,7 +2890,7 @@ export async function qaDialog(actor) {
 }
 
 //	Main crafting function
-async function qaCraftAttack() {
+export async function qaCraftAttack() {
 
 	// Check if a token is selected, if not default to game.user.character
 	// If both do not exist display message to select token
