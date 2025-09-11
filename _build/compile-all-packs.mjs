@@ -8,11 +8,18 @@ const ROOT = path.resolve(__dirname, "..");
 const moduleJson = JSON.parse(fs.readFileSync(path.join(ROOT, "module.json"), "utf8"));
 const packs = Array.isArray(moduleJson.packs) ? moduleJson.packs : [];
 
-function rmrf(p) {
-	try { fs.rmSync(p, { recursive: true, force: true }); } catch {}
-}
-function mkdirp(p) {
+function ensureDir(p) {
 	fs.mkdirSync(p, { recursive: true });
+}
+
+// remove everything inside dir EXCEPT the _source folder
+function cleanPackDirButKeepSource(dir) {
+	ensureDir(dir);
+	for (const entry of fs.readdirSync(dir)) {
+		if (entry === "_source") continue;
+		const full = path.join(dir, entry);
+		fs.rmSync(full, { recursive: true, force: true });
+	}
 }
 
 if (!packs.length) {
@@ -21,27 +28,24 @@ if (!packs.length) {
 }
 
 for (const p of packs) {
-	const packDir = path.resolve(ROOT, p.path);			
-	const srcDir = path.join(packDir, "_source");		
+	const packDir = path.resolve(ROOT, p.path);			// e.g., packs/alchemist-duct-tape-items
+	const srcDir = path.join(packDir, "_source");		// packs/.../_source
 
 	if (!fs.existsSync(srcDir)) {
-		process.stdout.write(`Skip (no _source): ${srcDir}\n`);
-		continue;
+		throw new Error(`Missing _source for pack: ${srcDir}. Run 'npm run extract' and commit the JSON.`);
 	}
 	const hasJson = fs.readdirSync(srcDir).some(f => f.endsWith(".json") && f !== "index.json");
 	if (!hasJson) {
-		process.stdout.write(`Skip (empty _source): ${srcDir}\n`);
-		continue;
+		throw new Error(`Empty _source for pack: ${srcDir}. Extract from your W: install and commit.`);
 	}
 
-	// wipe target, then compile
-	rmrf(packDir);
-	mkdirp(packDir);
+	// clean LevelDB outputs but keep _source intact
+	cleanPackDirButKeepSource(packDir);
 
 	process.stdout.write(`Compiling ${srcDir} -> ${packDir}\n`);
 	await compilePack(srcDir, packDir, { log: true });
 
-	// sanity check: ensure MANIFEST + at least one .ldb exist
+	// sanity check: must have a MANIFEST and at least one .ldb
 	const files = fs.readdirSync(packDir);
 	const hasManifest = files.some(n => /^MANIFEST-\d+$/i.test(n));
 	const hasLdb = files.some(n => /\.ldb$/i.test(n));
