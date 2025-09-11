@@ -1,0 +1,73 @@
+{
+  "name": "Effect: Mutagenist Resistance",
+  "type": "effect",
+  "effects": [],
+  "system": {
+    "description": {
+      "gm": "",
+      "value": "<p>Granted by <a class=\"content-link\" draggable=\"true\" data-link data-uuid=\"Compendium.pf2e.classfeatures.Item.wYOdTCWQQ6ec8I6b\" data-id=\"wYOdTCWQQ6ec8I6b\" data-type=\"Item\" data-pack=\"pf2e.classfeatures\" data-tooltip=\"Feat/Feature Item\"><strong>Advanced Vials</strong></a><strong> (11th)</strong> When you drink one of your field vials, you also gain resistance to physical damage for the same duration. The resistance is equal to half your level.</p>"
+    },
+    "rules": [
+      {
+        "key": "Resistance",
+        "type": "physical",
+        "value": "@actor.level / 2 | RoundDown"
+      }
+    ],
+    "slug": null,
+    "_migration": {
+      "version": 0.935,
+      "lastMigration": null
+    },
+    "traits": {
+      "otherTags": [],
+      "value": []
+    },
+    "publication": {
+      "title": "PF2e Alchemist Remaster Duct Tape module",
+      "authors": "TheJoester",
+      "license": "ORC",
+      "remaster": true
+    },
+    "level": {
+      "value": 11
+    },
+    "duration": {
+      "value": 1,
+      "unit": "rounds",
+      "expiry": "turn-start",
+      "sustained": false
+    },
+    "start": {
+      "value": 0,
+      "initiative": null
+    },
+    "tokenIcon": {
+      "show": true
+    },
+    "badge": null,
+    "context": null,
+    "unidentified": false
+  },
+  "img": "icons/equipment/shield/heater-steel-segmented-purple.webp",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.9.0",
+    "createdTime": 1739687226405,
+    "modifiedTime": 1756540791733,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
+    "exportSource": null
+  },
+  "_id": "0Zpa9OfNcTUlNc2t",
+  "sort": 100000,
+  "_key": "!items!0Zpa9OfNcTUlNc2t"
+}

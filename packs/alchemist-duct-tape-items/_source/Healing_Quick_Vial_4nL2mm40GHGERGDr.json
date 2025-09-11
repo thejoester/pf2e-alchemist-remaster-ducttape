@@ -1,0 +1,110 @@
+{
+  "name": "Healing Quick Vial",
+  "type": "consumable",
+  "effects": [],
+  "system": {
+    "description": {
+      "gm": "",
+      "value": "<p>Applies @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.htVOAKfVmVYafFrQ]{Effect: Coagulant Immunity}<br /><strong><br /></strong></p><hr /><p></p><p><strong>Field Vials</strong> Your versatile vials can be used to heal a living creature a number of Hit Points equal to the vial's initial damage. A creature can drink the vial for this benefit, or you can throw the vial at a willing creature within 20 feet as an Interact action to heal that creature. In either case, a vial used this way loses the acid and splash traits and gains the coagulant and healing traits, plus the elixir trait if a creature drinks it.</p><p><strong>@UUID[Compendium.pf2e.classfeatures.Item.qC0Iz6SlG2i9gv6g]{Field Discovery} (5th)</strong> Your medicinal elixirs are quite fortifying. When a creature drinks an infused elixir with the healing trait that you have created, that creature gains a number of temporary Hit Points equal to your Intelligence modifier (minimum 0); these temporary Hit Points last for 1 minute.</p><p><strong>@UUID[Compendium.pf2e.classfeatures.Item.6d8JFjFuvH27dpiw]{Advanced Vials} (11th)</strong> When you use a field vial to heal a creature that has half its maximum Hit Points or fewer, the coagulant trait doesn't apply to that healing.</p><p><strong>@UUID[Compendium.pf2e.classfeatures.Item.JJcaVijwRt9dsnac]{Greater Field Discovery} (13th)</strong> When you use Quick Alchemy to create any type of elixir of life, the creature healed by the item regains the maximum Hit Points possible, instead of rolling to determine the number of Hit Points regained.</p>"
+    },
+    "rules": [],
+    "slug": "healing-quick-vial-temp",
+    "_migration": {
+      "version": 0.935,
+      "lastMigration": null
+    },
+    "traits": {
+      "otherTags": [],
+      "value": [
+        "alchemical",
+        "coagulant",
+        "consumable",
+        "elixir",
+        "healing",
+        "infused"
+      ],
+      "rarity": "common"
+    },
+    "publication": {
+      "title": "PF2e Alchemist Remaster Duct Tape module",
+      "authors": "PF2e Alchemist Remaster Duct Tape module",
+      "license": "ORC",
+      "remaster": true
+    },
+    "level": {
+      "value": 1
+    },
+    "quantity": 1,
+    "baseItem": null,
+    "bulk": {
+      "value": 0.1
+    },
+    "hp": {
+      "value": 0,
+      "max": 0
+    },
+    "hardness": 0,
+    "price": {
+      "value": {}
+    },
+    "equipped": {
+      "carryType": "worn"
+    },
+    "containerId": null,
+    "size": "med",
+    "material": {
+      "type": null,
+      "grade": null
+    },
+    "identification": {
+      "status": "identified",
+      "unidentified": {
+        "name": "Unusual Object",
+        "img": "systems/pf2e/icons/unidentified_item_icons/other-consumables.webp",
+        "data": {
+          "description": {
+            "value": ""
+          }
+        }
+      },
+      "misidentified": {}
+    },
+    "category": "elixir",
+    "uses": {
+      "value": 1,
+      "max": 1,
+      "autoDestroy": true
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "untyped",
+      "kind": "healing"
+    },
+    "usage": {
+      "value": "held-in-one-hand"
+    },
+    "stackGroup": null,
+    "spell": null
+  },
+  "img": "icons/consumables/potions/flask-corked-red-glow.webp",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.12.2",
+    "createdTime": 1735554269381,
+    "modifiedTime": 1756540791733,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
+    "exportSource": null
+  },
+  "_id": "4nL2mm40GHGERGDr",
+  "sort": 700000,
+  "_key": "!items!4nL2mm40GHGERGDr"
+}

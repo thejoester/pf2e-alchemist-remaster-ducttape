@@ -1,0 +1,28 @@
+{
+  "name": "index-stats",
+  "type": "script",
+  "command": "// Macro: Show Alchemical Index Stats\n(async () => {\n\tconst NS = \"pf2e-alchemist-remaster-ducttape\";\n\tconst idx = game.settings.get(NS, \"alchIndex\") || { meta: {}, items: {} };\n\tconst items = idx.items || {};\n\tconst meta = idx.meta || {};\n\n\t// Count entries\n\tconst entries = Object.keys(items).length;\n\n\t// Approximate size in bytes (stringify)\n\tlet sizeStr = \"(unknown)\";\n\ttry {\n\t\tconst json = JSON.stringify(idx);\n\t\tconst bytes = new Blob([json]).size;\n\t\tif (bytes < 1024) sizeStr = `${bytes} B`;\n\t\telse if (bytes < 1024 * 1024) sizeStr = `${(bytes / 1024).toFixed(1)} KB`;\n\t\telse sizeStr = `${(bytes / (1024 * 1024)).toFixed(1)} MB`;\n\t} catch (err) {\n\t\tconsole.warn(\"Failed to measure size:\", err);\n\t}\n\n\tawait foundry.applications.api.DialogV2.wait({\n\t\twindow: { title: \"Alchemical Index Stats\" },\n\t\tcontent: `\n\t\t\t<p><b>Entries:</b> ${entries}</p>\n\t\t\t<p><b>Size:</b> ${sizeStr}</p>\n\t\t\t<p><b>System version:</b> ${meta.systemVersion || \"-\"}</p>\n\t\t\t<p><b>Locale:</b> ${meta.locale || \"-\"}</p>\n\t\t`,\n\t\tbuttons: [{ action: \"ok\", label: \"OK\" }],\n\t\tdefault: \"ok\"\n\t});\n})();",
+  "img": "icons/svg/book.svg",
+  "author": "EpqDCtSCbVNM4wPj",
+  "scope": "global",
+  "folder": "vsc8kgpLB8at8Ww9",
+  "ownership": {
+    "default": 0,
+    "EpqDCtSCbVNM4wPj": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "7.3.1",
+    "createdTime": 1755498669322,
+    "modifiedTime": 1755498669372,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj"
+  },
+  "_id": "1asffmZLsj8xdwVw",
+  "sort": 200000,
+  "_key": "!macros!1asffmZLsj8xdwVw"
+}

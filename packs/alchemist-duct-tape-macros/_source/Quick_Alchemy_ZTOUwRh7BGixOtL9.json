@@ -1,0 +1,32 @@
+{
+  "name": "Quick Alchemy",
+  "type": "script",
+  "flags": {
+    "macro-wheel": {
+      "activeCondition": ""
+    }
+  },
+  "command": "qaCraftAttack();",
+  "img": "modules/pf2e-alchemist-remaster-ducttape/assets/ARDT-QA.webp",
+  "author": "CLMiGpsYVSTK4VM8",
+  "scope": "global",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.6.2",
+    "createdTime": 1731606174874,
+    "modifiedTime": 1745057424447,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8",
+    "exportSource": null
+  },
+  "_id": "ZTOUwRh7BGixOtL9",
+  "sort": 100000,
+  "_key": "!macros!ZTOUwRh7BGixOtL9"
+}

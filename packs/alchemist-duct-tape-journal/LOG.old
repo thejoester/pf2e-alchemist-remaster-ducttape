@@ -1,7 +1,0 @@
-2025/09/01-02:00:06.875362 71c6027fc640 Recovering log #97
-2025/09/01-02:00:06.879450 71c6027fc640 Delete type=3 #95
-2025/09/01-02:00:06.879614 71c6027fc640 Delete type=0 #97
-2025/09/01-02:04:44.092629 71c0db3ff640 Level-0 table #102: started
-2025/09/01-02:04:44.092675 71c0db3ff640 Level-0 table #102: 0 bytes OK
-2025/09/01-02:04:44.094065 71c0db3ff640 Delete type=0 #100
-2025/09/01-02:04:44.096336 71c0db3ff640 Manual compaction at level-0 from '!journal!96Mgln6PUS7MPrk1' @ 72057594037927935 : 1 .. '!journal.pages!96Mgln6PUS7MPrk1.yiW2t5ffyh48NGZ9' @ 0 : 0; will stop at (end)

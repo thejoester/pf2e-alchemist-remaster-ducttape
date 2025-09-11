@@ -59,6 +59,11 @@ jobs:
       - name: Compile packs from _source
         run: node _build/compile-all-packs.mjs
 
+      - name: Show compiled pack contents
+        run: |
+          echo "==== packs tree ===="
+          find packs -maxdepth 2 -type f -printf "%p (%k KB)\n" | sort
+
       # Create the final module zip archive (excluding _build/)
       - name: Create Module Archive
         run: |
@@ -66,7 +71,8 @@ jobs:
           if [ -f LICENSE.md ]; then LIC="LICENSE.md"; else LIC="LICENSE"; fi
           zip -r dist/pf2e-alchemist-remaster-ducttape.zip \
             module.json README.md "$LIC" CHANGELOG.md \
-            assets/ packs/ scripts/ styles/ templates/ lang/
+            assets/ packs/ scripts/ styles/ templates/ lang/ \
+            -x "packs/*/_source/*"
 
       # Pull release notes from CHANGELOG.md
       - uses: release-flow/keep-a-changelog-action@v3

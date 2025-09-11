@@ -87,13 +87,24 @@
 		{
             "name": "alchemist-duct-tape-journal",
             "label": "Alchemist Duct Tape Journal",
-            "path": "packs/alchemist-duct-tape-journal.db",
+            "path": "packs/alchemist-duct-tape-journal",
             "type": "JournalEntry",
             "ownership": {
                 "PLAYER": "OBSERVER",
                 "ASSISTANT": "OWNER"
             },
             "system": "pf2e"
+        }
+    ],
+    "packFolders": [
+        {
+            "name": "PF2e Alchemist Duct Tape",
+            "sorting": "a",
+            "packs": [
+                "alchemist-duct-tape-macros",
+                "alchemist-duct-tape-items",
+                "alchemist-duct-tape-journal"
+            ]
         }
     ],
     "languages": [

@@ -1,0 +1,28 @@
+{
+  "name": "clear-index",
+  "type": "script",
+  "command": "// Macro: Clear Alchemical Index (GM only)\nif (!game.user.isGM) {\n\tui.notifications.warn(game.i18n.localize(\"PF2E_ALCHEMIST_REMASTER_DUCTTAPE.GM_ONLY\"));\n\treturn;\n}\nif (!window.PF2E_ARDT_INDEX?.clearIndexWithPrompt) {\n\tui.notifications.error(\"PF2E_ARDT_INDEX.clearIndexWithPrompt not found — is the module enabled and loaded?\");\n\treturn;\n}\nawait window.PF2E_ARDT_INDEX.clearIndexWithPrompt();",
+  "img": "icons/magic/symbols/cog-glowing-green.webp",
+  "author": "EpqDCtSCbVNM4wPj",
+  "scope": "global",
+  "folder": "vsc8kgpLB8at8Ww9",
+  "ownership": {
+    "default": 0,
+    "EpqDCtSCbVNM4wPj": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "7.3.1",
+    "createdTime": 1755348809206,
+    "modifiedTime": 1755498669372,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj"
+  },
+  "_id": "tt34u0zjjMG1wyhX",
+  "sort": 300000,
+  "_key": "!macros!tt34u0zjjMG1wyhX"
+}
