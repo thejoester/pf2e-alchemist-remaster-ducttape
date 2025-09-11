@@ -96,6 +96,17 @@
             "system": "pf2e"
         }
     ],
+    "packFolders": [
+        {
+            "name": "PF2e Alchemist Duct Tape",
+            "sorting": "a",
+            "packs": [
+                "alchemist-duct-tape-macros",
+                "alchemist-duct-tape-items",
+                "alchemist-duct-tape-journal"
+            ]
+        }
+    ],
     "languages": [
         {
             "lang": "en",
