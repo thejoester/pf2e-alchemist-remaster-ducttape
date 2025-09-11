@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.14.1] - 2025-09-11
-## Changed
+### Changed
 - Merged compendiums into folder "PF2e Alchemist Duct Tape". 
 - updated release process to elimiate file spam in packs/ directory
 
