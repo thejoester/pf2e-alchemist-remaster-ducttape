@@ -59,6 +59,11 @@ jobs:
       - name: Compile packs from _source
         run: node _build/compile-all-packs.mjs
 
+      - name: Show compiled pack contents
+        run: |
+          echo "==== packs tree ===="
+          find packs -maxdepth 2 -type f -printf "%p (%k KB)\n" | sort
+
       # Create the final module zip archive (excluding _build/)
       - name: Create Module Archive
         run: |
