@@ -11,37 +11,71 @@ jobs:
       contents: write
 
     steps:
+      # Pull repo code into the GitHub runner
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Install Node.js (needed for CLI scripts)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      # Grab the version number from the release tag (strip leading "v")
       - name: Extract Version From Tag
         id: get_version
         uses: battila7/get-version-action@v2
 
+      # Pick correct manifest URL depending on prerelease vs stable
+      - name: Set manifest URL for channel (stable vs prerelease)
+        id: set_manifest
+        run: |
+          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            echo "manifest_url=https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.json" >> $GITHUB_OUTPUT
+          else
+            echo "manifest_url=https://github.com/${{ github.repository }}/releases/latest/download/module.json" >> $GITHUB_OUTPUT
+          fi
+
+      # Update module.json with version, manifest, and download links
       - name: Modify Module Manifest With Release-Specific Values
         id: sub_manifest_link_version
         uses: microsoft/variable-substitution@v1
         with:
           files: "module.json"
         env:
-          version: ${{steps.get_version.outputs.version-without-v}}
-          manifest: https://github.com/${{github.repository}}/releases/latest/download/module.json
-          download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/pf2e-alchemist-remaster-ducttape.zip
+          version: ${{ steps.get_version.outputs.version-without-v }}
+          manifest: ${{ steps.set_manifest.outputs.manifest_url }}
+          download: https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/pf2e-alchemist-remaster-ducttape.zip
 
+      # Install the Foundry CLI (used for pack compile/verify scripts)
+      - name: Install Foundry CLI
+        run: npm i -D @foundryvtt/foundryvtt-cli
+
+      # Check packs/_source JSON for duplicate names/slugs
+      - name: Verify extracted packs (no dupes)
+        run: node _build/verify-extracted-packs.mjs
+
+      # Rebuild clean LevelDB packs from _source JSON
+      - name: Compile packs from _source
+        run: node _build/compile-all-packs.mjs
+
+      # Create the final module zip archive (excluding _build/)
       - name: Create Module Archive
-        run: zip -r pf2e-alchemist-remaster-ducttape.zip module.json README.md LICENSE.md CHANGELOG.md assets/ packs/ scripts/ styles/ templates/ lang/
+        run: |
+          mkdir -p dist
+          if [ -f LICENSE.md ]; then LIC="LICENSE.md"; else LIC="LICENSE"; fi
+          zip -r dist/pf2e-alchemist-remaster-ducttape.zip \
+            module.json README.md "$LIC" CHANGELOG.md \
+            assets/ packs/ scripts/ styles/ templates/ lang/
 
+      # Pull release notes from CHANGELOG.md
       - uses: release-flow/keep-a-changelog-action@v3
         id: changelog
         with:
           command: query
           version: ${{ steps.get_version.outputs.version-without-v }}
 
+      # Update the GitHub release with module.json + zip
       - name: Update Release With Files
         id: create_version_release
         uses: ncipollo/release-action@v1
@@ -52,12 +86,13 @@ jobs:
           prerelease: ${{ github.event.release.prerelease }}
           name: ${{ steps.get_version.outputs.version-without-v }}
           body: ${{ steps.changelog.outputs.release-notes }}
-          artifacts: "./module.json, ./pf2e-alchemist-remaster-ducttape.zip"
-          
+          artifacts: "module.json, dist/pf2e-alchemist-remaster-ducttape.zip"
+
+      # Publish stable releases to FoundryVTT package registry
       - name: Publish Module to FoundryVTT Website
         id: publish-to-foundry-website
-        if: ${{ ! github.event.release.prerelease}}
+        if: ${{ ! github.event.release.prerelease }}
         uses: cs96and/FoundryVTT-release-package@v1
         with:
           package-token: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
-          manifest-url: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.json
+          manifest-url: https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.json
