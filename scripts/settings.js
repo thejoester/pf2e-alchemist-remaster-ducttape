@@ -1,6 +1,19 @@
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
 
+// ===== Globals ===== 
+
+// Compendium folder migration
+const ARDT_MODULE_ID = "pf2e-alchemist-remaster-ducttape";
+const ARDT_COMP_FOLDER_NAME = "PF2e Alchemist Duct Tape";
+// Keep this in sync with module.json "packs"[].name
+const ARDT_PACK_NAMES = [
+	"alchemist-duct-tape-macros",
+	"alchemist-duct-tape-items",
+	"alchemist-duct-tape-journal"
+];
+const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: true, ... }
+
 /*	===== Exported Functions ===== 
 */
 	
@@ -286,7 +299,58 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
     async _updateObject(event, formData) {
         // No action needed since save is handled manually
     }
-};
+	};
+
+	// Get the full migrations object (always returns an object).
+	function getMigrations() {
+		const obj = game.settings.get(ARDT_MODULE_ID, ARDT_FLAGS_SETTING);
+		return obj && typeof obj === "object" ? { ...obj } : {};
+	}
+
+	// Set/merge a single flag without clobbering others.
+	async function setMigrationFlag(key, value) {
+		const current = getMigrations();
+		current[key] = value;
+		await game.settings.set(ARDT_MODULE_ID, ARDT_FLAGS_SETTING, current);
+	}
+
+	/** Check a flag; falsy if missing. */
+	function hasMigrationFlag(key) {
+		const current = getMigrations();
+		return Boolean(current[key]);
+	}
+
+	// Check folder migration 
+	async function checkFolderMigration(){
+		if (!game.user.isGM) return; // GM only
+		if (hasMigrationFlag("folderMigration")) return; // we already migrated
+
+		try {
+			let folder = game.folders.find((f) => f.type === "Compendium" && f.name === ARDT_COMP_FOLDER_NAME);
+			// If folder doesn't exist create it
+			if (!folder) { 
+				folder = await Folder.create({ name: ARDT_COMP_FOLDER_NAME, type: "Compendium", sorting: "a" });
+				debugLog("settings.js | Created compendium folder:", ARDT_COMP_FOLDER_NAME, folder?.id);
+			}
+
+			// move packs into folder
+			for (const name of ARDT_PACK_NAMES) {
+				const cid = `${ARDT_MODULE_ID}.${name}`;
+				const pack = game.packs.get(cid);
+				if (!pack) { debugLog("settings.js | Pack not found, skipping:", cid); continue; }
+				await pack.configure({ folder: folder.id });
+				debugLog("settings.js | Moved pack into folder:", cid, "→", ARDT_COMP_FOLDER_NAME);
+			}
+
+			// update flag
+			await setMigrationFlag("folderMigration", true);
+			ui.compendium.render(true);
+			debugLog("settings.js | Compendium folder migration complete.");
+		} catch (err) {
+			debugLog(3, "settings.js | Compendium folder migration failed:", err?.message ?? err);
+		}
+	}
+
 
 /* ===== Hooks =====
 */
@@ -336,6 +400,14 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 			config: false,
 			type: Number,
 			default: 0
+		});
+
+		// Setting to hold module flags
+		game.settings.register(ARDT_MODULE_ID, ARDT_FLAGS_SETTING, {
+			scope: "world",
+			config: false,
+			type: Object,
+			default: {}	
 		});
 		
 	//	QUICK ALCHEMY SETTINGS
@@ -644,115 +716,59 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 			requiresReload: false
 		});
 		
-		Hooks.on("renderSettingsConfig", (app, html, data) => {
-			if (game.release?.generation >= 13) { // If v13
-				Hooks.on("renderSettingsConfig", (app, html, data) => {
-					const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
-					const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
+		// disable our collapse setting if Workbench manages it
+		Hooks.on("renderSettingsConfig", (app, html/*, data*/) => {
+			const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
+			const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
 
-					// Check if Workbench is installed and active
-					const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
+			// require Workbench to be active
+			if (!game.modules.get("xdy-pf2e-workbench")?.active) return;
 
-					if (!isWorkbenchInstalled) return;
+			// current WB value
+			const wbValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
 
-					// Get the current value of the Workbench setting
-					const workbenchSettingValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
+			// our checkbox input
+			const input = html.querySelector(`input[name="${thisSettingKey}"]`);
+			if (!input) return;
 
-					// Get this setting input field in the UI
-					const thisSettingInput = html.querySelector(`input[name="${thisSettingKey}"]`);
+			const wrapper = input.closest(".form-group");
+			if (!wrapper) return;
 
-					if (thisSettingInput) {
-						const wrapperDiv = thisSettingInput.closest(".form-group");
-						if (!wrapperDiv) return;
+			const ensureNote = () => {
+				if (wrapper.querySelector(".notes")) return;
+				const note = document.createElement("p");
+				note.className = "notes";
+				note.style.color = "red";
+				note.innerText = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH");
+				wrapper.appendChild(note);
+			};
+			const removeNote = () => wrapper.querySelector(".notes")?.remove();
 
-						// Helper to insert note if not already added
-						const insertNote = () => {
-							if (!wrapperDiv.querySelector(".notes")) {
-								const note = document.createElement("p");
-								note.className = "notes";
-								note.style.color = "red";
-								note.innerText = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH");
-								wrapperDiv.appendChild(note);
-							}
-						};
-
-						// Set initial state
-						if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
-							thisSettingInput.disabled = true;
-							insertNote();
-						} else if (workbenchSettingValue === "noCollapse") {
-							thisSettingInput.disabled = false;
-						}
-
-						// Listen for changes to Workbench dropdown
-						const workbenchSelect = html.querySelector(`select[name="${workbenchSettingKey}"]`);
-						if (workbenchSelect) {
-							workbenchSelect.addEventListener("change", (event) => {
-								const selectedValue = event.target.value;
-
-								// Remove existing notes
-								const oldNote = wrapperDiv.querySelector(".notes");
-								if (oldNote) oldNote.remove();
-
-								if (selectedValue === "collapsedDefault" || selectedValue === "nonCollapsedDefault") {
-									thisSettingInput.disabled = true;
-									insertNote();
-									game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
-								} else if (selectedValue === "noCollapse") {
-									thisSettingInput.disabled = false;
-								}
-							});
-						}
-					}
-				});
-			}else{ // v12
-				const workbenchSettingKey = "xdy-pf2e-workbench.autoCollapseItemChatCardContent";
-				const thisSettingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
-
-				// Check if Workbench is installed and active
-				const isWorkbenchInstalled = game.modules.get("xdy-pf2e-workbench")?.active;
-
-				//monitor for settings change of workbench collapse setting
-				if (isWorkbenchInstalled) {
-					// Get the current value of the Workbench setting
-					const workbenchSettingValue = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
-
-					// Get this setting input field in the UI
-					const thisSettingInput = html.find(`input[name="${thisSettingKey}"]`);
-
-					// Disable or enable this setting based on the Workbench setting
-					if (thisSettingInput.length) {
-						if (workbenchSettingValue === "collapsedDefault" || workbenchSettingValue === "nonCollapsedDefault") {
-							thisSettingInput.prop("disabled", true);
-							thisSettingInput.parent().append(
-								`<p class="notes" style="color: red;">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH")}</p>`
-							);
-						} else if (workbenchSettingValue === "noCollapse") {
-							thisSettingInput.prop("disabled", false);
-						}
-					}
-
-					// Watch for changes to the Workbench setting in the UI
-					html.find(`select[name="${workbenchSettingKey}"]`).change((event) => {
-						const selectedValue = event.target.value;
-
-						// Update this setting's state dynamically
-						if (thisSettingInput.length) {
-							if (selectedValue === "collapsedDefault" || selectedValue === "nonCollapsedDefault") {
-								thisSettingInput.prop("disabled", true);
-								thisSettingInput.parent().find(".notes").remove(); // Remove old notes
-								thisSettingInput.parent().append(
-									`<p class="notes" style="color: red;">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH")}</p>`
-								);
-								game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
-							} else if (selectedValue === "noCollapse") {
-								thisSettingInput.prop("disabled", false);
-								thisSettingInput.parent().find(".notes").remove(); // Remove old notes
-							}
-						}
-					});
-				}
+			// set initial state
+			if (wbValue === "collapsedDefault" || wbValue === "nonCollapsedDefault") {
+				input.disabled = true;
+				ensureNote();
+			} else {
+				input.disabled = false;
+				removeNote();
 			}
+
+			// react to changes in WB dropdown live
+			const wbSelect = html.querySelector(`select[name="${workbenchSettingKey}"]`);
+			if (!wbSelect) return;
+
+			wbSelect.addEventListener("change", (ev) => {
+				const value = ev.target.value;
+				if (value === "collapsedDefault" || value === "nonCollapsedDefault") {
+					input.disabled = true;
+					ensureNote();
+					// keep our setting false when WB owns it
+					game.settings.set("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", false);
+				} else {
+					input.disabled = false;
+					removeNote();
+				}
+			});
 		});
 
 	//	Help Button
@@ -790,9 +806,12 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 	});
 
 Hooks.once("ready", async () => {
-	
+
 	//	Logging
 	debugLog("settings.js | Ready hook triggered.");
+
+	//check folder migration
+	try { await checkFolderMigration();} catch (err) {debugLog(3, "settings.js | Compendium folder migration failed:", err?.message ?? err);}
 	
 	//	Index module item Compendiums
 	try {
