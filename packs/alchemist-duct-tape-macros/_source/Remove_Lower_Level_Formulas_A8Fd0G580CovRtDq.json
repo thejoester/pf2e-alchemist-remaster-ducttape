@@ -1,0 +1,32 @@
+{
+  "name": "Remove Lower Level Formulas",
+  "type": "script",
+  "flags": {
+    "macro-wheel": {
+      "activeCondition": ""
+    }
+  },
+  "command": "/*\n\n\tRemoved lower level forumulas that your Alchemist\n\tknows higher level versions of to keep your formula\n\tlist clean. \n\n*/\npromptTokenFormulaRemove();",
+  "img": "modules/pf2e-alchemist-remaster-ducttape/assets/removeFormulas.png",
+  "author": "CLMiGpsYVSTK4VM8",
+  "scope": "global",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.11.1",
+    "createdTime": 1743490972118,
+    "modifiedTime": 1743999843487,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8",
+    "exportSource": null
+  },
+  "_id": "A8Fd0G580CovRtDq",
+  "sort": 200000,
+  "_key": "!macros!A8Fd0G580CovRtDq"
+}

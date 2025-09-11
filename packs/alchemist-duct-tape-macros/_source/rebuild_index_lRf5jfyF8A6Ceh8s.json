@@ -1,0 +1,28 @@
+{
+  "name": "rebuild-index",
+  "type": "script",
+  "command": "await window.qaForceRebuildAlchIndex?.({ reason: \"GM macro\" });",
+  "img": "icons/svg/daze.svg",
+  "author": "EpqDCtSCbVNM4wPj",
+  "scope": "global",
+  "folder": "vsc8kgpLB8at8Ww9",
+  "ownership": {
+    "default": 0,
+    "EpqDCtSCbVNM4wPj": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "7.3.1",
+    "createdTime": 1755348813267,
+    "modifiedTime": 1755498669372,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj"
+  },
+  "_id": "lRf5jfyF8A6Ceh8s",
+  "sort": 100000,
+  "_key": "!macros!lRf5jfyF8A6Ceh8s"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "Update Formulas",
+  "type": "script",
+  "flags": {
+    "macro-wheel": {
+      "activeCondition": ""
+    }
+  },
+  "command": "/*\n\n\tMacro to check for higher levels of formulas your \n\tAlchemist already knows. \n\n*/\npromptTokenFormulaAdd();",
+  "img": "modules/pf2e-alchemist-remaster-ducttape/assets/newFormulas.png",
+  "author": "CLMiGpsYVSTK4VM8",
+  "scope": "global",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.11.1",
+    "createdTime": 1743490970181,
+    "modifiedTime": 1743490972177,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8",
+    "exportSource": null
+  },
+  "_id": "HHRCPhcYB8IXXDWQ",
+  "sort": 300000,
+  "_key": "!macros!HHRCPhcYB8IXXDWQ"
+}
