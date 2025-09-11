@@ -87,7 +87,7 @@
 		{
             "name": "alchemist-duct-tape-journal",
             "label": "Alchemist Duct Tape Journal",
-            "path": "packs/alchemist-duct-tape-journal.db",
+            "path": "packs/alchemist-duct-tape-journal",
             "type": "JournalEntry",
             "ownership": {
                 "PLAYER": "OBSERVER",
