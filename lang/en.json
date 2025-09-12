@@ -138,6 +138,13 @@
 		"QUICK_ALCHEMY_NO_VV":"You have no more Versatile Vials.",
 		"QUICK_ALCHEMY_10_MIN":"You must spend 10 minutes searching for reagents to craft more.",
 		"QUICK_ALCHEMY_REOPEN_SHEET":"Try opening character sheet then try again.",
+
+		"HEALING_VIAL_CHOICE_TITLE": "Healing Quick Vial",
+		"HEALING_VIAL_CHOICE_DESC": "Choose how to use your Healing Quick Vial: throw it up to 20 feet at a willing ally (heals equal to the vial’s initial damage), or craft it for drinking.",
+		"BTN_THROW": "Throw",
+		"BTN_CRAFT": "Craft",
+		"HEALING_VIAL_THROW_FLAVOR": "Heals (thrown):",
+		"COAGULANT_TRAIT": "Coagulant",
 		
 		"FIELDVIAL_LBL": "Toxicologist Field Vial Poison",
 		"ADVFIELDVIAL_LBL": "Toxicologist Advanced Vial Poison",

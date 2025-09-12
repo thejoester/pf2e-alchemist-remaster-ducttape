@@ -19,7 +19,6 @@ const qaEscape = (s) => String(s ?? "")
 Hooks.once("init", () => {
 	// v13 text editor
 	QA_TEXT_EDITOR = foundry.applications.ux.TextEditor.implementation;
-
 });
 
 //	DialogV2 opener
@@ -522,11 +521,11 @@ export async function sendConsumableUseMessage(itemUuid) {
 
 //	Function to send "Already consumed" chat message
 function sendAlreadyConsumedChat() {
-	/*
-		// most likely this happens because user clicked 
+	/* =========================================================
+		most likely this happens because user clicked 
 		attack already and item was consumed, we will send 
 		chat message saying item was already used
-	*/
+	========================================================= */
 	const actor = game.user.character; // Assuming actor is the user's character
 	const content = LOCALIZED_TEXT.QUICK_ALCHEMY_ALREADY_CONSUMED_MSG;
 
@@ -538,8 +537,10 @@ function sendAlreadyConsumedChat() {
 	});
 }
 
-//	Function to create chat message after creating Quick Vial prompting to 
-//	attack or open QuickAlchemy dialog
+/* Send Vial Attack Message ===================================================
+	create chat message after creating Quick Vial prompting to
+	attack or open QuickAlchemy dialog
+============================================================================ */
 async function sendVialAttackMessage(itemUuid, actor) {
 	
 	//Log the UUID
@@ -593,7 +594,9 @@ async function sendVialAttackMessage(itemUuid, actor) {
 	});
 }
 
-// Function to send a message with a link to roll an attack with a weapon
+/* Send Weapon Attack Message =================================================
+	create chat message after creating item prompting to attack 
+============================================================================ */
 export async function sendWeaponAttackMessage(itemUuid) {
 	// Log the UUID for debugging purposes
 	debugLog(`sendWeaponAttackMessage() | Attempting to fetch item with UUID: ${itemUuid}`);
@@ -712,8 +715,12 @@ async function clearInfused(actor) {
 	}
 }
 
-//	Function to craft "Healing Quick Vial" from the module compendium and add 
-//	"(*Temporary)" to the end of the name and custom flag
+
+
+/* Craft Healing Quick Vial ===================================================	
+	Function to craft "Healing Quick Vial" from the module compendium 
+	and add "(*Temporary)" to the end of the name and custom flag
+============================================================================ */
 async function craftHealingVial(selectedItem, selectedActor) {
 	// Define the slug for the healing quick vial
 	const healingSlug = "healing-quick-vial";
@@ -722,6 +729,168 @@ async function craftHealingVial(selectedItem, selectedActor) {
 	// Get actor size to use for new item size
 	const actorSize = await getActorSize(selectedActor);
 
+	// Ask Throw or Craft BEFORE doing anything
+	const useMode = await new Promise((resolve) => {
+		let resolved = false;
+		try {
+            const dlg = new foundry.applications.api.DialogV2({
+				id: "qa-healing-vial-choice",
+				modal: true,
+				width: 520,
+				classes: ["quick-alchemy-dialog"],
+				window: { title: (LOCALIZED_TEXT?.HEALING_VIAL_CHOICE_TITLE ?? "Healing Quick Vial") },
+				content: `
+					<div style="max-width:520px">
+						<p>${LOCALIZED_TEXT?.HEALING_VIAL_CHOICE_DESC
+							?? "Choose how to use your Healing Quick Vial: throw it up to 20 feet at a willing ally (heals equal to the vial’s initial damage), or craft it for drinking."}</p>
+					</div>
+				`,
+				buttons: [
+					{
+						action: "throw",
+						label: (LOCALIZED_TEXT?.BTN_THROW ?? "Throw"),
+						icon: "fa-solid fa-flask",
+						callback: () => {
+							if (!resolved) { resolved = true; resolve("throw"); }
+						}
+					},
+					{
+						action: "craft",
+						label: (LOCALIZED_TEXT?.BTN_CRAFT ?? "Craft"),
+						icon: "fa-solid fa-vial",
+						default: true,
+						callback: () => {
+							if (!resolved) { resolved = true; resolve("craft"); }
+						}
+					}
+				],
+				close: () => {
+					if (!resolved) { resolved = true; resolve("craft"); }
+				}
+			});
+			dlg.render(true);
+		} catch (e) {
+			debugLog(2, "craftHealingVial() | choice dialog failed, defaulting to Craft", e);
+			if (!resolved) { resolved = true; resolve("craft"); }
+		}
+	});
+
+	// Compute level & initial formula now (needed for Throw path even if we don't create the item)
+	const actorLevel = selectedActor.system.details.level.value;
+	const itemLevel = actorLevel >= 18 ? 18 : actorLevel >= 12 ? 12 : actorLevel >= 4 ? 4 : 1;
+	const itemFormula = actorLevel >= 18 ? "4d6" : actorLevel >= 12 ? "3d6" : actorLevel >= 4 ? "2d6" : "1d6";
+
+	/* THROW PATH =================================================================
+		heal equals initial damage, no attack, no splash; show Apply button
+	============================================================================ */
+	if (useMode === "throw") {
+		try {
+			// Target already required earlier in your flow
+			const targetToken = Array.from(game.user?.targets ?? [])[0] ?? null;
+			if (!targetToken) {
+				debugLog(2, "craftHealingVial() | Throw selected but no target found");
+			}
+
+			// Roll initial damage as healing (ASYNC EVAL to avoid sync-term errors)
+			const roll = new Roll(itemFormula, selectedActor.getRollData?.() ?? {});
+			await roll.evaluate({ async: true });
+
+			// Build chat payload and flags
+			const speaker = ChatMessage.getSpeaker({ actor: selectedActor, token: selectedActor.getActiveTokens?.()[0] });
+			const flavorLbl = (LOCALIZED_TEXT?.HEALING_VIAL_THROW_FLAVOR ?? "Heals (thrown):");
+			const targetUuid = targetToken?.document?.uuid ?? targetToken?.actor?.uuid ?? "";
+			const healTotal = Number(roll.total) || 0;
+
+			const content = `
+				<section class="pf2e chat-card">
+					<header class="card-header">
+						<h4 class="action">${foundry.utils.escapeHTML("Healing Quick Vial")}</h4>
+						<div class="tags">
+							<span class="tag" data-slug="healing">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_HEALING") ?? "healing"}</span>
+							<span class="tag" data-slug="coagulant">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.COAGULANT_TRAIT") ?? "coagulant"}</span>
+						</div>
+					</header>
+					<div class="message-content">
+						<p><strong>${flavorLbl}</strong> ${healTotal}</p>
+						<div class="message-buttons">
+							<button type="button"
+								data-action="apply-quick-vial-healing"
+								data-target="${foundry.utils.escapeHTML(targetUuid)}"
+								data-heal="${healTotal}">
+								${LOCALIZED_TEXT?.APPLY_HEALING_BTN ?? "Apply Healing"}
+							</button>
+						</div>
+					</div>
+				</section>
+			`;
+
+			// Register a temporary handler BEFORE message creation to avoid race conditions
+			const onceId = Hooks.on("renderChatMessage", async (message, html) => {
+				try {
+					const f = message?.flags?.["pf2e-alchemist-remaster-ducttape"];
+					if (!f || f.healingQuickVial !== true || f.mode !== "throw") return;
+
+					// We found our message; detach hook after wiring
+					Hooks.off("renderChatMessage", onceId);
+
+					const btn = html[0]?.querySelector?.("button[data-action='apply-quick-vial-healing']");
+					if (!btn) return;
+
+					// permission gate: GM or target owner can click, else disabled
+					const targetDoc = await fromUuid(btn.dataset.target);
+					const targetActor = targetDoc?.actor ?? targetDoc;
+					const isGM = game.user.isGM;
+					const isTargetOwner = targetDoc?.testUserPermission?.(game.user, "OWNER") ?? targetActor?.testUserPermission?.(game.user, "OWNER") ?? false;
+					if (!(isGM || isTargetOwner)) {
+						btn.setAttribute("disabled", "disabled");
+					}
+
+					btn.addEventListener("click", async (ev) => {
+						try {
+							const heal = parseInt(btn.dataset.heal);
+							const targetDoc2 = await fromUuid(btn.dataset.target);
+							const targetActor2 = targetDoc2?.actor ?? targetDoc2;
+							const token = targetDoc2?.isToken ? targetDoc2 : targetActor2?.getActiveTokens?.()[0];
+							if (!targetActor2 || isNaN(heal)) return;
+
+							// Apply as healing (negative damage). This requires appropriate permission (GM/owner).
+							await targetActor2.applyDamage?.({ damage: -heal, token, heal: true, skipIWR: true });
+							debugLog(`craftHealingVial() | Applied ${heal} healing to ${targetActor2?.name}`);
+						} catch (clickErr) {
+							debugLog(2, "craftHealingVial() | Apply Healing button error", clickErr);
+						}
+					}, { once: true });
+				} catch (hookErr) {
+					debugLog(2, "craftHealingVial() | renderChatMessage hook error", hookErr);
+				}
+			});
+
+			// Create the chat message (now the hook above will wire the button)
+			await ChatMessage.create({
+				speaker,
+				content,
+				classes: ["quick-alchemy-dialog"],
+				type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+				rolls: [roll],
+				flags: {
+					"pf2e-alchemist-remaster-ducttape": {
+						healingQuickVial: true,
+						mode: "throw",
+						itemSlug: healingSlug,
+						targetUuid,
+						noSplash: true
+					}
+				}
+			});
+		} catch (err) {
+			debugLog(2, "craftHealingVial() | Throw path error", err);
+		}
+		return; // Throw is resolved immediately; nothing is created
+	}
+
+	/* CRAFT PATH =================================================================
+		create (or increment) a drinkable vial with proper traits
+	============================================================================ */
 	// Check if the item already exists in the actor's inventory
 	const existingItem = selectedActor.items.find(item =>
 		item.slug === healingSlug &&
@@ -736,7 +905,6 @@ async function craftHealingVial(selectedItem, selectedActor) {
 		sendConsumableUseMessage(existingItem.uuid);
 		return;
 	} else {
-
 		// Item does not exist, retrieve from compendium
 		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
 		if (!compendium) {
@@ -765,25 +933,32 @@ async function craftHealingVial(selectedItem, selectedActor) {
 			modifiedItem.system.publication.license = "ORC";
 			modifiedItem.system.publication.title = "PF2e Alchemist Remaster Duct Tape";
 
-			// Adjust Quick Vial Level
-			const actorLevel = selectedActor.system.details.level.value;
-			const itemLevel = actorLevel >= 18 ? 18 : actorLevel >= 12 ? 12 : actorLevel >= 4 ? 4 : 1;
-			const itemFormula = actorLevel >= 18 ? "4d6" : actorLevel >= 12 ? "3d6" : actorLevel >= 4 ? "2d6" : "1d6";
+			// Ensure final slug/name
+			modifiedItem.system.slug = healingSlug;
+
+			// Adjust Quick Vial Level & initial "damage" (used as healing)
 			modifiedItem.system.level.value = itemLevel;
+			modifiedItem.system.damage = modifiedItem.system.damage ?? {};
 			modifiedItem.system.damage.formula = itemFormula;
 
-			// Add Coagulant trait unless we have Advanced Vials Chirurgeon Feat
-			
-			const advVials = hasFeat(selectedActor, "advanced-vials-chirurgeon");
-			if (!advVials){
-				// Add the "coagulant" trait if not already present
-				if (!modifiedItem.system.traits.value.includes("coagulant")) {
-					modifiedItem.system.traits.value.push("coagulant");
-				}
-			} 
-			
+			// Traits: remove acid/splash; add coagulant & healing; add elixir (since Craft/drink)
+			try {
+				const trPath = "system.traits.value";
+				const cur = foundry.utils.getProperty(modifiedItem, trPath) ?? [];
+				const next = new Set(cur);
+				next.delete("acid");
+				next.delete("splash");
+				next.add("coagulant");
+				next.add("healing");
+				next.add("elixir"); // craft/drink path only
+				foundry.utils.setProperty(modifiedItem, trPath, Array.from(next));
+				debugLog("craftHealingVial() | Craft traits set:", Array.from(next));
+			} catch (trErr) {
+				debugLog(2, "craftHealingVial() | Trait mutate error", trErr);
+			}
+
 			// Rename the item
-			modifiedItem.name += " (*Temporary)";
+			modifiedItem.name = "Healing Quick Vial (*Temporary)";
 
 			// If we are using size based quick alchemy, modify size
 			if (alchemyMode !== "disabled") {
@@ -797,8 +972,10 @@ async function craftHealingVial(selectedItem, selectedActor) {
 			// Add the item to the actor's inventory
 			const createdItem = await selectedActor.createEmbeddedDocuments("Item", [modifiedItem]);
 			debugLog(`craftHealingVial() | Crafted `, createdItem);
-			const createdItemUuid = createdItem[0].uuid; //`Actor.${selectedActor.id}.Item.${createdItem[0].id}`;
+			const createdItemUuid = createdItem[0].uuid;
 			debugLog(`craftHealingVial() | createdItemUuid: ${createdItemUuid}`);
+
+			// Show/use the crafted vial (drink)
 			sendConsumableUseMessage(createdItemUuid);
 		} catch (error) {
 			debugLog(3, "craftHealingVial() | Error retrieving Healing Quick Vial from compendium: ", error);
@@ -806,11 +983,12 @@ async function craftHealingVial(selectedItem, selectedActor) {
 	}
 }
 
- 	
-//	Function to craft Quick Vial using Quick Alchemy and add "(*Temporary)" 
-//	to the end of the name and custom tag to any item created with this 
-//	Quick Alchmy macro so that it can be removed at the end of the turn 
-//	and ensured that when attacking it is using the same item.
+/* Craft Vial =================================================================
+	Function to craft Quick Vial using Quick Alchemy and add "(*Temporary)" 
+	to the end of the name and custom tag to any item created with this 
+	Quick Alchmy macro so that it can be removed at the end of the turn and 
+	ensured that when attacking it is using the same item.
+============================================================================ */
 async function craftVial(selectedItem, selectedActor, selectedType = "acid", specialIngredient = "none") {
 	debugLog(`craftVial() | Selected Vial: ${selectedItem?.name} || No Name}`); // Selected Vial: 
 	debugLog(`craftVial() | Selected Actor: ${selectedActor?.name} || No Name}`); // Selected acrtor: 
@@ -909,10 +1087,13 @@ async function craftVial(selectedItem, selectedActor, selectedType = "acid", spe
 	return newItemSlug; // return slug
 }
 
-//	Function to craft item using Quick Alchemy and add "(*Temporary)" to the 
-//	end of the name and a custom tag "ductTapped" to any item created with this 
-//	Quick Alchmy macro so that it can be removed at the end of the turn and 
-//	ensured that when attacking it is using the same item.
+
+/* Craft Item =================================================================
+	Function to craft item using Quick Alchemy and add "(*Temporary)" to the 
+	end of the name and a custom tag "ductTapped" to any item created with 
+	this Quick Alchmy macro so that it can be removed at the end of the turn 
+	and ensured that when attacking it is using the same item.
+============================================================================ */
 async function craftItem(selectedItem, selectedActor, count = 1) {
 	debugLog(`craftItem() | Selected Item: ${selectedItem?.name} || No Name}`);
 	debugLog(`craftItem() | Selected Actor: ${selectedActor?.name} || No Name}`);
