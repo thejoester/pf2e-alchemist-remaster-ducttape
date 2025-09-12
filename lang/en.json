@@ -140,7 +140,7 @@
 		"QUICK_ALCHEMY_REOPEN_SHEET":"Try opening character sheet then try again.",
 
 		"HEALING_VIAL_CHOICE_TITLE": "Healing Quick Vial",
-		"HEALING_VIAL_CHOICE_DESC": "Choose how to use your Healing Quick Vial: throw it up to 20 feet at a willing ally (heals equal to the vial’s initial damage), or craft it for drinking.",
+		"HEALING_VIAL_CHOICE_DESC": "<h4>Choose how to use your Healing Quick Vial:</h4> <p><b>Throw</b> it up to 20 feet at a willing ally, <br>or <br><b>Craft</b> it for drinking.",
 		"BTN_THROW": "Throw",
 		"BTN_CRAFT": "Craft",
 		"HEALING_VIAL_THROW_FLAVOR": "Heals (thrown):",
