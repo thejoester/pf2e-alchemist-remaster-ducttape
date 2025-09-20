@@ -31,8 +31,10 @@ I would like to extend a thanks to the following people for helping contribute t
 
 ### Translations
 - Polish (pl): [Lioheart](https://github.com/Lioheart)
-- Brazilian Portuguese(pt-BR): [Charlinho](https://github.com/Chrystian-Carvalho)
-- Chinese(cn): [AlphaStarguide](https://github.com/AlphaStarguide)
+- Brazilian Portuguese (pt-BR): [Charlinho](https://github.com/Chrystian-Carvalho)
+- Chinese (cn): [AlphaStarguide](https://github.com/AlphaStarguide)
+- French (fr): [Rectulo](https://github.com/rectulo)
+- Korean (ko): [Rutz179](https://github.com/rectulo)
 
 ## Contribute  
 
