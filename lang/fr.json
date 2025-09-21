@@ -1,5 +1,6 @@
 {
   "PF2E_ALCHEMIST_REMASTER_DUCTTAPE": {
+    "MODULE_NAME": "PF2e Alchimiste remaster Gros scotch",
     "ACID": "Acide",
     "COLD": "Froid",
     "ELECTRICITY": "Électricité",
@@ -190,6 +191,23 @@
     "HEALING_BOMB_TRAIT_RANGE30": "Incrément de portée 9 mètres.",
     "HEALING_BOMB_BUTTON_CHIRURGEON": "Découverte de champ de rechercher supérieure guérison",
     "HEALING_BOMB_BUTTON_HEAL": "Appliquer les soins",
-    "GM_ONLY": "MJ uniquement."
+    "HEALING_BOMB_BUTTON_ROLLED": "Bombe de guérison (Soins lancés)",
+    "HEALING_BOMB_BUTTON_SPLASH": "Appliquer l'éclaboussure de soins",
+    "HEALING_BOMB_SPLASH_APPLIED": "éclaboussures de soins appliqués à :",
+    "HEALING_BOMB_BUTTON_FAILURE": "Appliquer l'échec des soins",
+    "HEALING_BOMB_SELECT_CRAFT_INVENTORY": "Voulez-vous fabriquer un nouvel Élixir de vie<br />ou<br />en utiliser un depuis votre inventaire ?",
+    "HEALING_BOMB_CRAFT": "Fabriquer une bombe de guérison",
+    "HEALING_BOMB_SELECT_INVENTORY": "Sélectionnez l'Élixir de vie à utiliser dans l'inventaire",
+    "INDEX_PROGRESS_TITLE": "Crée un index alchimique…",
+    "INDEX_PROGRESS_HINT": "Vous pouvez fermer cette fenêtre. L'indexation se poursuit.",
+    "INDEX_PROGRESS_PACK": "Parcourt {pack}…",
+    "INDEX_DONE_TITLE": "Index terminé",
+    "INDEX_DONE_BODY": "{count} objet(s) alchimique(s) indexé(s).",
+    "GM_ONLY": "MJ uniquement.",
+    "INDEX_CLEAR_PROMPT_TITLE": "Effacer l'index alchimique ?",
+    "INDEX_CLEAR_PROMPT_BODY": "Cela supprimera l'index des objets alchimiques mis en cache pour ce monde.\n\nVous serez invité à le reconstruire au prochain chargement du monde ou lors de sa reconstruction.\n\nContinuer ?",
+    "INDEX_CLEAR_DONE": "Index alchimique effacé.",
+    "INDEX_CLEAR_ABORTED": "Effacement annulé.",
+    "INDEX_CLEAR_FAILED": "Impossible d'effacer l'index alchimique."
   }
 }
