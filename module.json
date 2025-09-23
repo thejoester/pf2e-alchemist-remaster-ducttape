@@ -48,7 +48,7 @@
                 "type": "system",
                 "compatibility": {
                     "minimum": "7.4.0",
-                    "verified": "7.4.3"
+                    "verified": "7.5.1"
                 }
             }
         ]
