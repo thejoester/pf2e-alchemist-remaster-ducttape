@@ -86,7 +86,7 @@ function addFormulaSearch(html) {
 	// Add click event listener for the clear button
 	clearButton.on("click", () => {
 		searchInput.val(""); // Clear the input field
-		formulas.show();     // Show all formulas
+		formulas.show(); // Show all formulas
 	});
 }
 
