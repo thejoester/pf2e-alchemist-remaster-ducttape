@@ -17,17 +17,15 @@ function updateDescription(description, regexPattern, replacementFn) {
 
 Hooks.on("ready", () => {
 
-
-
   	console.log("%cPF2e Alchemist Remaster Duct Tape: AlchemistFeats.js loaded","color: aqua; font-weight: bold;");
-		
-	Hooks.on("createItem", async (item) => {
-		debugLog(`Item ${item.name} Created!`);
+
+	Hooks.on("preCreateItem", async (item) => {
+		debugLog(`AlchemistFeats.js | Item ${item.name} Created!`);
 				
 		// Get the actor from the item's parent (the actor who owns the item)
 		const actor = item.parent;
 		if (!actor) {
-			debugLog(3,`Actor for item ${item.name} not found.`,);
+			debugLog(3,`AlchemistFeats.js | Actor for item ${item.name} not found.`,);
 			return;
 		}
 		
@@ -35,32 +33,32 @@ Hooks.on("ready", () => {
 		const activeOwnersExist = hasActiveOwners(actor);
 		if (activeOwnersExist) { // Owners exist, make sure user is owner
 			if (!actor.isOwner) {
-				debugLog(1,`Current user is owner of item: ${item.name}`,);
+				debugLog(1,`AlchemistFeats.js | Current user is owner of item: ${item.name}`,);
 				return;	
 			}
 		} else { // No owners exist, check if GM
 			if (!game.user.isGM){ // User is not GM
-				debugLog(1,`Current user is owner of item: ${item.name}`,);
+				debugLog(1,`AlchemistFeats.js | Current user is owner of item: ${item.name}`,);
 				return;	
 			}
 		}
 		
 		// Make sure item was created by Quick Alchemy Macro
 		if (!item?.system?.ductTaped) {
-			debugLog(`Item ${item.name} not created with Duct Tape module... skipping: `, item);
+			debugLog(`AlchemistFeats.js | Item ${item.name} not created with Duct Tape module... skipping: `, item);
 			return;
 		}
 		
 		// Make sure selected token is an alchemist or has archetype
 		const alchemistCheck = isAlchemist(actor);
 		if (alchemistCheck.qualifies) {
-			debugLog("Actor's Class DC:", alchemistCheck.dc);
+			debugLog("AlchemistFeats.js | Actor's Class DC:", alchemistCheck.dc);
 			if (!alchemistCheck.dc) {
-				debugLog(2, "Warning: Class DC not found for the actor:", actor);
+				debugLog(2, "AlchemistFeats.js | Warning: Class DC not found for the actor:", actor);
 				return;
 			}
 		} else {
-			debugLog(`Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
+			debugLog(`AlchemistFeats.js | Selected Character (${actor.name}) is not an Alchemist - Ignoring`);
 			return;
 		}
 		
@@ -72,28 +70,25 @@ Hooks.on("ready", () => {
 		await annotateEffectLinkBeforeUse(item);
 
 		if(item.system.traits.value.includes("healing")) {
-			debugLog("Item is a healing item - Ignoring.");
+			debugLog("AlchemistFeats.js | Item is a healing item - Ignoring.");
 			return;
 		}
 		
 		// ensure the item type is 'weapon' or 'consumable'
 		if (!item || (item.type !== "weapon" && item.type !== "consumable")) {
-		  debugLog(`Item type (${item.type}) is not weapon or consumable or item is undefined - Ignoring.`);
+		  debugLog(`AlchemistFeats.js | Item type (${item.type}) is not weapon or consumable or item is undefined - Ignoring.`);
 		  return;
 		}
 		
-		/*
-			*** POWERFUL ALCHEMY *** 
-			Check if the actor has Powerful Alchemy - if not return with mesactorge in log	
-		*/
-		//check if Powerful Alchemy is enabled
+		/* 	*** POWERFUL ALCHEMY *** 
+			Check if the actor has Powerful Alchemy - if not return with mesactorge in log */
 		const paEnabled = getSetting("enablePowerfulAlchemy");
 		if (paEnabled) {
-			debugLog("PowerfulAlchemy enabled.");
+			debugLog("AlchemistFeats.js | PowerfulAlchemy enabled.");
 			if (hasFeat(actor, "powerful-alchemy")) {
 				await applyPowerfulAlchemy(item,actor,alchemistCheck.dc);
 			}else{
-				debugLog(`Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
+				debugLog(`AlchemistFeats.js | Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 			}
 		}			
 	});
@@ -105,7 +100,7 @@ Hooks.on("ready", () => {
 	Does nothing if it's already injected or no such link exists.
 */
 async function annotateEffectLinkBeforeUse(item) {
-	setTimeout(async () => {
+	//setTimeout(async () => {
 		try {
 			if (!item) return;
 
@@ -114,7 +109,7 @@ async function annotateEffectLinkBeforeUse(item) {
 
 			// Already injected? bail.
 			if (/>\s*Apply before using\s*:\s*<\/strong>\s*\@UUID\[/i.test(desc)) {
-				debugLog(`annotateEffectLinkBeforeUse: already present for ${item.name}`);
+				debugLog(`AlchemistFeats.js | annotateEffectLinkBeforeUse: already present for ${item.name}`);
 				return;
 			}
 
@@ -122,42 +117,41 @@ async function annotateEffectLinkBeforeUse(item) {
 			const uuidEffectRe = /(\@UUID\[[^\]]+\]\{\s*Effect:\s*[^}]+\})/i;
 
 			if (!uuidEffectRe.test(desc)) {
-				debugLog(`annotateEffectLinkBeforeUse: no @UUID Effect link in ${item.name}`);
+				debugLog(`AlchemistFeats.js | annotateEffectLinkBeforeUse: no @UUID Effect link in ${item.name}`);
 				return;
 			}
 
 			const updated = desc.replace(uuidEffectRe, (_m, g1) => {
-				return `<p><strong> Apply before using: </strong>${g1}</p>`;
+				return `<p><strong> ${LOCALIZED_TEXT.QUICK_ALCHEMY_APPLY_BEFORE_USE} </strong>${g1}</p>`;
 			});
 
 			if (updated !== desc) {
-				await item.update({ 'system.description.value': updated });
-				debugLog(`annotateEffectLinkBeforeUse: injected label for ${item.name}`);
+				await item.updateSource({ 'system.description.value': updated });
+				debugLog(`AlchemistFeats.js | annotateEffectLinkBeforeUse: injected label for ${item.name}`);
 			}
 		} catch (err) {
-			debugLog(`annotateEffectLinkBeforeUse ERROR: ${err?.message || err}`);
+			debugLog(`AlchemistFeats.js | annotateEffectLinkBeforeUse ERROR: ${err?.message || err}`);
 			console.error(err);
 		}
-	}, 100);
+	//}, 100);
 }
-
 
 //	Function to apply Powerful Alchemy effects to item created by Alchemist
 async function applyPowerfulAlchemy(item,actor,alchemistDC){
 	// Delay to allow item to finish embedding (avoids Foundry V12 timing issues)
-	setTimeout(async () => {
+	// setTimeout(async () => {
 		try {
 			if (!item || !item.system?.traits?.value?.includes("alchemical")) {
-				debugLog(`Item (${item?.name}) does not have the 'alchemical' trait or item is undefined.`);
+				debugLog(`AlchemistFeats.js | Item (${item?.name}) does not have the 'alchemical' trait or item is undefined.`);
 				return;
 			}
 
 			if (!item.system.traits.value.includes("infused")) {
-				debugLog(`Item (${item.name}) does not have the 'infused' trait.`);
+				debugLog(`AlchemistFeats.js | Item (${item.name}) does not have the 'infused' trait.`);
 				return;
 			}
 
-			debugLog(`Infused item created! Item: `, item);
+			debugLog(`AlchemistFeats.js | Infused item created! Item: `, item);
 
 			let description = item.system.description.value;
 
@@ -182,20 +176,20 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 			}
 
 			if (updatedDescription !== description) {
-				await item.update({ "system.description.value": updatedDescription });
-				debugLog(`Description was updated to Class DC: ${alchemistDC}`);
+				await item.updateSource({ "system.description.value": updatedDescription });
+				debugLog(`AlchemistFeats.js | Description was updated to Class DC: ${alchemistDC}`);
 
 				await ChatMessage.create({
 					author: game.user?.id,
-					content: `<h3>Powerful Alchemy:</h3><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistDC}!</p>`,
-					speaker: { alias: "Powerful Alchemy" }
+					content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistDC}!</p>`,
+					speaker: { alias: LOCALIZED_TEXT.POWERFUL_ALCHEMY }
 				});
 			}
 
 			// Update any matching Note rule elements with the new description
 			let updatedRules = item.system.rules.map(rule => {
 				if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
-					debugLog(`Updating Note Rule Element for ${item.name}`);
+					debugLog(`AlchemistFeats.js | Updating Note Rule Element for ${item.name}`);
 					return {
 						...rule,
 						text: updatedDescription
@@ -205,14 +199,14 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 			});
 
 			if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
-				await item.update({ "system.rules": updatedRules });
-				debugLog(`Updated Note Rule Element for ${item.name} to use new description.`);
+				await item.updateSource({ "system.rules": updatedRules });
+				debugLog(`AlchemistFeats.js | Updated Note Rule Element for ${item.name} to use new description.`);
 			}
 		} catch (err) {
-			debugLog(`Error in applyPowerfulAlchemy: ${err.message}`);
+			debugLog(`AlchemistFeats.js | Error in applyPowerfulAlchemy: ${err.message}`);
 			console.error(err); // Optional: for debugging during development
 		}
-	}, 100);
+	//}, 100);
 }
 
 /* ========================================================================== */
@@ -252,9 +246,9 @@ async function _unstablePostCreateUse(actor, itemDoc) {
 			}
 		}
 
-		debugLog(2, `_unstablePostCreateUse() | no matching sender for ${itemDoc.name} (type=${t})`);
+		debugLog(2, `AlchemistFeats.js | _unstablePostCreateUse() | no matching sender for ${itemDoc.name} (type=${t})`);
 	} catch (e) {
-		debugLog(3, `_unstablePostCreateUse() failed: ${e?.message ?? e}`);
+		debugLog(3, `AlchemistFeats.js | _unstablePostCreateUse() failed: ${e?.message ?? e}`);
 	}
 }
 
@@ -352,16 +346,15 @@ function _unstableMutateRawItemData(raw) {
 		foundry.utils.setProperty(raw, descPath, nextDesc);
 
 	} catch (e) {
-		debugLog(3, `_unstableMutateRawItemData() failed: ${e?.message ?? e}`);
+		debugLog(3, `AlchemistFeats.js | _unstableMutateRawItemData() failed: ${e?.message ?? e}`);
 	}
 }
-
 
 //	Chooser (two buttons): Use from Inventory / Craft Item
 export async function displayUnstableConcoctionDialog(actor) {
 	try {
 		if (!actor) {
-			debugLog(3, "displayUnstableConcoctionDialog(): no actor provided");
+			debugLog(3, "AlchemistFeats.js | displayUnstableConcoctionDialog(): no actor provided");
 			return;
 		}
 
@@ -414,12 +407,12 @@ export async function displayUnstableConcoctionDialog(actor) {
 			default: "inventory",
 			render: (_ev, dialog) => {
 				try { qaClampDialog(dialog, 400); } catch (err) {
-					debugLog(3, `displayUnstableConcoctionDialog(): clamp failed: ${err?.message ?? err}`);
+					debugLog(3, `AlchemistFeats.js | displayUnstableConcoctionDialog(): clamp failed: ${err?.message ?? err}`);
 				}
 			}
 		});
 	} catch (err) {
-		debugLog(3, `displayUnstableConcoctionDialog() failed: ${err?.message ?? err}`);
+		debugLog(3, `AlchemistFeats.js | displayUnstableConcoctionDialog() failed: ${err?.message ?? err}`);
 	}
 }
 
@@ -452,7 +445,7 @@ export async function displayUnstableInventoryDialog(actor) {
 		
 
 		if (!items.length) {
-			debugLog(2, "displayUnstableInventoryDialog() | no eligible alchemical consumables on actor");
+			debugLog(2, "AlchemistFeats.js | displayUnstableInventoryDialog() | no eligible alchemical consumables on actor");
 			return;
 		}
 
@@ -489,7 +482,7 @@ export async function displayUnstableInventoryDialog(actor) {
 							if (curQty <= 0) return;
 							await base.update({ [qPath]: curQty - 1 });
 						} catch (e) {
-							debugLog(3, `unstable inventory | qty dec failed: ${e?.message ?? e}`);
+							debugLog(3, `AlchemistFeats.js | unstable inventory | qty dec failed: ${e?.message ?? e}`);
 						}
 
 						// embed a mutated 1-qty copy
@@ -519,7 +512,7 @@ export async function displayUnstableInventoryDialog(actor) {
 			render: (_ev, dialog) => { try { if (typeof qaClampDialog === "function") qaClampDialog(dialog, 520); } catch {} }
 		});
 	} catch (e) {
-		debugLog(3, `displayUnstableInventoryDialog() failed: ${e?.message ?? e}`);
+		debugLog(3, `AlchemistFeats.js | displayUnstableInventoryDialog() failed: ${e?.message ?? e}`);
 	}
 }
 
@@ -537,7 +530,7 @@ export async function displayUnstableCraftDialog(actor) {
 		if (typeof getVersatileVialCount === "function") {
 			const vv = Number(getVersatileVialCount(actor) ?? 0);
 			if (vv <= 0) {
-				debugLog(2, "displayUnstableCraftDialog() | no Versatile Vials available");
+				debugLog(2, "AlchemistFeats.js | displayUnstableCraftDialog() | no Versatile Vials available");
 				return;
 			}
 		}
@@ -559,7 +552,7 @@ export async function displayUnstableCraftDialog(actor) {
 		craftChoices.sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
 		
 		if (!craftChoices.length) {
-			debugLog(2, "displayUnstableCraftDialog() | no matching formulas");
+			debugLog(2, "AlchemistFeats.js | displayUnstableCraftDialog() | no matching formulas");
 		}
 
 		const options = craftChoices.map(e => `<option value="${e.uuid}">${e.name}</option>`).join("");
@@ -590,7 +583,7 @@ export async function displayUnstableCraftDialog(actor) {
 						if (typeof consumeVersatileVial === "function") {
 							const ok = await consumeVersatileVial(actor, "unstable-concoction", 1);
 							if (!ok) {
-								debugLog(2, "displayUnstableCraftDialog() | failed to consume Versatile Vial");
+								debugLog(2, "AlchemistFeats.js | displayUnstableCraftDialog() | failed to consume Versatile Vial");
 								return;
 							}
 						}
@@ -612,7 +605,7 @@ export async function displayUnstableCraftDialog(actor) {
 									return;
 								}
 							} catch (e) {
-								debugLog(3, `displayUnstableCraftDialog() | craftButton failed: ${e?.message ?? e}`);
+								debugLog(3, `AlchemistFeats.js | displayUnstableCraftDialog() | craftButton failed: ${e?.message ?? e}`);
 							}
 						}
 
@@ -630,7 +623,7 @@ export async function displayUnstableCraftDialog(actor) {
 								await _unstablePostCreateUse(actor, ownedTmp);
 							}
 						} catch (e) {
-							debugLog(3, `displayUnstableCraftDialog() | embed fallback failed: ${e?.message ?? e}`);
+							debugLog(3, `AlchemistFeats.js | displayUnstableCraftDialog() | embed fallback failed: ${e?.message ?? e}`);
 						}
 					}
 				},
@@ -648,6 +641,6 @@ export async function displayUnstableCraftDialog(actor) {
 			render: (_ev, dialog) => { try { if (typeof qaClampDialog === "function") qaClampDialog(dialog, 520); } catch {} }
 		});
 	} catch (e) {
-		debugLog(3, `displayUnstableCraftDialog() failed: ${e?.message ?? e}`);
+		debugLog(3, `AlchemistFeats.js | displayUnstableCraftDialog() failed: ${e?.message ?? e}`);
 	}
 }

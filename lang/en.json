@@ -138,6 +138,9 @@
 		"QUICK_ALCHEMY_NO_VV":"You have no more Versatile Vials.",
 		"QUICK_ALCHEMY_10_MIN":"You must spend 10 minutes searching for reagents to craft more.",
 		"QUICK_ALCHEMY_REOPEN_SHEET":"Try opening character sheet then try again.",
+		"QUICK_ALCHEMY_APPLY_BEFORE_USE": "Apply before using:",
+
+		"POWERFUL_ALCHEMY": "Powerful Alchemy",
 
 		"HEALING_VIAL_CHOICE_TITLE": "Healing Quick Vial",
 		"HEALING_VIAL_CHOICE_DESC": "<h4>Choose how to use your Healing Quick Vial:</h4> <p><b>Throw</b> it up to 20 feet at a willing ally, <br>or <br><b>Craft</b> it for drinking.",

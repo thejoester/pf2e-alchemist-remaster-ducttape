@@ -12,7 +12,7 @@ Hooks.once('init', () => {
     if (vialSearchReminder) {
 		
 		//debug
-		debugLog(`Vial Search Reminder enabled!`);
+		debugLog(`VialSearch.js | Vial Search Reminder enabled!`);
 		
 		Hooks.on('updateWorldTime', async () => {
 
@@ -35,12 +35,12 @@ Hooks.once('init', () => {
 			if (!previousTime) {
 				previousTime = currentTime;
 				await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', previousTime);
-				debugLog(`Initializing previousTime to current world time: ${previousTime}`);
+				debugLog(`VialSearch.js | Initializing previousTime to current world time: ${previousTime}`);
 			}
 
 			// If in combat, stop tracking
 			if (game.combat) {
-				debugLog(`In Combat - Not incrementing explorationTime`);
+				debugLog(`VialSearch.js | In Combat - Not incrementing explorationTime`);
 				await game.settings.set('pf2e-alchemist-remaster-ducttape', 'previousTime', currentTime);
 				return;
 			}
@@ -48,18 +48,18 @@ Hooks.once('init', () => {
 			// Calculate the difference in time
 			let diff = currentTime - previousTime;
 
-			debugLog(`Current Time: ${currentTime}, Previous Time: ${previousTime}, Diff: ${diff}, Exploration Time: ${explorationTime}`);
+			debugLog(`VialSearch.js | Current Time: ${currentTime}, Previous Time: ${previousTime}, Diff: ${diff}, Exploration Time: ${explorationTime}`);
 
 			// Cap the maximum possible time difference to 90 minutes (5400 seconds) but **only for forward time**
 			if (diff > 5400) {
-				debugLog(`Large time jump detected. Limiting diff to 90 minutes.`);
+				debugLog(`VialSearch.js | Large time jump detected. Limiting diff to 90 minutes.`);
 				diff = 5400; // Cap diff to 90 minutes
 			}
 
 			// Handle negative diff by subtracting it from explorationTime
 			if (diff < 0) {
 				explorationTime += diff; // Subtract the diff from explorationTime
-				debugLog(`Negative time detected. Reducing explorationTime by ${Math.abs(diff)} seconds.`);
+				debugLog(`VialSearch.js | Negative time detected. Reducing explorationTime by ${Math.abs(diff)} seconds.`);
 			} else {
 				// Accumulate total exploration time for positive diffs
 				explorationTime += diff;
@@ -74,7 +74,7 @@ Hooks.once('init', () => {
 			// Ensure explorationTime does not go negative
 			explorationTime = Math.max(0, explorationTime); 
 
-			debugLog(`Exploration time updated | explorationTime: ${explorationTime} | explorationBlocks: ${explorationBlocks}`);
+			debugLog(`VialSearch.js | Exploration time updated | explorationTime: ${explorationTime} | explorationBlocks: ${explorationBlocks}`);
 
 			// Save explorationTime and previousTime back into the game settings
 			await game.settings.set('pf2e-alchemist-remaster-ducttape', 'explorationTime', explorationTime);
@@ -98,7 +98,11 @@ Hooks.once('init', () => {
 					!!!Archetype does not qualify for this feature!!!
 				*/
 				const alchemistCheck = isAlchemist(actor);
-				if (!alchemistCheck.qualifies) continue; // actor is not alchemist, stop
+				
+				if (!alchemistCheck.qualifies || alchemistCheck.isArchetype) {
+					debugLog(`VialSearch.js | Skipping Vial Search for Actor: ${actor.name} | Qualifies: ${alchemistCheck.qualifies} | is Archtype: ${alchemistCheck.isArchetype}`);	
+					continue; // actor is not alchemist or is an Archetype, stop
+				}
 
 				// Avoid processing the same actor multiple times
 				if (processedActorIds.has(actor.id)) continue;
@@ -117,7 +121,7 @@ Hooks.once('init', () => {
 				
 				// get current vial count
 				let currentVials = getCurrentVials(actor); 
-				debugLog(`${actor.name} has ${currentVials} and found a max of ${foundVials} versatile vials.`);
+				debugLog(`VialSearch.js | ${actor.name} has ${currentVials} and found a max of ${foundVials} versatile vials.`);
 
 				if (currentVials < maxVials) { // if actor is not maxed out on vials already
 					
@@ -167,12 +171,12 @@ $(document).on('click', '.add-vials-button', async (event) => {
     const actorId = button.dataset.actorId;
 	const vialsToAdd = parseInt(button.dataset.foundVials, 10);
 	if (isNaN(vialsToAdd)) {
-		debugLog(3,'Error: foundVials is not a valid number');
+		debugLog(3,'VialSearch.js | Error: foundVials is not a valid number');
 		return;
 	}
     const actor = game.actors.get(actorId);
     if (!actor) { // Check for Actor, if none stop
-		debugLog(`No actor found on .add-vials-button`);
+		debugLog(`VialSearch.js | No actor found on .add-vials-button`);
 		return; 
 	}
 	
@@ -185,7 +189,7 @@ $(document).on('click', '.add-vials-button', async (event) => {
     if (vialsToAdd > 0) { // Make sure we are adding vials
         // add vials to the actor
         await addVialsToActor(actor, vialsToAdd); // Add vials 
-		debugLog(`Added ${vialsToAdd} to ${actor.name}`);
+		debugLog(`VialSearch.js | Added ${vialsToAdd} to ${actor.name}`);
 		
         // Send chat message visible to all players
         ChatMessage.create({
@@ -199,14 +203,14 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	// Once clicked - delete button from chat mesasage
 	const messageId = button.closest('.message').dataset.messageId; // Get the chat message ID
     const message = game.messages.get(messageId); // Get the chat message object
-	debugLog(`MessageId: ${messageId} | message: ${message}`);
+	debugLog(`VialSearch.js | MessageId: ${messageId} | message: ${message}`);
     
 	if (!messageId) {
-        debugLog('Message ID not found on button. Ensure data-message-id is set correctly.');
+        debugLog('VialSearch.js | Message ID not found on button. Ensure data-message-id is set correctly.');
         return;
     }
 	if (!message) {
-        debugLog(`Message not found for ID: ${messageId}`);
+        debugLog(`VialSearch.js | Message not found for ID: ${messageId}`);
         return;
     }
 	
@@ -220,7 +224,7 @@ $(document).on('click', '.add-vials-button', async (event) => {
 //	Function to get the max number of versatile vials actor should have in inventory
 function getMaxVials(actor){
   const maxVials = 2 + actor.system.abilities.int.mod; // 2 + INT modifier
-  debugLog(`Actor ${actor.name} max vials calculated as: ${maxVials}`);
+  debugLog(`VialSearch.js | Actor ${actor.name} max vials calculated as: ${maxVials}`);
   return maxVials;
 }
 
@@ -255,7 +259,7 @@ export async function addVialsToActor(actor, count) {
 			// Update the item's quantity
 			const newQuantity = currentQuantity + count;
 			await vialItem.update({ 'system.quantity': newQuantity });
-			debugLog(`Updated versatile vial quantity for ${actor.name} to ${newQuantity}.`);
+			debugLog(`VialSearch.js | Updated versatile vial quantity for ${actor.name} to ${newQuantity}.`);
 		} else {
 			// Add a new versatile vial item from the compendium
 			const versatileVials = actor.getResource("versatileVials");
@@ -266,10 +270,10 @@ export async function addVialsToActor(actor, count) {
 				await actor.updateResource("versatileVials", versatileVials.value + count);
 				vialItem = actor.items.find(item => item.system.slug === 'versatile-vial');
 				if (vialItem) await vialItem.update({ 'system.level.value': itemLevel });
-				debugLog(`Added item (quantity: ${count}, level: ${vialItem.level}) to ${actor.name}: `, vialItem );
+				debugLog(`VialSearch.js | Added item (quantity: ${count}, level: ${vialItem.level}) to ${actor.name}: `, vialItem );
 			}
 		}
 	} catch (error) {
-		debugLog(`Error adding versatile vial for actor ${actor.name}:`, error);
+		debugLog(`VialSearch.js | Error adding versatile vial for actor ${actor.name}:`, error);
 	}
 }
