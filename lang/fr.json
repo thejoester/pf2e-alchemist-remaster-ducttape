@@ -135,6 +135,8 @@
     "QUICK_ALCHEMY_NO_VV": "Vous n'avez plus de fiole polyvalente.",
     "QUICK_ALCHEMY_10_MIN": "Vous devez passer 10 minutes à rechercher des réactifs pour en fabriquer davantage.",
     "QUICK_ALCHEMY_REOPEN_SHEET": "Essayez d'ouvrir la feuille de personnage, puis réessayez.",
+    "QUICK_ALCHEMY_APPLY_BEFORE_USE": "Appliquer avant utilisation :",
+    "POWERFUL_ALCHEMY": "Alchimie puissante",
     "HEALING_VIAL_CHOICE_TITLE": "Fiole rapide de guérison",
     "HEALING_VIAL_CHOICE_DESC": "<h4>Choisissez comment utiliser votre Fiole rapide de guérison :</h4> <p><b>jet</b> jusqu'à 6 mètres sur un allié consentant, <br>ou <br><b>Fabriquez-la</b> pour la boire.",
     "BTN_THROW": "Jet",
