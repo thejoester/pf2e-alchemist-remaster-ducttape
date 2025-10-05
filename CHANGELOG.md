@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.14.7] - 2025-10-05
 ### Fixed
-- **Localization:** updated module.json file to add French localization (fr.json)
-- **Localization:** fixed bug causing localization in toxicologist persistent poison tag for chat message and damage roll window.
+- **Localization:** Updated module.json file to add French localization (fr.json)
+- **Localization:** Fixed bug causing localization in toxicologist persistent poison tag for chat message and damage roll window.
 
 ## [2.14.6] - 2025-10-02
 ### Changed
-- **Localization:** updated French localization. Credit [Rectulo](https://github.com/rectulo).
+- **Localization:** Updated French localization. Credit [Rectulo](https://github.com/rectulo).
 
 ## [2.14.5] - 2025-09-26
 ### Fixed
