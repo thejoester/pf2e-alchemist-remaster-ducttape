@@ -2277,12 +2277,9 @@ async function displayCraftingDialog(actor, itemType) {
 				eff.system.tokenIcon = { show: true };
 
 				// ---- Localization labels (your keys) ----
-				const FIELD_LABEL = LOCALIZED_TEXT?.FIELDVIAL_LBL
-					?? game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.FIELDVIAL_LBL");
-				const ADV_LABEL = LOCALIZED_TEXT?.ADVFIELDVIAL_LBL
-					?? game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ADVFIELDVIAL_LBL");
-				const ADV_PERSIST_LABEL = LOCALIZED_TEXT?.ADVFIELDVIAL_PERSISTENT_LBL
-					?? game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ADVFIELDVIAL_PERSISTENT_LBL");
+				const FIELD_LABEL = LOCALIZED_TEXT.FIELDVIAL_LBL;
+				const ADV_LABEL = LOCALIZED_TEXT.ADVFIELDVIAL_LBL;
+				const ADV_PERSIST_LABEL = LOCALIZED_TEXT.ADV_PERSIST_LABEL;
 
 				// If the pack stored names as keys, force-localize the item name
 				if (typeof eff.name === "string") {
