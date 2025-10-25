@@ -705,7 +705,10 @@ function extractBaseName(name) {
 function extractBaseSlug(slug) {
 	if (!slug) return null;
 
-	// Special case: elemental-ammunition-[tier]-[element]
+	/* Special cases: 
+		- elemental-ammunition-[tier]-[element]
+		- cooperative waffles (no lesser only greater)
+	*/
 	if (slug.startsWith("elemental-ammunition-")) {
 		const parts = slug.split("-");
 		if (parts.length >= 4 && ["lesser", "moderate", "greater"].includes(parts[2])) {
@@ -713,6 +716,16 @@ function extractBaseSlug(slug) {
 			parts.splice(2, 1);
 			return parts.join("-");
 		}
+	} else if (slug.startsWith("cooperative-waffles")){
+		debugLog(`extractBaseSlug() | WAAAAFFFFFLLLLLEEEEESSSSSS!!!!!!!!!`);
+		const parts = slug.split("-");
+		debugLog(`extractBaseSlug() | length: ${parts.length}`);
+		if (parts.length >= 3 && ["greater"].includes(parts[2])) {
+			// Remove the potency (third element),first part
+			parts.splice(2, 1);
+			return parts.join("-");
+		}
+		return slug; 
 	}
 
 	// Default: remove last segment (usually the potency)
