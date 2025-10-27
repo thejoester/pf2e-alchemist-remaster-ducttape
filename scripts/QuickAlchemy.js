@@ -321,19 +321,116 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 	});
 });
 
+// Healing Vial listener
+Hooks.once("ready", () => {
+	document.addEventListener("click", async (ev) => {
+		try {
+			const el = ev.target?.closest?.("[data-action]");
+			if (!el) return;
+
+			// A) Roll Healing (from the pre-card)
+			if (el.dataset.action === "qa-roll-quick-vial-healing") {
+				ev.preventDefault();
+
+				const originActor = el.dataset.originActor ? await fromUuid(el.dataset.originActor).catch(() => null) : null;
+				const originTokenDoc = el.dataset.originToken ? await fromUuid(el.dataset.originToken).catch(() => null) : null;
+				const targetTokenDoc = el.dataset.targetToken ? await fromUuid(el.dataset.targetToken).catch(() => null) : null;
+				const actorForRoll = originActor ?? game.actors?.get(game.user?.character ?? "") ?? null;
+
+				const DamageRollClass = game.pf2e?.Dice?.DamageRoll ?? game.pf2e?.DamageRoll ?? Roll;
+				const formula = el.dataset.formula || "1d6";
+
+				// Roll as healing and post a proper PF2e card WITH target
+				const roll = new DamageRollClass(`{${formula}[healing]}`);
+				await roll.evaluate({ async: true });
+				const total = Number(roll.total) || 0;
+
+				await roll.toMessage(
+					{
+						flavor: `
+							<h4 class="action"><strong>Healing Quick Vial</strong></h4>
+							<div class="tags" data-tooltip-class="pf2e">
+								<span class="tag" data-trait="healing">Healing</span>
+								<span class="tag" data-trait="alchemical">Alchemical</span>
+								<span class="tag" data-trait="consumable">Consumable</span>
+							</div>
+						`,
+						speaker: ChatMessage.getSpeaker({ token: originTokenDoc ?? actorForRoll }),
+						flags: {
+							pf2e: {
+								context: {
+									type: "damage-roll",
+									sourceType: "item",
+									actor: actorForRoll?.id ?? actorForRoll?.uuid ?? null,
+									token: originTokenDoc?.uuid ?? null,
+									target: targetTokenDoc?.uuid ?? null,	// ← wire target like Heal
+									domains: ["damage", "healing", "item-healing"],
+									options: ["healing", "alchemical", "consumable"],
+									skipDialog: true
+								}
+							}
+						}
+					},
+					{ create: true }
+				);
+
+				// Optional helper: Apply Healing button (GM or target owner can click)
+				const targetActorUuid = targetTokenDoc?.actor?.uuid ?? null;
+				const applyContent = `
+					<section class="pf2e chat-card">
+						<div class="message-buttons horizontal" data-identifier="quick-vial-apply">
+							<section class="card-buttons">
+								<button type="button"
+									class="success"
+									data-action="ardt-apply-healing"
+									data-target="${targetActorUuid ?? ""}"
+									data-heal="${total}">
+									${LOCALIZED_TEXT?.APPLY_HEALING_BTN ?? "Apply Healing"}
+								</button>
+							</section>
+						</div>
+					</section>
+				`;
+				await ChatMessage.create({
+					user: game.user.id,
+					speaker: ChatMessage.getSpeaker({ token: originTokenDoc ?? actorForRoll }),
+					type: CONST.CHAT_MESSAGE_TYPES.OTHER,
+					content: applyContent,
+					classes: ["pf2e", "chat-card"],
+					trusted: true
+				});
+				return;
+			}
+
+			// B) Apply Healing (from the tiny helper)
+			if (el.dataset.action === "ardt-apply-healing") {
+				ev.preventDefault();
+
+				const targetUuid = el.dataset.target ?? "";
+				const heal = Number(el.dataset.heal ?? "0");
+				if (!targetUuid || !Number.isFinite(heal)) return;
+
+				const targetEntity = await fromUuid(targetUuid).catch(() => null);
+				const actor = targetEntity?.actor ?? targetEntity;
+				if (!actor) return;
+
+				const canApply = game.user.isGM || actor?.isOwner || actor?.testUserPermission?.(game.user, "OWNER");
+				if (!canApply) return;
+
+				const token = actor.getActiveTokens?.()[0] ?? null;
+				await actor.applyDamage?.({ damage: -heal, token, heal: true, skipIWR: true });
+				debugLog(`Quick Vial | Applied ${heal} healing to ${actor?.name}`);
+				return;
+			}
+		} catch (e) {
+			debugLog(2, "Quick Vial | delegated click error", e);
+		}
+	});
+});
+
 Hooks.on("ready", async () => {
 	console.log("%cPF2e Alchemist Remaster Duct Tape QuickAlchemy.js loaded", "color: aqua; font-weight: bold;");
-	
-	/*
-	//	Preload compendium
-	try {
-		await game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items")?.getDocuments();
-		debugLog(1, "Preloaded compendium: alchemist-duct-tape-items");
-	} catch (err) {
-		debugLog(3, "Error preloading compendium alchemist-duct-tape-items: ", err);
-	}
-	*/
-	
+
 	// Attach function to the global window object
 	window.qaCraftAttack = qaCraftAttack;
 	
@@ -781,111 +878,82 @@ async function craftHealingVial(selectedItem, selectedActor) {
 	const itemFormula = actorLevel >= 18 ? "4d6" : actorLevel >= 12 ? "3d6" : actorLevel >= 4 ? "2d6" : "1d6";
 
 	/* THROW PATH =================================================================
-		heal equals initial damage, no attack, no splash; show Apply button
+		Heal equals initial damage; 
+		post a Heal-style pre-card with "Roll Healing"
 	============================================================================ */
 	if (useMode === "throw") {
 		try {
-			// Target already required earlier in your flow
+			// Require a target
 			const targetToken = Array.from(game.user?.targets ?? [])[0] ?? null;
 			if (!targetToken) {
 				debugLog(2, "craftHealingVial() | Throw selected but no target found");
+				return;
 			}
 
-			// Roll initial damage as healing (ASYNC EVAL to avoid sync-term errors)
-			const roll = new Roll(itemFormula, selectedActor.getRollData?.() ?? {});
-			await roll.evaluate({ async: true });
+			// Refs
+			const originToken = selectedActor?.getActiveTokens?.()[0] ?? null;
+			const originTokenUuid = originToken?.document?.uuid ?? null;
+			const originActorUuid = selectedActor?.uuid ?? null;
+			const targetTokenUuid = targetToken?.document?.uuid ?? null;
+			const targetActorUuid = targetToken?.actor?.uuid ?? null;
 
-			// Build chat payload and flags
-			const speaker = ChatMessage.getSpeaker({ actor: selectedActor, token: selectedActor.getActiveTokens?.()[0] });
-			const flavorLbl = (LOCALIZED_TEXT?.HEALING_VIAL_THROW_FLAVOR ?? "Heals (thrown):");
-			const targetUuid = targetToken?.document?.uuid ?? targetToken?.actor?.uuid ?? "";
-			const healTotal = Number(roll.total) || 0;
-
+			// Pre-card content
 			const content = `
 				<section class="pf2e chat-card">
 					<header class="card-header">
 						<h4 class="action">${foundry.utils.escapeHTML("Healing Quick Vial")}</h4>
 						<div class="tags">
-							<span class="tag" data-slug="healing">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_HEALING") ?? "healing"}</span>
-							<span class="tag" data-slug="coagulant">${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.COAGULANT_TRAIT") ?? "coagulant"}</span>
+							<span class="tag" data-slug="healing">Healing</span>
+							<span class="tag" data-slug="alchemical">Alchemical</span>
+							<span class="tag" data-slug="consumable">Consumable</span>
 						</div>
 					</header>
 					<div class="message-content">
-						<p><strong>${flavorLbl}</strong> ${healTotal}</p>
-						<div class="message-buttons">
+						<p><strong>${foundry.utils.escapeHTML(selectedActor?.name ?? "Someone")}</strong> ${
+							LOCALIZED_TEXT?.THROWS_AT ?? "throws a healing vial at"
+						} <strong>${foundry.utils.escapeHTML(targetToken?.name ?? targetActorUuid ?? "target")}</strong>.</p>
+					</div>
+					<div class="message-buttons horizontal" data-identifier="quick-vial-roll">
+						<section class="card-buttons">
 							<button type="button"
-								data-action="apply-quick-vial-healing"
-								data-target="${foundry.utils.escapeHTML(targetUuid)}"
-								data-heal="${healTotal}">
-								${LOCALIZED_TEXT?.APPLY_HEALING_BTN ?? "Apply Healing"}
+								class="success"
+								data-action="qa-roll-quick-vial-healing"
+								data-origin-actor="${foundry.utils.escapeHTML(originActorUuid ?? "")}"
+								data-origin-token="${foundry.utils.escapeHTML(originTokenUuid ?? "")}"
+								data-target-actor="${foundry.utils.escapeHTML(targetActorUuid ?? "")}"
+								data-target-token="${foundry.utils.escapeHTML(targetTokenUuid ?? "")}"
+								data-formula="${foundry.utils.escapeHTML(itemFormula)}">
+								${LOCALIZED_TEXT?.ROLL_HEALING_BTN ?? "Roll Healing"}
 							</button>
-						</div>
+						</section>
 					</div>
 				</section>
 			`;
 
-			// Register a temporary handler BEFORE message creation to avoid race conditions
-			const onceId = Hooks.on("renderChatMessage", async (message, html) => {
-				try {
-					const f = message?.flags?.["pf2e-alchemist-remaster-ducttape"];
-					if (!f || f.healingQuickVial !== true || f.mode !== "throw") return;
-
-					// We found our message; detach hook after wiring
-					Hooks.off("renderChatMessage", onceId);
-
-					const btn = html[0]?.querySelector?.("button[data-action='apply-quick-vial-healing']");
-					if (!btn) return;
-
-					// permission gate: GM or target owner can click, else disabled
-					const targetDoc = await fromUuid(btn.dataset.target);
-					const targetActor = targetDoc?.actor ?? targetDoc;
-					const isGM = game.user.isGM;
-					const isTargetOwner = targetDoc?.testUserPermission?.(game.user, "OWNER") ?? targetActor?.testUserPermission?.(game.user, "OWNER") ?? false;
-					if (!(isGM || isTargetOwner)) {
-						btn.setAttribute("disabled", "disabled");
-					}
-
-					btn.addEventListener("click", async (ev) => {
-						try {
-							const heal = parseInt(btn.dataset.heal);
-							const targetDoc2 = await fromUuid(btn.dataset.target);
-							const targetActor2 = targetDoc2?.actor ?? targetDoc2;
-							const token = targetDoc2?.isToken ? targetDoc2 : targetActor2?.getActiveTokens?.()[0];
-							if (!targetActor2 || isNaN(heal)) return;
-
-							// Apply as healing (negative damage). This requires appropriate permission (GM/owner).
-							await targetActor2.applyDamage?.({ damage: -heal, token, heal: true, skipIWR: true });
-							debugLog(`craftHealingVial() | Applied ${heal} healing to ${targetActor2?.name}`);
-						} catch (clickErr) {
-							debugLog(2, "craftHealingVial() | Apply Healing button error", clickErr);
-						}
-					}, { once: true });
-				} catch (hookErr) {
-					debugLog(2, "craftHealingVial() | renderChatMessage hook error", hookErr);
-				}
-			});
-
-			// Create the chat message (now the hook above will wire the button)
 			await ChatMessage.create({
-				speaker,
+				user: game.user.id,
+				speaker: ChatMessage.getSpeaker({ actor: selectedActor, token: originToken ?? selectedActor }),
+				type: CONST.CHAT_MESSAGE_TYPES.OTHER,
 				content,
-				classes: ["quick-alchemy-dialog"],
-				type: CONST.CHAT_MESSAGE_TYPES.ROLL,
-				rolls: [roll],
+				classes: ["pf2e", "chat-card"],
+				trusted: true,	// keep the button intact
 				flags: {
 					"pf2e-alchemist-remaster-ducttape": {
 						healingQuickVial: true,
-						mode: "throw",
-						itemSlug: healingSlug,
-						targetUuid,
-						noSplash: true
+						mode: "throw-pre",
+						itemSlug: "healing-quick-vial",
+						originActorUuid,
+						originTokenUuid,
+						targetActorUuid,
+						targetTokenUuid,
+						baseFormula: itemFormula
 					}
 				}
 			});
 		} catch (err) {
 			debugLog(2, "craftHealingVial() | Throw path error", err);
 		}
-		return; // Throw is resolved immediately; nothing is created
+		return;
 	}
 
 	/* CRAFT PATH =================================================================
