@@ -113,15 +113,16 @@
       "damageType": "acid",
       "persistent": null
     },
+    "bonusDamage": {
+      "value": 0
+    },
     "splashDamage": {
       "value": 1
     },
     "range": 20,
-    "expend": null,
     "reload": {
       "value": "-"
     },
-    "grade": null,
     "runes": {
       "potency": 0,
       "striking": 0,
@@ -129,9 +130,6 @@
     },
     "specific": null,
     "subitems": [],
-    "bonusDamage": {
-      "value": 0
-    },
     "property1": {
       "value": "",
       "dice": 0,
@@ -151,13 +149,12 @@
   "_stats": {
     "compendiumSource": null,
     "duplicateSource": null,
-    "coreVersion": "13.346",
+    "coreVersion": "12.331",
     "systemId": "pf2e",
     "systemVersion": "6.9.0",
     "createdTime": 1738906276097,
-    "modifiedTime": 1756540791733,
-    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-    "exportSource": null
+    "modifiedTime": 1739598221109,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8"
   },
   "effects": [],
   "folder": null,
@@ -167,6 +164,6 @@
   },
   "flags": {},
   "_id": "9NXufURxsBROfbz1",
-  "sort": 500000,
+  "sort": 100000,
   "_key": "!items!9NXufURxsBROfbz1"
 }

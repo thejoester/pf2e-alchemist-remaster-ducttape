@@ -18,13 +18,12 @@
   "_stats": {
     "compendiumSource": null,
     "duplicateSource": null,
-    "coreVersion": "13.346",
+    "coreVersion": "12.331",
     "systemId": "pf2e",
     "systemVersion": "6.11.1",
     "createdTime": 1743490972118,
     "modifiedTime": 1743999843487,
-    "lastModifiedBy": "CLMiGpsYVSTK4VM8",
-    "exportSource": null
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8"
   },
   "_id": "A8Fd0G580CovRtDq",
   "sort": 200000,

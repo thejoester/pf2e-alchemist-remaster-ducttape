@@ -85,15 +85,16 @@
       "damageType": "untyped",
       "persistent": null
     },
+    "bonusDamage": {
+      "value": 6
+    },
     "splashDamage": {
       "value": 1
     },
     "range": 20,
-    "expend": null,
     "reload": {
       "value": "-"
     },
-    "grade": null,
     "runes": {
       "potency": 0,
       "striking": 0,
@@ -101,9 +102,6 @@
     },
     "specific": null,
     "subitems": [],
-    "bonusDamage": {
-      "value": 6
-    },
     "property1": {
       "value": "",
       "dice": 0,
@@ -129,15 +127,14 @@
   "_stats": {
     "compendiumSource": null,
     "duplicateSource": null,
-    "coreVersion": "13.346",
+    "coreVersion": "12.331",
     "systemId": "pf2e",
     "systemVersion": "6.12.1",
     "createdTime": 1744408945497,
-    "modifiedTime": 1756540791733,
-    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-    "exportSource": null
+    "modifiedTime": 1748069863513,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8"
   },
   "_id": "2yyr8yA9JRmOskab",
-  "sort": 300000,
+  "sort": 0,
   "_key": "!items!2yyr8yA9JRmOskab"
 }

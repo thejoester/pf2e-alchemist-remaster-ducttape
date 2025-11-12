@@ -14,7 +14,7 @@
       "image": {},
       "text": {
         "format": 1,
-        "content": "<p>This module was originally created to be a hot-fix for some Remaster Alchemist functionality, mainly Quick Alchemy (using versatile vials to craft infused alchemical items rather than reagents), in Foundry until the official update was released. It has grown from suggestions of the community and now it has more features.</p><ul><li><p><strong data-start=\"493\" data-end=\"507\">Important:</strong> The default “Quick Alchemy” action on character sheets remains unchanged. This module adds a separate @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.ZTOUwRh7BGixOtL9]{Macro} for Quick Alchemy functionality. </p></li></ul><p>@UUID[.snwAOVnkbCHVr7YO]{Explaining Quick Alchemy, Versatile Vials, \"Quick Vials\", \"Field Vials\", etc.}</p><p></p><div class=\"markdown-heading\"><h3>Supported Features / Dedications</h3></div><p>This module implements features using the following \"sub-modules\":</p><ul><li><p><strong>Quick Alchemy</strong> – Macro tool to craft infused alchemical items using versatile vials. Support for Double Brew feat and expanded functionality for Field Vials and Healing Bombs.</p></li><li><p><strong>Alchemist Feats</strong></p><ul><li><a href=\"https://2e.aonprd.com/Classes.aspx?ID=56\" rel=\"nofollow\">Powerful Alchemy</a> – Will monitor crafted infused items, and if relevant will update the item description, including inline checks to use the Alchemist Class DC for saves if the character has the Powerful Alchemy feat.</li><li><a href=\"https://2e.aonprd.com/Classes.aspx?ID=56\" rel=\"nofollow\">Double Brew</a> – Quick Alchemy macro will prompt to make an additional item using Double Brew.</li><li><a href=\"https://2e.aonprd.com/Feats.aspx?ID=5778\" rel=\"nofollow\">Debilitating Bomb</a> – The <a href=\"https://github.com/foundryvtt/pf2e\">PF2e system</a> now supports this, enable this feature on the actions tab of your character sheet.</li><li><a href=\"https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki/Healing-Bombs\">Healing Bombs</a> – Healing bombs are now fully supported. When using a Quick Vial for a healing item, the module creates a ranged Strike with proper tags (Alchemical, Consumable, Healing, Splash). Includes support for Greater Field Discovery: Chirurgeon (Automatically applies maximum healing). Splash Healing support.</li><li><a href=\"https://2e.aonprd.com/Feats.aspx?ID=3172\">Munition Machinist Feat</a> (Gunslinger) </li><li><a href=\"https://2e.aonprd.com/Archetypes.aspx?ID=119\">Firework Technician Dedication</a> - Note: Currently no way to limit crafting to 'firework' items, so will show all formulas. </li><li><a href=\"https://2e.aonprd.com/Feats.aspx?ID=7053\">Wandering Chef Dedication</a> - When running Quick Alchemy macro will just open dialog to select food to create from formulas.</li></ul></li><li><p><strong>Vial Search</strong> – Will monitor game world time. When 10 minutes or more pass, it will prompt in chat to \"find\" versatile vials and add them to inventory. Supports Alchemical Expertise feat.</p></li><li><p><strong>Level Up</strong> – Monitors when an Alchemist levels up, and adds higher-level versions of known formulas. For example, if a character knows Elixir of Life (Minor), when they reach level 5 it adds Elixir of Life (Lesser) formula.</p><ul><li><p>There are two macros in the <strong>Alchemist Duct Tape Macros compendium</strong> that will allow you to run this check at any time.</p></li></ul></li><li><p><strong>Formula Search</strong> – Adds a search bar to the crafting tab for formulas to help filter and locate known recipes.</p></li><li><p><strong>Localization</strong> – All chat messages, settings, tooltips, and labels are localized. Community translations are welcome! See @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-journal.JournalEntry.wrCXMx4U8bqUaG51.JournalEntryPage.YCj85xvHP1ovZmmw]{Credits} for credits on existing localizations.</p><ul><li><p>Currently supports: <br />English (en) <br />Polish (pl) <br />Brazilian Portuguese (pt-BR). </p></li></ul></li><li><p><strong>Homebrew Alchemical Support</strong> – The module now better supports custom homebrew alchemical items, including healing bombs and poison vials, as long as they use standard PF2E item flags and system fields.</p></li></ul>"
+        "content": "<p>This module was originally created to be a hot-fix for some Remaster Alchemist functionality, mainly Quick Alchemy (using versatile vials to craft infused alchemical items rather than reagents), in Foundry until the official update was released. It has grown from suggestions of the community and now it has more features.</p><ul><li><p><strong data-start=\"493\" data-end=\"507\">Important:</strong> The default “Quick Alchemy” action on character sheets remains unchanged. This module adds a separate @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.ZTOUwRh7BGixOtL9]{Macro} for Quick Alchemy functionality.. </p></li></ul><p></p><p>@UUID[.snwAOVnkbCHVr7YO]{Explaining Quick Alchemy, Versatile Vials, \"Quick Vials\", \"Field Vials\", etc.}</p><div class=\"markdown-heading\"><h3>Supported Features</h3></div><p>This module implements features using the following \"sub-modules\":</p><ul><li><p><strong>Quick Alchemy</strong> – Macro tool to craft infused alchemical items using versatile vials. Support for Double Brew feat and expanded functionality for Field Vials and Healing Bombs.</p></li><li><p><strong>Alchemist Feats</strong></p><ul><li><a href=\"https://2e.aonprd.com/Classes.aspx?ID=56\" rel=\"nofollow\"><strong>Powerful Alchemy</strong></a> – Will monitor crafted infused items, and if relevant will update the item description, including inline checks to use the Alchemist Class DC for saves if the character has the Powerful Alchemy feat.</li><li><a href=\"https://2e.aonprd.com/Classes.aspx?ID=56\" rel=\"nofollow\"><strong>Double Brew</strong></a> – Quick Alchemy macro will prompt to make an additional item using Double Brew.</li><li><a href=\"https://2e.aonprd.com/Feats.aspx?ID=5778\" rel=\"nofollow\"><strong>Debilitating Bomb</strong></a> – The <a href=\"https://github.com/foundryvtt/pf2e\">PF2e system</a> now supports this, enable this feature on the actions tab of your character sheet.</li><li><a href=\"https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki/Healing-Bombs\"><strong>Healing Bombs</strong></a> – Healing bombs are now fully supported. When using a Quick Vial for a healing item, the module creates a ranged Strike with proper tags (Alchemical, Consumable, Healing, Splash). Includes support for Greater Field Discovery: Chirurgeon (Automatically applies maximum healing). Splash Healing support.</li></ul></li><li><p><strong>Vial Search</strong> – Will monitor game world time. When 10 minutes or more pass, it will prompt in chat to \"find\" versatile vials and add them to inventory. Supports Alchemical Expertise feat.</p></li><li><p><strong>Level Up</strong> – Monitors when an Alchemist levels up, and adds higher-level versions of known formulas. For example, if a character knows Elixir of Life (Minor), when they reach level 5 it adds Elixir of Life (Lesser) formula.</p><ul><li><p>There are two macros in the <strong>Alchemist Duct Tape Macros compendium</strong> that will allow you to run this check at any time.</p></li></ul></li><li><p><strong>Formula Search</strong> – Adds a search bar to the crafting tab for formulas to help filter and locate known recipes.</p></li><li><p><strong>Localization</strong> – All chat messages, settings, tooltips, and labels are localized. Currently supports English (en), Polish (pl), and Brazilian Portuguese (pt-BR). Community translations are welcome!</p></li><li><p><strong>Homebrew Alchemical Support</strong> – The module now better supports custom homebrew alchemical items, including healing bombs and poison vials, as long as they use standard PF2E item flags and system fields.</p></li></ul>"
       },
       "video": {
         "controls": true,
@@ -29,15 +29,13 @@
       "_stats": {
         "compendiumSource": null,
         "duplicateSource": null,
-        "coreVersion": "13.346",
+        "coreVersion": "12.331",
         "systemId": "pf2e",
         "systemVersion": "6.12.2",
         "createdTime": null,
-        "modifiedTime": 1755501842506,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-        "exportSource": null
+        "modifiedTime": 1748330922389,
+        "lastModifiedBy": "CLMiGpsYVSTK4VM8"
       },
-      "category": null,
       "_key": "!journal.pages!wrCXMx4U8bqUaG51.qtrtFHChIeUb4cre"
     },
     {
@@ -68,15 +66,13 @@
       "_stats": {
         "compendiumSource": "JournalEntry.U2BsYeCYTDGeZaTL.JournalEntryPage.snwAOVnkbCHVr7YO",
         "duplicateSource": null,
-        "coreVersion": "13.346",
+        "coreVersion": "12.331",
         "systemId": "pf2e",
         "systemVersion": "6.12.2",
         "createdTime": null,
         "modifiedTime": 1748251966750,
-        "lastModifiedBy": "CLMiGpsYVSTK4VM8",
-        "exportSource": null
+        "lastModifiedBy": "CLMiGpsYVSTK4VM8"
       },
-      "category": null,
       "_key": "!journal.pages!wrCXMx4U8bqUaG51.snwAOVnkbCHVr7YO"
     },
     {
@@ -92,7 +88,7 @@
       "image": {},
       "text": {
         "format": 1,
-        "content": "<div class=\"markdown-heading\"><h3 class=\"heading-element\">Quick Vials / Field Vials</h3></div><p>Part of the Quick Alchemy feature, this module assists with crafting Quick Vial bombs and Field Vials from research fields. Logic is based on feats and active research fields, and prompts dynamically based on context.</p><p></p><div class=\"markdown-heading\"><h3 class=\"heading-element\">Research Fields</h3></div><p>The module has support for the following Research Field features:</p><ul><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=5\" rel=\"nofollow\">Bomber</a></p><ul><li>🔴 <strong>Field Benefit</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – prompts for damage type when crafting quick vial</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Advanced Vials</strong> – prompts for special material (e.g. silver, cold iron) when crafting</li><li>🔴 <strong>Greater Field Discovery</strong> – not needed</li></ul></li><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=6\" rel=\"nofollow\">Chirurgeon</a></p><ul><li>🔴 <strong>Field Benefit</strong> – not needed</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – prompts to craft a healing vial during quick alchemy</li><li>🟡 <strong>Advanced Vials</strong> – Not yet implemented</li><li>🟢 <strong>Greater Field Discovery</strong> – Not yet implemented (max healing via Greater FD is supported only in Healing Bombs)</li></ul></li><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=8\" rel=\"nofollow\">Toxicologist</a></p><ul><li>🟢 <strong>Field Benefit</strong> – prompts to create/apply injury poison @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-journal.JournalEntry.wrCXMx4U8bqUaG51.JournalEntryPage.snwAOVnkbCHVr7YO]{Quick Vial} and select weapon</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – checks target resistance/immunity/weakness and selects damage type, defaults to poison</li><li>🟢 <strong>Advanced Vials</strong> – adds persistent damage</li><li>🔴 <strong>Greater Field Discovery</strong> – not needed</li></ul></li><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=7\" rel=\"nofollow\">Mutagenist</a></p><ul><li>🔴 <strong>Field Benefit</strong> – handled by the system</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – handled by the system</li><li>🟢 <strong>Advanced Vials</strong> – implemented</li><li>🔴 <strong>Greater Field Discovery</strong> – not needed</li></ul></li></ul>"
+        "content": "<div class=\"markdown-heading\"><h3 class=\"heading-element\">Quick Vials / Field Vials</h3></div><p>Part of the Quick Alchemy feature, this module assists with crafting Quick Vial bombs and Field Vials from research fields. Logic is based on feats and active research fields, and prompts dynamically based on context.</p><p></p><div class=\"markdown-heading\"><h3 class=\"heading-element\">Research Fields</h3></div><p>The module has support for the following Research Field features:</p><ul><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=5\" rel=\"nofollow\">Bomber</a></p><ul><li>🔴 <strong>Field Benefit</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – prompts for damage type when crafting quick vial</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Advanced Vials</strong> – prompts for special material (e.g. silver, cold iron) when crafting</li><li>🔴 <strong>Greater Field Discovery</strong> – not needed</li></ul></li><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=6\" rel=\"nofollow\">Chirurgeon</a></p><ul><li>🔴 <strong>Field Benefit</strong> – not needed</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – prompts to craft a healing vial during quick alchemy</li><li>🟡 <strong>Advanced Vials</strong> – Not yet implemented</li><li>🟢 <strong>Greater Field Discovery</strong> – Not yet implemented (max healing via Greater FD is supported only in Healing Bombs)</li></ul></li><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=8\" rel=\"nofollow\">Toxicologist</a></p><ul><li>🟢 <strong>Field Benefit</strong> – prompts to create/apply injury poison and select weapon</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – checks target resistance/immunity/weakness and selects damage type, defaults to poison</li><li>🟢 <strong>Advanced Vials</strong> – adds persistent damage</li><li>🔴 <strong>Greater Field Discovery</strong> – not needed</li></ul></li><li><p><a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=7\" rel=\"nofollow\">Mutagenist</a></p><ul><li>🔴 <strong>Field Benefit</strong> – handled by the system</li><li>🔴 <strong>Field Discovery</strong> – not needed</li><li>🟢 <strong>Field Vial feature</strong> – handled by the system</li><li>🟢 <strong>Advanced Vials</strong> – implemented</li><li>🟡 <strong>Greater Field Discovery</strong> – not yet implemented</li></ul></li></ul>"
       },
       "video": {
         "controls": true,
@@ -107,19 +103,17 @@
       "_stats": {
         "compendiumSource": null,
         "duplicateSource": null,
-        "coreVersion": "13.346",
+        "coreVersion": "12.331",
         "systemId": "pf2e",
         "systemVersion": "6.12.2",
         "createdTime": null,
-        "modifiedTime": 1756514715752,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-        "exportSource": null
+        "modifiedTime": null,
+        "lastModifiedBy": null
       },
-      "category": null,
       "_key": "!journal.pages!wrCXMx4U8bqUaG51.LWCmobukL1RjjE4t"
     },
     {
-      "sort": 900000,
+      "sort": 400000,
       "name": "Issues / Feature Requests",
       "type": "text",
       "_id": "UmmMF8DTsIRynv7u",
@@ -146,19 +140,17 @@
       "_stats": {
         "compendiumSource": null,
         "duplicateSource": null,
-        "coreVersion": "13.346",
+        "coreVersion": "12.331",
         "systemId": "pf2e",
         "systemVersion": "6.12.2",
         "createdTime": 1748254454299,
-        "modifiedTime": 1755501201047,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-        "exportSource": null
+        "modifiedTime": 1748328795580,
+        "lastModifiedBy": "CLMiGpsYVSTK4VM8"
       },
-      "category": null,
       "_key": "!journal.pages!wrCXMx4U8bqUaG51.UmmMF8DTsIRynv7u"
     },
     {
-      "sort": 1000000,
+      "sort": 500000,
       "name": "Credits",
       "type": "text",
       "_id": "YCj85xvHP1ovZmmw",
@@ -185,211 +177,14 @@
       "_stats": {
         "compendiumSource": null,
         "duplicateSource": null,
-        "coreVersion": "13.346",
+        "coreVersion": "12.331",
         "systemId": "pf2e",
         "systemVersion": "6.12.2",
         "createdTime": 1748330451667,
-        "modifiedTime": 1755501203234,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-        "exportSource": null
+        "modifiedTime": 1749198427365,
+        "lastModifiedBy": "CLMiGpsYVSTK4VM8"
       },
-      "category": null,
       "_key": "!journal.pages!wrCXMx4U8bqUaG51.YCj85xvHP1ovZmmw"
-    },
-    {
-      "sort": 150000,
-      "name": "Macros",
-      "type": "text",
-      "_id": "Usn8NYXoVWaYuXsc",
-      "system": {},
-      "title": {
-        "show": true,
-        "level": 1
-      },
-      "image": {},
-      "text": {
-        "format": 1,
-        "content": "<p>This module includes macros stored in the \"Aclchemist Duct Tape Macros\" compendium. This is where the main @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.ZTOUwRh7BGixOtL9]{Quick Alchemy} macro is located.</p><p>There are other macros, and here is what they do:</p><p>@UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.HHRCPhcYB8IXXDWQ]{Update Formulas} This macro will check and see if there are any higher level formulas for items you already have the formula for, and add them. This will allow you to specify if you want to auto-add, ask about each one individually, or ask once for all of them. It will let you specify what level items to start checking for. It will then ask you if you want Alchemical items only (Fast) or Full check. The Full check takes a little longer as it checks the main SRD compendium as well as any compendiums added in the module settings. <br /><br />@UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.A8Fd0G580CovRtDq]{Remove Lower Level Formulas} - This macro will manually check for any lower level formulas that the character has, but also knows a higher level version for and clean up the formulas. You can choose how/if it prompts to remove them.</p><p>Tools Macros</p><p>These macros are more for potential troubleshooting and you will not need them unless advised to do so for troubleshooting purposes, but here is what they do:</p><p>@UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.tt34u0zjjMG1wyhX]{clear-index} - This will clear the modules index of alchemical items. This index is used to improve performance to not need to read full document items from a compendium when looking up alchemical items.</p><p></p><p>@UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.lRf5jfyF8A6Ceh8s]{rebuild-index} - This will rebuild the modules Index of Alchemical items.</p><p></p><p>@UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.1asffmZLsj8xdwVw]{index-stats} - This macro will display the current stats for the module index. Number of entries, locale, and size.</p><p></p><p>@UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.QSJZ9AbUqLkrr0o3]{Index Table} - Will open a browser to display all the items in the index, this is for troubleshooting if an item is not displaying correctly we can verify it is in the Index. </p>"
-      },
-      "video": {
-        "controls": true,
-        "volume": 0.5
-      },
-      "src": null,
-      "category": null,
-      "ownership": {
-        "default": -1,
-        "EpqDCtSCbVNM4wPj": 3
-      },
-      "flags": {},
-      "_stats": {
-        "compendiumSource": null,
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.346",
-        "systemId": "pf2e",
-        "systemVersion": "7.3.1",
-        "createdTime": 1755497091956,
-        "modifiedTime": 1756516553630,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj"
-      },
-      "_key": "!journal.pages!wrCXMx4U8bqUaG51.Usn8NYXoVWaYuXsc"
-    },
-    {
-      "sort": 700000,
-      "name": "How To: Adding homebrew compendiums",
-      "type": "text",
-      "_id": "yiW2t5ffyh48NGZ9",
-      "system": {},
-      "title": {
-        "show": true,
-        "level": 1
-      },
-      "image": {},
-      "text": {
-        "format": 1,
-        "content": "<p>You can add homebrew Item compendiums so that this module will utilize these items in the features of the module.<br /><br /><a href=\"https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki/Adding-homebrew-compendiums\">Instructions are on the Wiki</a></p>"
-      },
-      "video": {
-        "controls": true,
-        "volume": 0.5
-      },
-      "src": null,
-      "category": null,
-      "ownership": {
-        "default": -1,
-        "EpqDCtSCbVNM4wPj": 3
-      },
-      "flags": {},
-      "_stats": {
-        "compendiumSource": null,
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.346",
-        "systemId": "pf2e",
-        "systemVersion": "7.3.1",
-        "createdTime": 1755498804802,
-        "modifiedTime": 1756514447853,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj"
-      },
-      "_key": "!journal.pages!wrCXMx4U8bqUaG51.yiW2t5ffyh48NGZ9"
-    },
-    {
-      "sort": 800000,
-      "name": "Settings",
-      "type": "text",
-      "_id": "PAs54tQhRBspU4d9",
-      "system": {},
-      "title": {
-        "show": true,
-        "level": 1
-      },
-      "image": {},
-      "text": {
-        "format": 1,
-        "content": "<p>Here is the breakdown of the settings and what they do.</p><p></p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Add compendiums</h2></div><p><a href=\"https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/wiki/Adding-homebrew-compendiums\">Add Homebrew compendiums</a> for the module to use so any home-brew items will be included in this module's features.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Quick Alchemy: Show description panel</h2></div><p>Show description of item in Quick alchemy dialog when selecting item to craft.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Quick Alchemy: remove temporary items at start of turn</h2></div><p>If you want infused items created by the Quick Alchemy macro to be removed at the start of the alchemist's turn.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Quick Alchemy: remove temporary items at end of combat?</h2></div><p>If you want infused items created by the Quick Alchemy macro to be removed at the end of combat.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Quick Alchemy: Send chat message when removing temp quick alchemy items</h2></div><p>If you want to show a message in chat log when temp items are removed.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Quick Alchemy: Send all crafted items to chat</h2></div><p>If you want items made with Quick Alchemy macro to add a chat card for the item.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Quick Alchemy: Enable size-based alchemy?</h2></div><p>If you want to adjust the size of items created by Quick Alchemy macro based on the size of the Alchemist character. This allows Tiny creatures to be able to use Quick Alchemy. Available options:</p><ul><li>Disabled - will disable this tool.</li><li>Tiny only (default) - will only resize crafted items for tiny sized characters.</li><li>All Sizes - will also make larger items for larger characters.</li></ul><div class=\"markdown-heading\"><h2 class=\"heading-element\">Enable Powerful Alchemy</h2></div><p>Enabled the module to adjust DC of created items for alchemists with the <a href=\"https://2e.aonprd.com/Classes.aspx?ID=56\" rel=\"nofollow\">Powerful Alchemy feat</a>.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Level Up: Add higher Level versions of known formulas upon level up</h2></div><p>Available options:</p><ul><li>Disabled - do not add formulas on level up.</li><li>Ask for all (default) - will ask once for all formulas being added.</li><li>Ask for each - will ask for each formula individually.</li><li>Auto - will automatically add new formulas without asking.</li></ul><div class=\"markdown-heading\"><h2 class=\"heading-element\">Level Up: Lower level formula handling</h2></div><p>This option determines how lower level formulas are handled upon level up. How it asks you is handled the same as the setting for adding higher level versions (Ask for all, Ask for each, Auto). Available options:</p><ul><li>Disabled - do not add/remove lower level formulas on level up.</li><li>Add lower level formulas - Will add lower level versions of known formulas if not already known.</li><li>Remove lower level versions- Will remove a formula if a higher level version is known / learned to keep your formula list clean. This option is default and recommended to help Foundry performance.</li></ul><div class=\"markdown-heading\"><h2 class=\"heading-element\">Level Up: Prompt setting for lower level formulas</h2></div><p>How to prompt when removing lower level formulas when you know the higher level version. Available options:</p><ul><li>Disabled - do not remove formulas on level up.</li><li>Ask for all (default) - will ask once for all formulas being removed.</li><li>Ask for each - will ask for each formula individually.</li><li>Auto - will automatically remove formulas without asking.</li></ul><div class=\"markdown-heading\"><h2 class=\"heading-element\">Level Up: Permission to add/remove formulas to actor</h2></div><p>Sets default of who is asked to add/remove formulas upon level up. If no owner of the character is logged in, GM will be prompted. Available Options:</p><ul><li>GM - Will ask the GM if formulas will be added on level up.</li><li>Owner - Will ask character owner if formulas will be added on level up.</li></ul><div class=\"markdown-heading\"><h2 class=\"heading-element\">Level Up: Add list of new formulas added upon level up to chat</h2></div><p>Enable / disable sending a message to chat with list of added/removed formulas to chat on level up.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Vial Search Reminder</h2></div><p>Enable / disable to prompt character to add versatile vials when at least 10 minutes pass.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Display when alchemist has max vials already</h2></div><p>If you want to show even if alchemist is at max vials</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Enable Formula Search</h2></div><p>Enable / disable search bar on crafting tab to search formulas</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Collapse item description in chat</h2></div><p>Shortens chat messages with long item descriptions, click the Eye icon to expand. <strong>Note!:</strong> This setting will auto disable if you have the <a href=\"https://foundryvtt.com/packages/xdy-pf2e-workbench\" rel=\"nofollow\">PF2e Workbench module</a> collapse setting enabled.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Show Quick Alchemy Help Button</h2></div><p>Shows help button on the Quick Alchemy macro</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Debug Level</h2></div><p>Set the level of messages shown in console for debugging. It is recommended that unless submitting a bug report or troubleshooting to leave this set to \"None\" or \"Errors\" for performance reasons. Available Options:</p><ul><li>None - disables all logging,</li><li>Errors - shows only errors.</li><li>Warnings - includes warnings and errors.</li><li>All - includes all info, warnings, and errors.</li></ul>"
-      },
-      "video": {
-        "controls": true,
-        "volume": 0.5
-      },
-      "src": null,
-      "category": null,
-      "ownership": {
-        "default": -1,
-        "EpqDCtSCbVNM4wPj": 3
-      },
-      "flags": {},
-      "_stats": {
-        "compendiumSource": null,
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.346",
-        "systemId": "pf2e",
-        "systemVersion": "7.3.1",
-        "createdTime": 1755501110354,
-        "modifiedTime": 1755501679461,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj"
-      },
-      "_key": "!journal.pages!wrCXMx4U8bqUaG51.PAs54tQhRBspU4d9"
-    },
-    {
-      "sort": 500000,
-      "name": "Healing Bombs",
-      "type": "text",
-      "_id": "agfiIC8sN5gl8DnQ",
-      "system": {},
-      "title": {
-        "show": true,
-        "level": 1
-      },
-      "image": {},
-      "text": {
-        "format": 1,
-        "content": "<div class=\"markdown-heading\"><h1 class=\"heading-element\">Healing Bombs</h1></div><p>This feature allows characters (especially those with the Chirurgeon field) to hurl healing bombs as a <strong>ranged Strike</strong>, using alchemical logic, proper roll domains, and automation for splash and maximum healing.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Prerequisites</h2></div><p>To use Healing Bombs Character must have the <a href=\"https://2e.aonprd.com/Feats.aspx?ID=5773\" rel=\"nofollow\">Healing Bomb Feat</a>.</p><div class=\"markdown-heading\"><h2 class=\"heading-element\">Features</h2></div><p>When a Healing Bomb is crafted and thrown, the module performs the following:</p><div class=\"markdown-heading\"><h3 class=\"heading-element\"><br />Replace Attack Roll with Healing</h3></div><ul><li>The module automatically swaps the normal damage roll with a healing roll after a successful ranged attack.</li><li>Apply healing button only works for owner of target token or GM.</li><li>If attack is critical success, splash healing button is added but will work for GM ONLY as this will auto apply splash healing to all tokens adjacent to target.</li></ul><div class=\"markdown-heading\"><h3 class=\"heading-element\">Greater Field Discovery: Chirurgeon</h3></div><ul><li>If the actor has this feat, the module <strong>maximizes healing</strong> instead of rolling dice.</li></ul>"
-      },
-      "video": {
-        "controls": true,
-        "volume": 0.5
-      },
-      "src": null,
-      "category": null,
-      "ownership": {
-        "default": -1,
-        "EpqDCtSCbVNM4wPj": 3
-      },
-      "flags": {},
-      "_stats": {
-        "compendiumSource": null,
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.346",
-        "systemId": "pf2e",
-        "systemVersion": "7.4.1",
-        "createdTime": 1756514459196,
-        "modifiedTime": 1756514519395,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj"
-      },
-      "_key": "!journal.pages!wrCXMx4U8bqUaG51.agfiIC8sN5gl8DnQ"
-    },
-    {
-      "sort": 750000,
-      "name": "How To: Apply poison to weapon/ammo",
-      "type": "text",
-      "_id": "HGLwMbnMqVaNozn2",
-      "system": {},
-      "title": {
-        "show": true,
-        "level": 1
-      },
-      "image": {},
-      "text": {
-        "format": 1,
-        "content": "<p>After some questions on this topic, I thought I would make an entry.</p><p></p><p>Clarification</p><p>Due to the complexity of <a href=\"https://2e.aonprd.com/Rules.aspx?ID=2389\">afflictions </a>and various poisons, this feature is only for the <a href=\"https://2e.aonprd.com/ResearchFields.aspx?ID=8\">Toxicologist Field Vials </a>feature:</p><p></p><div class=\"subclass-feature subclass-feature-condensed\"><section class=\"statblock\"><h2><span class=\"subclass-feature-name\">Field Vials</span></h2><p class=\"subclass-feature-description\"><span id=\"ctl00_RadDrawer1_Content_MainContent_DetailedOutput\">Your versatile vials have the </span><span style=\"text-decoration:underline\"><a style=\"text-decoration:underline\" href=\"https://2e.aonprd.com/Traits.aspx?ID=669\"><span style=\"text-decoration:underline\">poison</span></a></span><span id=\"ctl00_RadDrawer1_Content_MainContent_DetailedOutput\"> trait and deal poison damage instead of having the </span><span style=\"text-decoration:underline\"><a style=\"text-decoration:underline\" href=\"https://2e.aonprd.com/Traits.aspx?ID=524\"><span style=\"text-decoration:underline\">acid</span></a></span><span id=\"ctl00_RadDrawer1_Content_MainContent_DetailedOutput\"> trait and dealing acid damage (though your field benefit still applies). You can apply the contents of a versatile vial to a weapon or piece of ammunition as an </span><span style=\"text-decoration:underline\"><a style=\"text-decoration:underline\" href=\"https://2e.aonprd.com/Traits.aspx?ID=635\"><span style=\"text-decoration:underline\">injury</span></a></span><span id=\"ctl00_RadDrawer1_Content_MainContent_DetailedOutput\"> poison. Add the versatile vial’s initial damage to the first successful </span><span style=\"text-decoration:underline\"><a style=\"text-decoration:underline\" href=\"https://2e.aonprd.com/Actions.aspx?ID=2306\"><span style=\"text-decoration:underline\">Strike</span></a></span><span id=\"ctl00_RadDrawer1_Content_MainContent_DetailedOutput\"> with that weapon or ammunition. The substance becomes inert at the end of your current turn.</span></p></section></div><p></p><h4>How it works:</h4><ul><li><p>When using the @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-macros.Macro.ZTOUwRh7BGixOtL9]{Quick Alchemy macro} and selecting Quck Vial, ifthe Alchemist is a Toxicoloist it will present the option for \"Injury Poison\"<br /></p><img src=\"modules/pf2e-alchemist-remaster-ducttape/assets/journal-items/tox-Injury-poison.png\" /></li></ul><p></p><ul><li><p>It will then prompt to select a weapon</p><ul><li><p><span style=\"text-decoration:underline\"><strong><span style=\"text-decoration:underline\">Note</span></strong></span>: In Foundry the damage is based on the weapon item and not the ammo, so for ranged weapons you still select the weapon. <br /></p><img src=\"modules/pf2e-alchemist-remaster-ducttape/assets/journal-items/tox-select-weapon.png\" /></li></ul></li><li><p>This will place an effect on the Toxicologist that will add the proper damage (and persistent damage if Toxicologist has Advanced Vials at level 11) of the proper type (Poison or Acid depending on target immunity/resistance/weakness). </p></li><li><p>The effect will auto expire at the end of the turn, this should not be an issue as this would be a 3-action process. <span class=\"action-glyph\">1 </span>To make the Injury Poison, <span class=\"action-glyph\">1 </span>To apply the injury poison, and finally <span class=\"action-glyph\">1 </span>To strike. </p></li></ul>"
-      },
-      "video": {
-        "controls": true,
-        "volume": 0.5
-      },
-      "src": null,
-      "category": null,
-      "ownership": {
-        "default": -1,
-        "EpqDCtSCbVNM4wPj": 3
-      },
-      "flags": {},
-      "_stats": {
-        "compendiumSource": null,
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.346",
-        "systemId": "pf2e",
-        "systemVersion": "7.4.1",
-        "createdTime": 1756514546858,
-        "modifiedTime": 1756546286161,
-        "lastModifiedBy": "EpqDCtSCbVNM4wPj"
-      },
-      "_key": "!journal.pages!wrCXMx4U8bqUaG51.HGLwMbnMqVaNozn2"
     }
   ],
   "folder": null,
@@ -401,16 +196,15 @@
   "_stats": {
     "compendiumSource": null,
     "duplicateSource": null,
-    "coreVersion": "13.346",
+    "coreVersion": "12.331",
     "systemId": "pf2e",
     "systemVersion": "6.12.2",
     "createdTime": 1748249984468,
     "modifiedTime": 1748249984468,
-    "lastModifiedBy": "CLMiGpsYVSTK4VM8",
-    "exportSource": null
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8"
   },
   "_id": "wrCXMx4U8bqUaG51",
   "sort": 0,
-  "categories": [],
-  "_key": "!journal!wrCXMx4U8bqUaG51"
+  "_key": "!journal!wrCXMx4U8bqUaG51",
+  "categories": []
 }

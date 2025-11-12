@@ -46,7 +46,7 @@
   "_id": "htVOAKfVmVYafFrQ",
   "img": "systems/pf2e/icons/spells/wall-of-stone.webp",
   "folder": null,
-  "sort": 400000,
+  "sort": 0,
   "ownership": {
     "default": 0,
     "CLMiGpsYVSTK4VM8": 3
@@ -55,13 +55,12 @@
   "_stats": {
     "compendiumSource": null,
     "duplicateSource": null,
-    "coreVersion": "13.346",
+    "coreVersion": "12.331",
     "systemId": "pf2e",
     "systemVersion": "6.11.1",
     "createdTime": 1745213160620,
-    "modifiedTime": 1756540791733,
-    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-    "exportSource": null
+    "modifiedTime": 1745223155504,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8"
   },
   "_key": "!items!htVOAKfVmVYafFrQ"
 }

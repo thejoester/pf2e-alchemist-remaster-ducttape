@@ -19,6 +19,7 @@ Hooks.on("renderActorSheet", (app, html, data) => {
 	});
 });
 
+
 // Hook to add healing buttons to chat message
 Hooks.on('renderChatMessage', async (message, html) => {
 	const origin = message.flags.pf2e?.origin?.uuid?.split(".");

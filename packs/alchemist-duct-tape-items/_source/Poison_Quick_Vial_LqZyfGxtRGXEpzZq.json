@@ -114,15 +114,16 @@
       "damageType": "poison",
       "persistent": null
     },
+    "bonusDamage": {
+      "value": 0
+    },
     "splashDamage": {
       "value": 1
     },
     "range": 20,
-    "expend": null,
     "reload": {
-      "value": "-"
+      "value": ""
     },
-    "grade": null,
     "runes": {
       "potency": 0,
       "striking": 0,
@@ -130,9 +131,6 @@
     },
     "specific": null,
     "subitems": [],
-    "bonusDamage": {
-      "value": 0
-    },
     "property1": {
       "value": "",
       "dice": 0,
@@ -158,15 +156,14 @@
   "_stats": {
     "compendiumSource": null,
     "duplicateSource": null,
-    "coreVersion": "13.346",
+    "coreVersion": "12.343",
     "systemId": "pf2e",
-    "systemVersion": "6.9.0",
+    "systemVersion": "6.12.4",
     "createdTime": 1737540755678,
-    "modifiedTime": 1756540791733,
-    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
-    "exportSource": null
+    "modifiedTime": 1762932954122,
+    "lastModifiedBy": "CLMiGpsYVSTK4VM8"
   },
   "_id": "LqZyfGxtRGXEpzZq",
-  "sort": 600000,
+  "sort": 300000,
   "_key": "!items!LqZyfGxtRGXEpzZq"
 }
