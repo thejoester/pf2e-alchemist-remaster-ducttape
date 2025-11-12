@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.12.4-v12] - 2025-11-12
 ### Fixed
 - **Quick Alchemy:** fixed but preventing effect from limiting to 10 minutes from Quick Alchemy items being applied by player.
+### Added
+- **Macro:** Added Macro that GM or players can use to list any effect on selected token that has duration longer than 10 minutes, and reduce it to 10 minutes. 
 
 ## [2.12.3] - 2025-08-15
 ### Fixed
