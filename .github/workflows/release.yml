@@ -93,6 +93,7 @@ jobs:
           name: ${{ steps.get_version.outputs.version-without-v }}
           body: ${{ steps.changelog.outputs.release-notes }}
           artifacts: "module.json, dist/pf2e-alchemist-remaster-ducttape.zip"
+          makeLatest: ${{ ! github.event.release.prerelease }} 
 
       # Publish stable releases to FoundryVTT package registry
       - name: Publish Module to FoundryVTT Website
