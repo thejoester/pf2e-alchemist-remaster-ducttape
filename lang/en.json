@@ -21,6 +21,7 @@
 		"CRAFT_ATTACK":"Craft and Attack",
 		"CRAFT_APPLY_ATTACK":"Craft, Apply & Attack",
 		"VERSATILE_VIAL":"Versatile Vial",
+		"VERSATILE_VIALS": "Versatile Vials",
 		"QUICK_VIAL":"Quick Vial",
 		"QUICK_VIAL_BOMB":"Quick Vial Bomb",
 		"DOUBLE_BREW_FEAT":"Double Brew Feat",
@@ -59,6 +60,7 @@
 		"NOTIF_APPLY_EFFECT_ACTOR":"Applied effect {effectname} to {actorname}",
 		"NOTIF_NO_PERMS":"You do not have permission to modify this actor.",
 		"NOTIF_ACTOR_NOT_ASSOC_ITEM":"No actor associated with this item.",
+		"NOTIF_SELECT_WEAPON_FOR_POISON": "Select a weapon for the Toxicologist poison, then make your Strike.",
 		
 		"SETTING_WORKBENCH_NOT_FOUND":"Workbench setting key 'xdy-pf2e-workbench.autoCollapseItemChatCardContent' not found.",
 		"SETTING_MANAGE_HOMEBREW_COMPENDIUM":"Manage Homebrew Compendiums",
@@ -80,7 +82,7 @@
 		"SETTING_LEVELUP_ADD_HIGHER_HINT":"If enabled, when leveled up will add higher level version of known formulas.Ask for each = will prompt for each formula; Ask for all = will prompt for all formulas at once; Auto = will automatically add formulas.",
 		"SETTING_LEVELUP_HANDLE_LOWER_LEVEL":"Level Up: Lower level formula handling:",
 		"SETTING_LEVELUP_HANDLE_LOWER_LEVEL_HINT":"Upon level up, will check for available lower level formulas, or remove them to keep your formula list small. Add lower level versions = Will add lower level versions of known formulas; Remove lower level versions (default) = Will Remove lower level formulas if a higher level is known.",
-		"SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL":"Level Up: Prompt setting for lower level forumulas",
+		"SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL":"Level Up: Prompt setting for lower level formulas",
 		"SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL_HINT":"'Auto': Automatically removes lower level formulas, 'Ask for All': ask once for all, 'Ask for Each': Ask for each formula",
 		"SETTING_LEVELUP_PERMISSION_LEVEL":"Level Up: Permission level to add/remove formulas to actor:",
 		"SETTING_LEVELUP_PERMISSION_LEVEL_HINT":"(If actor owner is not logged in, GM will be prompted)",
@@ -136,7 +138,29 @@
 		"QUICK_ALCHEMY_NO_VV":"You have no more Versatile Vials.",
 		"QUICK_ALCHEMY_10_MIN":"You must spend 10 minutes searching for reagents to craft more.",
 		"QUICK_ALCHEMY_REOPEN_SHEET":"Try opening character sheet then try again.",
+		"QUICK_ALCHEMY_APPLY_BEFORE_USE": "Apply before using:",
+
+		"POWERFUL_ALCHEMY": "Powerful Alchemy",
+
+		"HEALING_VIAL_CHOICE_TITLE": "Healing Quick Vial",
+		"HEALING_VIAL_CHOICE_DESC": "<h4>Choose how to use your Healing Quick Vial:</h4> <p><b>Throw</b> it up to 20 feet at a willing ally, <br>or <br><b>Craft</b> it for drinking.",
+		"BTN_THROW": "Throw",
+		"BTN_CRAFT": "Craft",
+		"HEALING_VIAL_THROW_FLAVOR": "Heals (thrown):",
+		"COAGULANT_TRAIT": "Coagulant",
 		
+		"FIELDVIAL_LBL": "Toxicologist Field Vial Poison",
+		"ADVFIELDVIAL_LBL": "Toxicologist Advanced Vial Poison",
+		"CHOOSE_WEAPON": "Choose a weapon to poison",
+		"ADV_PERSIST_LABEL": "Toxicologist Advanced Vial Poison (Persistent)", 
+		
+		"UNSTABLE_CONCOCTION_BTN": "Unstable Concoction",
+		"UNSTABLE_CONCOCTION_TITLE": "Unstable Concoction",
+		"UNSTABLE_CONCOCTION_DESC": "Boost the initial dice of an alchemical consumable by one size. On activation, DC 10 flat check or take acid damage equal to the item's level.",
+		"UNSTABLE_NOTE": "<strong>Unstable:</strong> initial dice +1 size; on activation {check} or take {dmg} acid damage", 
+		"SELECT_FROM_INVENTORY": "Select from Inventory",
+		"UNSTABLE_CONCOCTION_SELECT_ITEM": "Select Item to modify:",
+				
 		"FORMULA_SEARCH_SEARCH":"Search Formulas...",
 		
 		"LEVELUP_REMOVEDLOWER_CHAT_MSG":"has removed the following lower-level formulas",
@@ -188,6 +212,18 @@
 		"HEALING_BOMB_BUTTON_FAILURE": "Apply Failure Healing",
 		"HEALING_BOMB_SELECT_CRAFT_INVENTORY":"Do you want to craft a new Elixir of Life<br />or<br />use one from your inventory?",
 		"HEALING_BOMB_CRAFT": "Craft Healing Bomb",
-		"HEALING_BOMB_SELECT_INVENTORY":"Select which Elixir of Life to use from the inventory"
+		"HEALING_BOMB_SELECT_INVENTORY":"Select which Elixir of Life to use from the inventory",
+		
+		"INDEX_PROGRESS_TITLE": "Building Alchemical Index…",
+		"INDEX_PROGRESS_HINT": "You can close this window; indexing will continue.",
+		"INDEX_PROGRESS_PACK": "Scanning {pack}…",
+		"INDEX_DONE_TITLE": "Index Complete",
+		"INDEX_DONE_BODY": "Indexed {count} alchemical item(s).",
+		"GM_ONLY": "GM only.",
+		"INDEX_CLEAR_PROMPT_TITLE": "Clear Alchemical Index?",
+		"INDEX_CLEAR_PROMPT_BODY": "This will remove the cached alchemical item index for this world.\n\nYou'll be prompted to rebuild it next time the world loads or when you run the rebuild.\n\nContinue?",
+		"INDEX_CLEAR_DONE": "Alchemical index cleared.",
+		"INDEX_CLEAR_ABORTED": "Clear cancelled.",
+		"INDEX_CLEAR_FAILED": "Failed to clear the alchemical index."
 	}
 }
