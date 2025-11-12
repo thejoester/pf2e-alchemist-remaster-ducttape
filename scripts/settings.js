@@ -47,7 +47,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
 		// Capture stack trace to get file and line number
 		const stack = new Error().stack.split("\n");
-		let fileInfo = "Unknown Source";
+		let fileInfo = "";
 		for (let i = 2; i < stack.length; i++) {
 			const line = stack[i].trim();
 			const fileInfoMatch = line.match(/(\/[^)]+):(\d+):(\d+)/); // Match file path and line number
@@ -55,16 +55,27 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 				const [, filePath, lineNumber] = fileInfoMatch;
 				const fileName = filePath.split("/").pop(); // Extract just the file name
 				// Ensure the file is one of the allowed files
-				const allowedFiles = ["FormulaSearch.js", "LevelUp.js", "AlchemistFeats.js", "QuickAlchemy.js", "settings.js", "VialSearch.js"];
+				const allowedFiles = [
+					"AlchemistFeats.js", 
+					"AlchIndex.js", 
+					"FormulaSearch.js", 
+					"HealingBombs.js", 
+					"LevelUp.js", 
+					"Localization.js",
+					"QAEffects.js", 
+					"QuickAlchemy.js", 
+					"settings.js", 
+					"VialSearch.js"
+				];
 				if (allowedFiles.includes(fileName)) {
-					fileInfo = `${fileName}:${lineNumber}`;
+					fileInfo = `[${fileName}:${lineNumber}]`;
 					break;
 				}
 			}
 		}
 
 		// Prepend the file and line info to the log message
-		const formattedLogMsg = `[${fileInfo}] ${stringLogMsg}`;
+		const formattedLogMsg = `${fileInfo} ${stringLogMsg}`;
 		
 		if (objObject) {
 			switch (intLogType) {

@@ -41,7 +41,7 @@ Hooks.once('init', () => {
 			// Prevent recursion and unnecessary execution of code when cleaning formulas or processing update
 			if (actor.getFlag('pf2e-alchemist-remaster-ducttape', 'cleaningDuplicates') || 
 				actor.getFlag('pf2e-alchemist-remaster-ducttape', 'processingUpdate')) {
-				debugLog(`Skipping to prevent recursion or duplicate processing for ${actor.name}`);
+				debugLog(`LevelUp.js | Skipping to prevent recursion or duplicate processing for ${actor.name}`);
 				return;
 			}
 				
@@ -58,7 +58,7 @@ Hooks.once('init', () => {
             // Check if the level was updated
             const newLevel = updateData?.system?.details?.level?.value;
             if (newLevel === undefined) {
-                debugLog(`No level change detected for ${actor.name}.`);
+                debugLog(`LevelUp.js | No level change detected for ${actor.name}.`);
                 return;
             }
 			debugLog(`Actor Level change detected for ${actor.name}! New Level = ${newLevel} 

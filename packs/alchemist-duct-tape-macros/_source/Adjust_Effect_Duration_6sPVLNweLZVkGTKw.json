@@ -1,0 +1,32 @@
+{
+  "name": "Adjust Effect Duration",
+  "type": "script",
+  "_id": "6sPVLNweLZVkGTKw",
+  "author": "EpqDCtSCbVNM4wPj",
+  "img": "icons/magic/time/clock-stopwatch-white-blue.webp",
+  "scope": "global",
+  "command": "(async () => {\n\tconst { DialogV2 } = foundry.applications.api;\n\tconst dlgId = `limit-10-${randomID()}`;\n\n\t// helpers\n\tconst log = (msg, data) => { try { debugLog(msg, data); } catch (_) {} };\n\tconst esc = (s) => String(s)\n\t\t.replace(/&/g, \"&amp;\")\n\t\t.replace(/</g, \"&lt;\")\n\t\t.replace(/>/g, \"&gt;\")\n\t\t.replace(/\"/g, \"&quot;\")\n\t\t.replace(/'/g, \"&#039;\");\n\n\tconst info = (title, message) => {\n\t\tnew DialogV2({\n\t\t\tid: dlgId,\n\t\t\ttitle,\n\t\t\tcontent: `\n\t\t\t\t<style>\n\t\t\t\t\t#${dlgId} .window-content { min-width:560px; }\n\t\t\t\t\t#${dlgId} .limit-list { display:flex; flex-direction:column; gap:8px; margin-top:4px; }\n\t\t\t\t\t#${dlgId} .limit-list button { width:100%; text-align:left; white-space:normal; }\n\t\t\t\t</style>\n\t\t\t\t<p>${esc(message)}</p>\n\t\t\t`,\n\t\t\tmodal: false,\n\t\t\twidth: 600,\n\t\t\tbuttons: [{ action: \"close\", label: \"Close\", callback: () => {} }]\n\t\t}).render(true);\n\t};\n\n\t// selection & permission\n\tconst token = canvas.tokens?.controlled?.[0] ?? null;\n\tif (!token) return info(\"Limit Effect to 10 Minutes\", \"Select a token first.\");\n\tconst actor = token.actor;\n\tif (!actor) return info(\"Limit Effect to 10 Minutes\", \"Selected token has no actor.\");\n\n\tconst isGM = game.user.isGM === true;\n\tconst isOwner = actor.isOwner === true;\n\tif (!isGM && !isOwner) return info(\"Limit Effect to 10 Minutes\", \"You must be the GM or an owner of this actor.\");\n\n\t// collect candidate effects\n\tconst effects = actor.itemTypes?.effect ?? actor.items.filter(i => i.type === \"effect\");\n\tconst needsCap = (dur) => {\n\t\tif (!dur?.unit) return false;\n\t\tconst unit = String(dur.unit);\n\t\tconst value = Number(dur.value ?? 0);\n\t\tif (unit === \"minutes\") return value > 10;\n\t\tif ([\"hours\", \"days\", \"rounds\"].includes(unit)) return true;\n\t\treturn false;\n\t};\n\tconst candidates = effects.filter(eff => needsCap(eff.system?.duration));\n\tif (!candidates.length) return info(\"Limit Effect to 10 Minutes\", \"This actor has no effects exceeding 10 minutes.\");\n\n\t// updater\n\tconst limitEffect = async (eff) => {\n\t\ttry {\n\t\t\tconst before = foundry.utils.duplicate(eff.system?.duration ?? {});\n\t\t\tconst newDuration = { unit: \"minutes\", value: 10, expiry: before?.expiry ?? \"turn-start\", sustained: false };\n\t\t\tlog(\"LimitEffectMacro: updating effect duration\", { actor: actor.name, effect: eff.name, before, after: newDuration });\n\t\t\tawait eff.update({ \"system.duration\": newDuration });\n\t\t} catch (err) {\n\t\t\tlog(\"LimitEffectMacro: update error\", { err });\n\t\t\tinfo(\"Limit Effect to 10 Minutes\", `Failed to update \"${esc(eff.name)}\". See logs.`);\n\t\t}\n\t};\n\n\t// build content with vertical buttons\n\tconst rows = candidates.map(eff => {\n\t\tconst dur = eff.system?.duration ?? {};\n\t\tconst label = `${eff.name} — ${dur.value ?? \"?\"} ${dur.unit ?? \"?\"}`;\n\t\treturn `<button type=\"button\" class=\"limit-btn\" data-effect-id=\"${esc(eff.id)}\">${esc(label)}</button>`;\n\t}).join(\"\");\n\n\tconst dlg = new DialogV2({\n\t\tid: dlgId,\n\t\ttitle: \"Select effect to limit to 10 minutes\",\n\t\tcontent: `\n\t\t\t<style>\n\t\t\t\t#${dlgId} .window-content { min-width:560px; }\n\t\t\t\t#${dlgId} .limit-list { display:flex; flex-direction:column; gap:8px; margin-top:4px; }\n\t\t\t\t#${dlgId} .limit-list button { width:100%; text-align:left; white-space:normal; }\n\t\t\t</style>\n\t\t\t<p>Select effect to limit to 10 minutes:</p>\n\t\t\t<div class=\"limit-list\">\n\t\t\t\t${rows}\n\t\t\t</div>\n\t\t`,\n\t\tmodal: false,\n\t\twidth: 600,\n\t\tbuttons: [{ action: \"close\", label: \"Close\", callback: () => {} }]\n\t});\n\n\t// Bind click handlers when THIS dialog is rendered; close after updating\n\tconst onRender = (app, element) => {\n\t\tif (app?.id !== dlgId) return;\n\t\ttry {\n\t\t\telement.querySelectorAll(\".limit-btn\").forEach(btn => {\n\t\t\t\tbtn.addEventListener(\"click\", async (ev) => {\n\t\t\t\t\tconst id = ev.currentTarget.getAttribute(\"data-effect-id\");\n\t\t\t\t\tconst eff = actor.items.get(id);\n\t\t\t\t\tif (!eff) return;\n\t\t\t\t\tawait limitEffect(eff);\n\t\t\t\t\tawait dlg.close();\t// <-- close the dialog after applying the cap\n\t\t\t\t}, { once: true });\n\t\t\t});\n\t\t} catch (e) {\n\t\t\tlog(\"LimitEffectMacro: bind error\", { e });\n\t\t} finally {\n\t\t\tHooks.off(\"renderDialogV2\", onRender);\n\t\t}\n\t};\n\n\tHooks.on(\"renderDialogV2\", onRender);\n\tdlg.render(true);\n})();",
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0,
+    "EpqDCtSCbVNM4wPj": 3
+  },
+  "flags": {
+    "macro-wheel": {
+      "activeCondition": ""
+    }
+  },
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null,
+    "coreVersion": "13.350",
+    "systemId": "pf2e",
+    "systemVersion": "7.6.3",
+    "createdTime": 1762944004708,
+    "modifiedTime": 1762944017880,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj"
+  },
+  "_key": "!macros!6sPVLNweLZVkGTKw"
+}

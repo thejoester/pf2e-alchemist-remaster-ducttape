@@ -10,14 +10,6 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | QAEffects.js loaded","color: 
 	https://2e.aonprd.com/Actions.aspx?ID=2801
 */
 
-// Limit duration to 10 min if needed
-function needsTenMinuteCap(dur) {
-	if (!dur) return false;
-	if (dur.unit === 'minutes') return (dur.value ?? 0) > 10;
-	if (['hours', 'days', 'rounds'].includes(dur.unit)) return true;
-	return false;
-}
-
 // Check for tag that means this is a QA item
 function isQuickAlchemyItem(item) {
 	if (!item) return false;
@@ -33,23 +25,34 @@ function isQuickAlchemyItem(item) {
 // Limit duration on QA effects
 Hooks.on('preCreateItem', async (effect, data) => {
 	try {
-		if (!game.user.isGM) return;			// Only process as GM
-		if (data?.type !== 'effect') return;	// Only process for Effects
+		debugLog('QAEffects.js: preCreateItem(effect) hook fired', { effect, data });
+		//if (!game.user.isGM) return;
+		if (data?.type !== 'effect') return;
 
 		const actor = effect.actor;
 		if (!actor) return;
 
 		// Pull origin from the effect being embedded
-		const rawOrigin = data?.system?.context?.origin
+		const rawOrigin =
+			data?.system?.context?.origin
 			?? effect?.system?.context?.origin
+			?? effect?.flags?.pf2e?.origin
 			?? null;
 
-		// Be generous about where the UUID could be stored
-		const originUuid =
-			rawOrigin?.item
-			|| rawOrigin?.uuid
-			|| rawOrigin?.document
-			|| null;
+		let originUuid = null;
+
+		// Support both PF2e styles: direct string or structured object
+		if (typeof rawOrigin === "string") {
+			originUuid = rawOrigin;
+		} else if (rawOrigin && typeof rawOrigin === "object") {
+			originUuid =
+				rawOrigin.item
+				|| rawOrigin.uuid
+				|| rawOrigin.document
+				|| rawOrigin.sourceId
+				|| rawOrigin.itemUuid
+				|| null;
+		}
 
 		// Snapshot current duration
 		const before = {
@@ -66,9 +69,42 @@ Hooks.on('preCreateItem', async (effect, data) => {
 			originUuid,
 		});
 
-		// If we have no origin UUID at all, we can't verify... bail early.
+		// If we have no origin UUID, try to infer it from ductTaped Quick Alchemy items on this actor
 		if (!originUuid) {
-			debugLog('QAEffects.js: no origin UUID on effect – skipping limit', {});
+			const effectName = (data?.name ?? effect?.name ?? "").toLowerCase();
+
+			// Look for a QA item on the same actor whose base name matches this effect
+			const guessedSource = actor.items.find(i => {
+				if (!isQuickAlchemyItem(i)) return false;
+
+				// Strip our temporary marker(s) from the QA item name
+				const baseName = i.name
+					.replace(/\(\*temporary\)/gi, "")
+					.replace(/\(\*poisoned\)/gi, "")
+					.trim()
+					.toLowerCase();
+
+				if (!baseName) return false;
+
+				// Common PF2e pattern: "Effect: Quicksilver Mutagen (Greater)"
+				return effectName.includes(baseName);
+			});
+
+			if (guessedSource) {
+				originUuid = guessedSource.uuid;
+				debugLog('QAEffects.js: derived origin from ductTaped item on actor', {
+					effectName: data?.name ?? effect?.name,
+					sourceItem: guessedSource.name,
+					originUuid
+				});
+			}
+		}
+
+		// If we still have no origin UUID, we can't safely say it's from Quick Alchemy
+		if (!originUuid) {
+			debugLog('QAEffects.js: no origin UUID on effect – skipping limit', {
+				rawOrigin
+			});
 			return;
 		}
 
