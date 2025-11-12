@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.10] - 2025-11-12
+### Fixed
+- **Quick Alchemy:** fixed error in Poison Quick Vial that triggered it as needing reload. 
+- **Quick Alchemy:** fixed but preventing effect from limiting to 10 minutes from Quick Alchemy items being applied by player.
+### Added
+- **Macro:** Added Macro (Adjust Effect Duration) that GM or players can use to list any effect on selected token that has duration longer than 10 minutes, and reduce it to 10 minutes. 
+
+
 ## [2.14.9] - 2025-10-27
 ### Fixed
 - **Quick Alchemy:** Fixed issue when throwing Chirurgeon Field vial, apply healing button should now work for target player. 
