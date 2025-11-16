@@ -1,5 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
-import { getAlchIndex, setAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
+import { getAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
 import { displayUnstableConcoctionDialog } from "./AlchemistFeats.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 
@@ -7,14 +7,6 @@ let isArchetype = false;
 let QA_TEXT_EDITOR;	// v13 Text editor
 const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
 const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
-
-// simple HTML escaper for names
-const qaEscape = (s) => String(s ?? "")
-	.replace(/&/g, "&amp;")
-	.replace(/</g, "&lt;")
-	.replace(/>/g, "&gt;")
-	.replace(/"/g, "&quot;")
-	.replace(/'/g, "&#39;");
 
 Hooks.once("init", () => {
 	// v13 text editor
@@ -328,7 +320,7 @@ Hooks.once("ready", () => {
 			const el = ev.target?.closest?.("[data-action]");
 			if (!el) return;
 
-			// A) Roll Healing (from the pre-card)
+			// Roll Healing (from the pre-card)
 			if (el.dataset.action === "qa-roll-quick-vial-healing") {
 				ev.preventDefault();
 
@@ -374,7 +366,7 @@ Hooks.once("ready", () => {
 					{ create: true }
 				);
 
-				// Optional helper: Apply Healing button (GM or target owner can click)
+				// Apply Healing button (GM or target owner can click)
 				const targetActorUuid = targetTokenDoc?.actor?.uuid ?? null;
 				const applyContent = `
 					<section class="pf2e chat-card">
@@ -402,7 +394,7 @@ Hooks.once("ready", () => {
 				return;
 			}
 
-			// B) Apply Healing (from the tiny helper)
+			// Apply Healing (from the tiny helper)
 			if (el.dataset.action === "ardt-apply-healing") {
 				ev.preventDefault();
 
@@ -435,18 +427,6 @@ Hooks.on("ready", async () => {
 	window.qaCraftAttack = qaCraftAttack;
 	
 });
-
-//	function to close popup from rollActionMacro
-function closeAttackPopouts(){
-	for (const app of Object.values(ui.windows)) {
-		const id = app._element?.[0]?.id ?? "";
-		if (id.startsWith("AttackPopout-") && app.options?.type === "strike") {
-			// DEBUG
-			debugLog(1, `[Healing Bomb] Closing attack popout: ${id}`);
-			app.close();
-		}
-	}
-}
 
 //	Function to clear temporary items from inventory
 async function deleteTempItems(actor, endTurn = false) {
@@ -613,24 +593,6 @@ export async function sendConsumableUseMessage(itemUuid) {
 		user: game.user.id,
 		speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY, actor: actor?.id ?? null },
 		content
-	});
-}
-
-//	Function to send "Already consumed" chat message
-function sendAlreadyConsumedChat() {
-	/* =========================================================
-		most likely this happens because user clicked 
-		attack already and item was consumed, we will send 
-		chat message saying item was already used
-	========================================================= */
-	const actor = game.user.character; // Assuming actor is the user's character
-	const content = LOCALIZED_TEXT.QUICK_ALCHEMY_ALREADY_CONSUMED_MSG;
-
-	// Send the message to chat
-	ChatMessage.create({
-		user: game.user.id,
-		speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY },
-		content: content,
 	});
 }
 
@@ -811,8 +773,6 @@ async function clearInfused(actor) {
 		debugLog("clearInfused() | No infused items with quantity 0 found.");
 	}
 }
-
-
 
 /* Craft Healing Quick Vial ===================================================	
 	Function to craft "Healing Quick Vial" from the module compendium 
@@ -1309,7 +1269,7 @@ export async function processFormulasWithProgress(actor) {
 	let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
 		try {
-			// ---------- INDEX FIRST, THEN ASYNC DOC FALLBACK ----------
+			// INDEX FIRST, THEN ASYNC DOC FALLBACK
 			let entry = await qaGetIndexEntry(formula.uuid);
 
 			if (!entry || !(entry?.traits?.length || entry?.system?.traits?.value?.length)) {
@@ -1346,12 +1306,15 @@ export async function processFormulasWithProgress(actor) {
 			// Pull traits (lowercased); support index rows (entry.traits) and full docs (system.traits.value)
 			const traitsRaw =
 				entry?.system?.traits?.value ??
-				entry?.traits?.value ??			// some docs use this shape
-				entry?.traits ??				// <- your AlchIndex rows store plain array here
+				entry?.traits?.value ??			
+				entry?.traits ??				
 				entry?._source?.system?.traits?.value ??
 				[];
 			const traits = Array.isArray(traitsRaw) ? traitsRaw.map(t => String(t).toLowerCase()) : [];
 			const isAlchemical = traits.includes("alchemical");
+			// get item level & Check for improbable elixir (consumables only)
+			const level = entry?.system?.level?.value ?? entry?.level ?? null;
+			const improbableElixir = traits.includes("potion") && level !== null && level <= 9;
 
 			// For Double Brew, include ONLY alchemical weapons/consumables
 			if (entry.type === "weapon") {
@@ -1362,9 +1325,17 @@ export async function processFormulasWithProgress(actor) {
 				weaponEntries.push(entry);
 				listProcessedFormulas += ` | added to weaponEntries`;
 			} else if (entry.type === "consumable") {
-				if (!isAlchemical) {
-					listProcessedFormulas += ` | skipped (consumable not alchemical)`;
-					continue;
+				//Check for improbable-elixirs feat
+				if (hasFeat(actor, "improbable-elixirs")) {
+					if (!improbableElixir && !isAlchemical) {
+						listProcessedFormulas += ` | skipped (consumable not Alchemical and not eligible for Improbable Elixirs)`;
+						continue;
+					}
+				} else {
+					if (!isAlchemical) {
+						listProcessedFormulas += ` | skipped (consumable not alchemical)`;
+						continue;
+					}
 				}
 				consumableEntries.push(entry);
 				listProcessedFormulas += ` | added to consumableEntries`;
@@ -1486,17 +1457,17 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 			const entryType = entry?.type ?? entry?.system?.type?.value ?? "";	
 			const traitsRaw =
 				entry?.system?.traits?.value ??
-				entry?.traits?.value ??			// some docs
-				entry?.traits ??				// ← your AlchIndex rows store plain array here
+				entry?.traits?.value ??			
+				entry?.traits ??				
 				entry?._source?.system?.traits?.value ??
 				[];
 			const traits = Array.isArray(traitsRaw) ? traitsRaw.map(t => String(t).toLowerCase()) : [];
 			// debugLog(`${entry.name} traits = `, traits);
 			const isAlchemical = traits.includes("alchemical");
-			// debugLog(`isAlchemical = ${isAlchemical}`);
+			// get item level & Check for improbable elixir (consumables only)
+			const level = entry?.system?.level?.value ?? entry?.level ?? null;
+			const improbableElixir = traits.includes("potion") && level !== null && level <= 9;
 			
-			//listProcessedFormulas = `-> ${listProcessedFormulas} slug: ${entry.slug} | uuid: ${entry.uuid}`;
-
 			// Skip Versatile Vials
 			if (itemSlug === "versatile-vial") {
 				// do nothing
@@ -1510,36 +1481,40 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 					if (slug) {
 						if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
 							filteredEntries.push(entry);
-							//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
 						}
 						continue;
 					}
 					filteredEntries.push(entry);
-					//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries (food match)`;
 				}
 			} else if (entryType === type) {
 				// Require the "alchemical" trait when selecting weapons or consumables
 				const requireAlchemical = type === "weapon" || type === "consumable";
-				if (requireAlchemical && !isAlchemical) {
-					//listProcessedFormulas = `-> ${listProcessedFormulas} skipped (not alchemical)`;
-					debugLog(`  --> SKIP (not alchemical) slug=${itemSlug} | traits=[${traits.join(",")}]`);
-					continue;
+				if (hasFeat(actor, "improbable-elixirs")) { // if actor has improbable elixirs, allow non-alchemical consumables that meet criteria
+					if (requireAlchemical) {
+						if (!improbableElixir && !isAlchemical) {
+							debugLog(`  --> SKIP (not Alchemical and not eligible for Improbable Elixirs) slug=${itemSlug} | traits=[${traits.join(",")}]`);
+							continue;
+						}
+					}
+				} else {
+					if (requireAlchemical && !isAlchemical) {
+						debugLog(`  --> SKIP (not alchemical) slug=${itemSlug} | traits=[${traits.join(",")}]`);
+						continue;
+					}
 				}
-
+				
+				// Apply slug filter if provided
 				if (slug) {
 					if (itemSlug.toLowerCase().includes(slug.toLowerCase())) {
 						filteredEntries.push(entry);
-						//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
 						debugLog(`  --> ADD (slug match) ${itemSlug}`);
 					}
 					continue;
 				}
 
 				filteredEntries.push(entry);
-				//listProcessedFormulas = `-> ${listProcessedFormulas} added to filteredEntries`;
 				debugLog(`  --> ADD ${itemSlug}`);
 			} else { // entry is null
-				//listProcessedFormulas = `-> ${listProcessedFormulas} entry ${formula.uuid} is null`;
 			}
 		} catch (err) {
 			debugLog(3, `  --> error at i=${index}, uuid=${formula?.uuid}: ${err?.message ?? err}`);
@@ -2344,7 +2319,7 @@ async function displayCraftingDialog(actor, itemType) {
 				}
 				eff.system.tokenIcon = { show: true };
 
-				// ---- Localization labels (your keys) ----
+				// Localization labels
 				const FIELD_LABEL = LOCALIZED_TEXT.FIELDVIAL_LBL;
 				const ADV_LABEL = LOCALIZED_TEXT.ADVFIELDVIAL_LBL;
 				const ADV_PERSIST_LABEL = LOCALIZED_TEXT.ADV_PERSIST_LABEL;
@@ -2585,6 +2560,7 @@ async function displayCraftingDialog(actor, itemType) {
 		debugLog(`displayCraftingDialog() | uuid: ${uuid}`);
 		// Build HTML Content
 		let content = `<form>
+				${descStyle}
 				<div>
 					<select id="item-selection" name="item-selection" style="display: none;">
 						<option value="${uuid}">Quick Vial</option>

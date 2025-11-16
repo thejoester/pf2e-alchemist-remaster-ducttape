@@ -25,25 +25,19 @@ window.PF2E_ARDT_INDEX ??= {};
 		return entry?.items?.[uuid]?.slug ?? null;
 	}
 	
-	
 	//	Get Alchemical items Index
 	export function getAlchIndex() {
 		return game.settings.get("pf2e-alchemist-remaster-ducttape","alchIndex") ?? { items: {}, meta: {} };
 	}
-	
-	//	Save Alchemical items index
-	export function setAlchIndex(v) {
-		return game.settings.set("pf2e-alchemist-remaster-ducttape","alchIndex", v);
-	}
-	
+
 	//	Get Meta data for Alchemical Index (system version / locale)
 	export function getAlchIndexMeta() {
-		return game.settings.get("pf2e-alchemist-remaster-ducttape","alchIndexMeta") ?? { systemVersion: "", locale: "", lastBuilt: 0, itemCount: 0 };
-	}
-	
-	//	Save Meta data for Alchemical Index (system version / locale)
-	export function setAlchIndexMeta(v) {
-		return game.settings.set("pf2e-alchemist-remaster-ducttape","alchIndexMeta", v);
+		return game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndexMeta") ?? {
+			systemVersion: "",
+			locale: "",
+			lastBuilt: 0,
+			itemCount: 0
+		};
 	}
 	
 	// Function to kick off rebuild of index
@@ -55,20 +49,48 @@ window.PF2E_ARDT_INDEX ??= {};
 			const systemVersion = game.system?.version ?? "0.0.0";
 			const locale = game.i18n?.lang ?? "en";
 
-			// call the actual builder you defined below
+			//	Only rebuild if index is empty OR lastBuilt is more than 3 days ago
+			const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+			const meta = getAlchIndexMeta();
+			const lastBuilt = Number(meta?.lastBuilt ?? 0) || 0;
+			const now = Date.now();
+
+			const currentIndex = game.settings.get(NS, "alchIndex") ?? { items: {}, meta: {} };
+			const items = currentIndex.items ?? {};
+			const hasItems = Object.keys(items).length > 0;
+
+			//	If we have items AND lastBuilt is set AND it's newer than 3 days, skip rebuild
+			if (hasItems && lastBuilt > 0) {
+				const ageMs = now - lastBuilt;
+				if (ageMs <= THREE_DAYS_MS) {
+					debugLog(`AlchIndex.js: qaForceRebuildAlchIndex skipped; index age (ms)=${ageMs}`);
+					if (!silent) {
+						debugLog("AlchIndex.js: Alchemical index last built less than 3 days ago; skipping rebuild.");
+					}
+					return;
+				}
+			}
+
+			//	Actually build/update the index
 			await qaBuildOrUpdateAlchIndex({
 				fullRebuild: true,
 				meta: { systemVersion, locale }
 			});
 
+			//	Read the rebuilt index so we can store itemCount + lastBuilt in alchIndexMeta
+			const rebuiltIndex = game.settings.get(NS, "alchIndex") ?? { items: {}, meta: {} };
+			const rebuiltItems = rebuiltIndex.items ?? {};
+			const itemCount = Object.keys(rebuiltItems).length;
+
 			await game.settings.set(NS, "alchIndexMeta", {
 				systemVersion,
 				locale,
-				updatedAt: Date.now()
+				lastBuilt: now,
+				itemCount
 			});
 
 			if (!silent) {
-				debugLog(LOCALIZED_TEXT.INDEX_DONE_BODY?.(0) ?? "Alchemical index rebuilt.");
+				debugLog(LOCALIZED_TEXT.INDEX_DONE_BODY?.(itemCount) ?? "Alchemical index rebuilt.");
 			}
 
 			debugLog("AlchIndex.js: qaForceRebuildAlchIndex complete");
@@ -76,7 +98,7 @@ window.PF2E_ARDT_INDEX ??= {};
 			debugLog(`AlchIndex.js: qaForceRebuildAlchIndex error: \nMessage: ${err?.message ?? err} \n`);
 		}
 	}
-	
+
 /*	===== Macro Functions =====
 */
 	// GM-only: confirm, then clear the built index + meta
@@ -102,7 +124,7 @@ window.PF2E_ARDT_INDEX ??= {};
 			await game.settings.set(NS, "alchIndexMeta", {
 				systemVersion: "",
 				locale: "",
-				updatedAt: 0,
+				lastBuilt: 0,
 				itemCount: 0
 			});
 
@@ -157,14 +179,20 @@ window.PF2E_ARDT_INDEX ??= {};
 
 				// Fields to store in Index
 				const traits = e.system?.traits?.value ?? [];
-				if (!traits.includes("alchemical")) continue; // filter only Alchemical items
-				
+				const level = e.system?.level?.value ?? null;
+
+				//	Include:
+				//	- Any item with the "alchemical" trait (existing behavior)
+				//	- Any potion (trait "potion") of level 9 or lower (for Improbable Elixirs)
+				const isAlchemical = traits.includes("alchemical");
+				const isImprobablePotion = traits.includes("potion") && typeof level === "number" && level <= 9;
+
+				if (!isAlchemical && !isImprobablePotion) continue;
 				
 				const img = e.img ?? "";
 				let slug = e.system?.slug ?? "";
 				const rarity = e.system.traits?.rarity ?? null;
 				let html = e.system?.description?.value ?? "";
-				const level = e.system?.level?.value ?? null;
 				const type = e.type;
 
 				if (!html || !slug) {
@@ -182,6 +210,7 @@ window.PF2E_ARDT_INDEX ??= {};
 					lastYield = performance.now();
 				}
 			}
+
 		}
 
 		// Save index with meta

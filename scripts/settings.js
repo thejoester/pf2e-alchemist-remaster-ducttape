@@ -366,14 +366,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 /* ===== Hooks =====
 */
 	Hooks.once("init", () => {
-		
-	/*
-		// Configure compendiums to have slug and traits indexable
-		const fields = new Set(CONFIG.Item.compendiumIndexFields ?? []);
-		fields.add("system.slug");
-		fields.add("system.traits.value");
-		CONFIG.Item.compendiumIndexFields = Array.from(fields);
-	*/
+
 	//	=== Saved Data Settings ===
 
 		// Alchemical Index blob (uuid -> { name, desc, updatedAt })
@@ -674,7 +667,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 					});
 				});
 			}
-	});
+		});
 
 	//	Vial Search 
 		// Enable Vial Search
@@ -837,7 +830,7 @@ Hooks.once("ready", async () => {
 				debugLog(3, `settings.js: Compendium not found: ${id}`);
 				continue;
 			}
-			// v13: request fields so players get slug in the index
+			// request fields so players get slug in the index
 			await pack.getIndex({ fields: ["slug", "system.slug", "name", , "system.traits.value"], reload: true });
 			debugLog(`settings.js: Reindexed with fields: ${id}`);
 		}
@@ -858,7 +851,6 @@ Hooks.once("ready", async () => {
 	} catch (err) {
 		debugLog(3, `settings.js: Error reindexing compendiums: ${err?.message ?? err}`);
 	}
-
 	
     //	Adjust collapseChatDesc based on the Workbench setting
     adjustCollapseSettingBasedOnWorkbench();

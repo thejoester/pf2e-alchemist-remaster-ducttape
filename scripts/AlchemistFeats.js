@@ -62,11 +62,10 @@ Hooks.on("ready", () => {
 			return;
 		}
 		
-		/*
-			*** EFFECT LINK *** 
+		/* EFFECT LINK ================================================================
 			Check if description has an effect link in it and inject note before
 			the link to state "Apply before use" 
-		*/
+		============================================================================ */
 		await annotateEffectLinkBeforeUse(item);
 
 		if(item.system.traits.value.includes("healing")) {
@@ -80,8 +79,10 @@ Hooks.on("ready", () => {
 		  return;
 		}
 		
-		/* 	*** POWERFUL ALCHEMY *** 
-			Check if the actor has Powerful Alchemy - if not return with mesactorge in log */
+		/* POWERFUL ALCHEMY ===========================================================
+			Check if the actor has Powerful Alchemy - 
+			if not enabled, skip processing
+		============================================================================ */
 		const paEnabled = getSetting("enablePowerfulAlchemy");
 		if (paEnabled) {
 			debugLog("AlchemistFeats.js | PowerfulAlchemy enabled.");
@@ -94,11 +95,9 @@ Hooks.on("ready", () => {
 	});
 });
 
-/*
-	Injects "<strong> Apply before using: </strong>" immediately before the first
-	@UUID[...] {Effect: ...} link in the item's description.
-	Does nothing if it's already injected or no such link exists.
-*/
+/* ============================================================================
+	Inject Effect Link Annotation 
+============================================================================ */
 async function annotateEffectLinkBeforeUse(item) {
 	//setTimeout(async () => {
 		try {
@@ -139,81 +138,77 @@ async function annotateEffectLinkBeforeUse(item) {
 //	Function to apply Powerful Alchemy effects to item created by Alchemist
 async function applyPowerfulAlchemy(item,actor,alchemistDC){
 	// Delay to allow item to finish embedding (avoids Foundry V12 timing issues)
-	// setTimeout(async () => {
-		try {
-			if (!item || !item.system?.traits?.value?.includes("alchemical")) {
-				debugLog(`AlchemistFeats.js | Item (${item?.name}) does not have the 'alchemical' trait or item is undefined.`);
-				return;
-			}
-
-			if (!item.system.traits.value.includes("infused")) {
-				debugLog(`AlchemistFeats.js | Item (${item.name}) does not have the 'infused' trait.`);
-				return;
-			}
-
-			debugLog(`AlchemistFeats.js | Infused item created! Item: `, item);
-
-			let description = item.system.description.value;
-
-			const replacements = [
-				{
-					pattern: /@Check\[(?!flat)\w+\|dc:(\d+)(?:\|[^\]]+)?\]/g,
-					replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistDC}`)
-				},
-				{
-					pattern: /DC is (\d+)/g,
-					replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistDC}`)
-				},
-				{
-					pattern: /DC is \[\[\/act [^\]]*?dc=(\d+)\]\]\{\d+\}/g,
-					replaceFn: (match, p1) => `DC is [[/act escape dc=${alchemistDC}]]{${alchemistDC}}`
-				}
-			];
-
-			let updatedDescription = description;
-			for (const { pattern, replaceFn } of replacements) {
-				updatedDescription = updatedDescription.replace(pattern, replaceFn);
-			}
-
-			if (updatedDescription !== description) {
-				await item.updateSource({ "system.description.value": updatedDescription });
-				debugLog(`AlchemistFeats.js | Description was updated to Class DC: ${alchemistDC}`);
-
-				await ChatMessage.create({
-					author: game.user?.id,
-					content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistDC}!</p>`,
-					speaker: { alias: LOCALIZED_TEXT.POWERFUL_ALCHEMY }
-				});
-			}
-
-			// Update any matching Note rule elements with the new description
-			let updatedRules = item.system.rules.map(rule => {
-				if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
-					debugLog(`AlchemistFeats.js | Updating Note Rule Element for ${item.name}`);
-					return {
-						...rule,
-						text: updatedDescription
-					};
-				}
-				return rule;
-			});
-
-			if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
-				await item.updateSource({ "system.rules": updatedRules });
-				debugLog(`AlchemistFeats.js | Updated Note Rule Element for ${item.name} to use new description.`);
-			}
-		} catch (err) {
-			debugLog(`AlchemistFeats.js | Error in applyPowerfulAlchemy: ${err.message}`);
-			console.error(err); // Optional: for debugging during development
+	try {
+		if (!item || !item.system?.traits?.value?.includes("alchemical")) {
+			debugLog(`AlchemistFeats.js | Item (${item?.name}) does not have the 'alchemical' trait or item is undefined.`);
+			return;
 		}
-	//}, 100);
+
+		if (!item.system.traits.value.includes("infused")) {
+			debugLog(`AlchemistFeats.js | Item (${item.name}) does not have the 'infused' trait.`);
+			return;
+		}
+
+		debugLog(`AlchemistFeats.js | Infused item created! Item: `, item);
+
+		let description = item.system.description.value;
+
+		const replacements = [
+			{
+				pattern: /@Check\[(?!flat)\w+\|dc:(\d+)(?:\|[^\]]+)?\]/g,
+				replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistDC}`)
+			},
+			{
+				pattern: /DC is (\d+)/g,
+				replaceFn: (match, p1) => match.replace(`DC is ${p1}`, `DC is ${alchemistDC}`)
+			},
+			{
+				pattern: /DC is \[\[\/act [^\]]*?dc=(\d+)\]\]\{\d+\}/g,
+				replaceFn: (match, p1) => `DC is [[/act escape dc=${alchemistDC}]]{${alchemistDC}}`
+			}
+		];
+
+		let updatedDescription = description;
+		for (const { pattern, replaceFn } of replacements) {
+			updatedDescription = updatedDescription.replace(pattern, replaceFn);
+		}
+
+		if (updatedDescription !== description) {
+			await item.updateSource({ "system.description.value": updatedDescription });
+			debugLog(`AlchemistFeats.js | Description was updated to Class DC: ${alchemistDC}`);
+
+			await ChatMessage.create({
+				author: game.user?.id,
+				content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistDC}!</p>`,
+				speaker: { alias: LOCALIZED_TEXT.POWERFUL_ALCHEMY }
+			});
+		}
+
+		// Update any matching Note rule elements with the new description
+		let updatedRules = item.system.rules.map(rule => {
+			if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
+				debugLog(`AlchemistFeats.js | Updating Note Rule Element for ${item.name}`);
+				return {
+					...rule,
+					text: updatedDescription
+				};
+			}
+			return rule;
+		});
+
+		if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
+			await item.updateSource({ "system.rules": updatedRules });
+			debugLog(`AlchemistFeats.js | Updated Note Rule Element for ${item.name} to use new description.`);
+		}
+	} catch (err) {
+		debugLog(`AlchemistFeats.js | Error in applyPowerfulAlchemy: ${err.message}`);
+		console.error(err); // Optional: for debugging during development
+	}
 }
 
-/* ========================================================================== */
-/* Unstable Concoction — minimal flow (chooser + inventory + craft)           */
-/* ========================================================================== */
-
-// After we create/embed the Unstable copy, call the right QA helper to post a use card.
+/* ============================================================================
+	Unstable Concoction — minimal flow (chooser + inventory + craft) 
+============================================================================ */
 async function _unstablePostCreateUse(actor, itemDoc) {
 	try {
 		if (!actor || !itemDoc) return;
@@ -252,7 +247,7 @@ async function _unstablePostCreateUse(actor, itemDoc) {
 	}
 }
 
-const __UC_DIE_ORDER = ["d4","d6","d8","d10","d12"];
+const __UC_DIE_ORDER = ["d4","d6","d8","d10","d12"]; // order of die sizes
 function bumpDieToken(d) {
 	if (typeof d !== "string") return d;
 	const i = __UC_DIE_ORDER.indexOf(d.toLowerCase());
@@ -416,10 +411,11 @@ export async function displayUnstableConcoctionDialog(actor) {
 	}
 }
 
-/*	Use from Inventory → list actor items with traits alchemical+consumable
+/* ============================================================================
+	Use from Inventory → list actor items with traits alchemical+consumable
 	- decrements the base stack by 1
 	- embeds a 1-qty Unstable copy (owned), ready to activate later
-*/
+============================================================================ */
 export async function displayUnstableInventoryDialog(actor) {
 	try {
 		if (!actor) return;
@@ -516,12 +512,13 @@ export async function displayUnstableInventoryDialog(actor) {
 	}
 }
 
-/*	Craft path:
+/* DISPLAY UNSTABLE CRAFT DIALOG ==============================================
+	Craft path:
 	- build list from actor.system.crafting.formulas
 	- resolve name & traits via qaGetIndexEntry(uuid)
-	- on craft: if global craftButton() exists -> use it (your existing pipeline)
+	- on craft: if global craftButton() exists -> use it
 	  otherwise: embed a 1-qty copy of the formula doc
-*/
+============================================================================ */
 export async function displayUnstableCraftDialog(actor) {
 	try {
 		if (!actor) return;

@@ -1,14 +1,12 @@
 import { debugLog  } from './settings.js';
 console.log("%cPF2e Alchemist Remaster Duct Tape | QAEffects.js loaded","color: aqua; font-weight: bold;");
 
-/* 
-	Quick Alchemy Effects
+/* Quick Alchemy Effects ======================================================
 	This script file handles when effects are applied on an actor, it checks 
 	the origin of the effect, and if that origin is from an item created 
 	by Quick Alchemy, it will set a maximum duration of 10 minutes per RAW:
-	
 	https://2e.aonprd.com/Actions.aspx?ID=2801
-*/
+============================================================================ */
 
 // Check for tag that means this is a QA item
 function isQuickAlchemyItem(item) {

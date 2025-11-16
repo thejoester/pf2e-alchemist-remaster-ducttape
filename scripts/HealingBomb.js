@@ -1,5 +1,5 @@
 console.log("%cPF2e Alchemist Remaster Duct Tape | HealingBomb.js loaded","color: aqua; font-weight: bold;");
-import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, hasFeat } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
 
 // Hook to modify actor sheet buttons
@@ -130,9 +130,6 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		const token = actorDoc?.isToken ? actorDoc : actor?.getActiveTokens()[0];
 		if (!actor) return;
 		await actor.applyDamage({ damage: -parseInt(btn.dataset.heal), token, heal: true, skipIWR: true });
-		//	Below line should not be here, splash does not 
-		//  apply to target only adjacent - https://2e.aonprd.com/Feats.aspx?ID=5773
-		//	await actor.applyDamage({ damage: -parseInt(btn.dataset.splash), token, heal: true, skipIWR: true });
 	});
 
 	// Button: Roll healing
@@ -146,9 +143,6 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		await roll.evaluate({ async: true });
 		await roll.toMessage({ flavor: `${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_ROLLED}: ${roll.total}` });
 		await actor.applyDamage({ damage: -roll.total, token, heal: true, skipIWR: true });
-		//	Below line should not be here, splash does not 
-		//  apply to target only adjacent - https://2e.aonprd.com/Feats.aspx?ID=5773
-		//	await actor.applyDamage({ damage: -parseInt(btn.dataset.splash), token, heal: true, skipIWR: true });
 	});
 
 	// Button: Apply splash healing
@@ -237,4 +231,3 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		await actor.applyDamage({ damage: -splashHealing, token, heal: true, skipIWR: true });
 	});
 });
-

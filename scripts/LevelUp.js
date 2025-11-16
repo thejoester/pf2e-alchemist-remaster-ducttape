@@ -1,4 +1,4 @@
-import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
+import { debugLog, getSetting, isAlchemist, hasActiveOwners  } from './settings.js';
 import { qaGetIndexEntry, qaGetSlugFromUuid, getAlchIndex } from "./AlchIndex.js";
 import { LOCALIZED_TEXT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
@@ -18,10 +18,11 @@ Hooks.once('ready', async () => {
 	await clearFlags();
 	pauseFlags = false;
 	
+	// expose functions
 	window.promptTokenFormulaAdd = promptTokenFormulaAdd;
 	window.promptTokenFormulaRemove = promptTokenFormulaRemove;
 
-	getAlchemistLevels();
+	getAlchemistLevels(); 
 	
 });	
 
@@ -34,7 +35,7 @@ Hooks.once('init', () => {
 	addFormulasPermission = getSetting("addFormulasPermission","actor_owner");
 	promptLowerFormulasOnLevelUp = getSetting('promptLowerFormulasOnLevelUp');
 	
-    if (addFormulasSetting !== "disabled") {
+    if (addFormulasSetting !== "disabled") { // if enabled 
         // Hook into updateActor to detect level-ups and grant Alchemist formulas
         Hooks.on('updateActor', async (actor, updateData, options, userId) => {
 			if (pauseFlags) return;
@@ -160,17 +161,15 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 	debugLog(`Finished Task: Collect Index items that match base slug of deduplicatedBaseSlugs \n`, itemsToCheck );
 	updateLoadingProgress(80);
 	
-    // 3. Filter items by level, traits, and rarity
+    // Filter items by level, traits, and rarity
 	debugLog(`Starting Task: Filter items by level, traits, and rarity`);
     previousLevel ??= actor.getFlag('pf2e-alchemist-remaster-ducttape', 'previousLevel') || 1;
 	debugLog(`Previous level for ${actor.name}: ${previousLevel} | New Level: ${newLevel}`);
 
     const filteredItems = itemsToCheck.filter(item => {
 		const isAlchemical = item.traits?.includes('alchemical');
-        const isCommon = item.rarity === 'common';
         const levelCheck = item.level <= newLevel && item.level > previousLevel;
-        // return isAlchemical && isCommon && levelCheck;
-		return isAlchemical && levelCheck;
+        return isAlchemical && levelCheck;
     });
 	
 	debugLog(`Finished Task: Filter items by level, traits, and rarity: \n`, filteredItems);
@@ -432,7 +431,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
     }
 }
 
-// Old function for macro (for now 
+// Old function for macro (for now) 
 async function grantFormulasFull(actor, newLevel, mode = addFormulasSetting, previousLevel) {
 	
 	const loadingDialog = new foundry.applications.api.DialogV2({
@@ -692,23 +691,15 @@ async function grantFormulasFull(actor, newLevel, mode = addFormulasSetting, pre
     }
 }
 
-//	Function to extract base name ignoring parenthisis and contents within, 
-//	as well as commas and text after
-function extractBaseName(name) {
-    return name
-		.toLowerCase()
-		.replace(/\s*\(.*?\)|\s*,.*$/g, '') // Remove parentheses or comma-separated variants
-		.trim();
-}
-
 //	Helper function to extract base slug
 function extractBaseSlug(slug) {
 	if (!slug) return null;
 
-	/* Special cases: 
+	/* ============================================================================
+		Special cases: 
 		- elemental-ammunition-[tier]-[element]
 		- cooperative waffles (no lesser only greater)
-	*/
+	============================================================================ */
 	if (slug.startsWith("elemental-ammunition-")) {
 		const parts = slug.split("-");
 		if (parts.length >= 4 && ["lesser", "moderate", "greater"].includes(parts[2])) {
@@ -789,7 +780,7 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	}
 }
 
-//	Show a dialog to ask if the user wants to add all the gathered formulas.
+// 	Show a dialog to ask if the user wants to add all the gathered formulas.
 async function showFormulaListDialog(actor, formulas, isRemoving = false) {
 	return new Promise((resolve) => {
 		if (formulas.length === 0) {
@@ -975,12 +966,6 @@ async function clearFlags() {
 				cleared = true;
 			}
 		}
-		
-		/*
-		if (!cleared) {
-			clearedFlagsLog += `-> No flags to clear for ${actor.name}\n`;
-		}
-		*/
 	}
 
 	debugLog(clearedFlagsLog);
@@ -988,10 +973,10 @@ async function clearFlags() {
 
 //	Function to update progress bar
 function updateLoadingProgress(percent) {
-  const fill = document.getElementById("progress-fill");
-  const text = document.getElementById("progress-text");
-  if (fill) fill.style.width = `${percent}%`;
-  if (text) text.textContent = `${percent}%`;
+	const fill = document.getElementById("progress-fill");
+	const text = document.getElementById("progress-text");
+	if (fill) fill.style.width = `${percent}%`;
+	if (text) text.textContent = `${percent}%`;
 }
 
 //	Function to handle form submission
@@ -1185,7 +1170,7 @@ async function promptTokenFormulaRemove() {
 			}
 		],
 		submit: async (result) => {
-			dialog.close(); // ✅ Close immediately
+			dialog.close(); // Close immediately
 			await handleFormSubmit(actor, result, currentLevel);
 		}
 	});

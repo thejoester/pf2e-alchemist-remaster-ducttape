@@ -19,13 +19,13 @@ Hooks.once('init', () => {
 			// Ensure this hook only runs for GMs
 			if (!game.user.isGM) return;
 			
-			/*
-				explorationTime = total time in exploration mode
-				currentTime = game world current time
-				previousTime = game world time before change
-			*/			
-			
-			// Initialize explorationBlocks and get explorationTime and previousTime from game settings
+			/* ============================================================================
+				- Initialize explorationBlocks and get explorationTime and 
+				  previousTime from game settings
+				- explorationTime = total time in exploration mode
+				- currentTime = game world current time
+				- previousTime = game world time before change
+			============================================================================ */	
 			let explorationBlocks = 0;
 			let explorationTime = getSetting('explorationTime') ?? 0;
 			let previousTime = getSetting('previousTime');
@@ -93,12 +93,8 @@ Hooks.once('init', () => {
 			for (const actor of game.actors.party.members) {
 				if (!actor || actor.type !== 'character') continue; // Actor is character
 
-				/*
-					Checking that actor is Alchemist
-					!!!Archetype does not qualify for this feature!!!
-				*/
+				// Checking that actor is Alchemist - Archetype does not qualify for this feature
 				const alchemistCheck = isAlchemist(actor);
-				
 				if (!alchemistCheck.qualifies || alchemistCheck.isArchetype) {
 					debugLog(`VialSearch.js | Skipping Vial Search for Actor: ${actor.name} | Qualifies: ${alchemistCheck.qualifies} | is Archtype: ${alchemistCheck.isArchetype}`);	
 					continue; // actor is not alchemist or is an Archetype, stop
@@ -111,10 +107,7 @@ Hooks.once('init', () => {
 				// Get maximum vials character can have
 				const maxVials = getMaxVials(actor);
 				
-				/* 
-				Get number of vials that can be found per block
-				= 2 unless actor has alchemical expertise feat
-				*/
+				// number of vials that can be found per block = 2 unless actor has alchemical expertise feat
 				let foundVials = hasFeat(actor, "alchemical-expertise") ? 3 : 2;
 				// multiply by how many 10 minute blocks have passed
 				foundVials *= explorationBlocks;
