@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Indexing:** Reworked the index of items used in the module
   - Now will include potions (for Improbable Elixirs). 
   - Only re-index if index is 3 days old, speeding up loading as every player does not need to re-index every refresh. 
-- **Module:** Cleaned up older unused code. 
+- **Module:** Cleaned up older unused code, formatting of comments. 
 
 ## [2.14.10] - 2025-11-12
 ### Fixed
