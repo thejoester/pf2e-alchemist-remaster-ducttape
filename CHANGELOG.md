@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.15.0] - 2025-11-16
 ### Added
 - **Quick Alchemy:** Added support for [Improbable Elixirs](https://2e.aonprd.com/Feats.aspx?ID=5800) feat. 
-## Changed 
+### Changed 
 - **Indexing:** Reworked the index of items used in the module
   - Now will include potions (for Improbable Elixirs). 
   - Only re-index if index is 3 days old, speeding up loading as every player does not need to re-index every refresh. 
