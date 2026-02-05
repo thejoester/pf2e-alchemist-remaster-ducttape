@@ -326,15 +326,35 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 	for (let i = 0; i < total; i++) {
 		const formula = knownFormulas[i];
 
-		const item = await fromUuidSync(formula.uuid);
-		if (!item) {
-			debugLog(`Unable to retrieve item for formula UUID: ${formula.uuid}`);
+		let item = null;
+
+		try {
+			item = fromUuidSync(formula.uuid);
+		} catch (error) {
+			debugLog(3, `removeLowerLevelFormulas() | fromUuidSync failed for UUID: ${formula?.uuid}`, error);
 			continue;
 		}
 
-		const baseSlug = extractBaseSlug(item.system.slug);
+		if (!item) {
+			debugLog(`Unable to retrieve item for formula UUID: ${formula?.uuid}`);
+			continue;
+		}
+
+		// Some items (especially odd/homebrew/imports) may not have system.slug
+		let rawSlug = item?.system?.slug ?? item?.slug ?? null;
+
+		// Fallback: try the UUID-based slug helper if we still don't have one
+		if (!rawSlug && formula?.uuid) {
+			try {
+				rawSlug = await qaGetSlugFromUuid(formula.uuid);
+			} catch (error) {
+				debugLog(3, `removeLowerLevelFormulas() | qaGetSlugFromUuid failed for UUID: ${formula.uuid}`, error);
+			}
+		}
+
+		const baseSlug = rawSlug ? extractBaseSlug(rawSlug) : null;
 		if (!baseSlug) {
-			debugLog(`Skipping formula with invalid slug: ${item.name}`);
+			debugLog(`Skipping formula with missing/invalid slug: ${item.name} | UUID: ${formula?.uuid}`);
 			continue;
 		}
 		
@@ -1003,7 +1023,7 @@ async function handleFormSubmit(actor,options,currentLevel){
 				await grantFormulasFull(actor, currentLevel, mode, prevLevel);
 			}
 		}else if (options.action === "remove_formulas"){
-			await removeLowerLevelFormulasOLd(actor, mode);
+			await removeLowerLevelFormulas(actor, mode);
 		}
 	} catch (err) {
 		debugLog(`handleFormSubmit() | Grant formulas error: ${err?.message ?? err}`);
