@@ -175,7 +175,9 @@
 		"LEVELUP_PROMPT_ADD_FORMULA":"Do you want to add it?",
 		"LEVELUP_REMOVE_LOWERLEVEL_FORMULAS":"Remove Lower-Level Formulas",
 		"LEVELUP_NEW_FORMULAS_DISCOVERED":"New Formulas Discovered",
-		"LEVELUP_HIGHER_VERSION": "has a higher version of formula",		
+		"LEVELUP_HIGHER_VERSION": "has a higher version of formula",
+		"LEVELUP_NO_LOWER_FORMULAS": "No lower-level formulas to remove for",
+		"LEVELUP_WAIT_TITLE": "Alchemist Duct Tape",		
 		
 		"POWERFUL_ALCHEMY_UPDATED_CLASS_DC":"updated using Class DC",
 		

@@ -420,6 +420,7 @@ Hooks.once("ready", () => {
 	});
 });
 
+//	Ready Hook to expose global functions
 Hooks.on("ready", async () => {
 	console.log("%cPF2e Alchemist Remaster Duct Tape QuickAlchemy.js loaded", "color: aqua; font-weight: bold;");
 

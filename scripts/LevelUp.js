@@ -289,7 +289,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevelUp) {
 	
 	debugLog(`removeLowerLevelFormulas() | mode: ${mode}`);
-    debugLog(`Checking for lower level formulas for ${actor.name}`);
+	debugLog(`Checking for lower level formulas for ${actor.name}`);
 	
 	// Display dialog
 	const loadingDialog = new foundry.applications.api.DialogV2({
@@ -303,10 +303,10 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 		`,
 		buttons: [
 			{
-			  action: "hidden",
-			  label: LOCALIZED_TEXT.OK,
-			  icon: "",
-			  callback: () => {}
+				action: "hidden",
+				label: LOCALIZED_TEXT.OK,
+				icon: "",
+				callback: () => {}
 			}
 		],
 		render: (html) => {
@@ -317,138 +317,170 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 	});
 	loadingDialog.render(true);
 	
-    const knownFormulas = actor.system.crafting.formulas;
-    const formulaMap = new Map(); // Map to store the highest-level version of each base formula
-    let removedFormulas = []; // Track removed formulas
-	
+	const knownFormulas = actor.system.crafting.formulas;
+	const formulaMap = new Map(); // baseSlug -> { uuid, level, name }
+	let removedFormulas = [];
 
-    const total = knownFormulas.length;
-	for (let i = 0; i < total; i++) {
-		const formula = knownFormulas[i];
+	try {
+		const total = knownFormulas.length;
 
-		let item = null;
+		for (let i = 0; i < total; i++) {
+			const formula = knownFormulas[i];
 
-		try {
-			item = fromUuidSync(formula.uuid);
-		} catch (error) {
-			debugLog(3, `removeLowerLevelFormulas() | fromUuidSync failed for UUID: ${formula?.uuid}`, error);
-			continue;
-		}
+			const uuid = formula?.uuid;
+			if (!uuid || typeof uuid !== "string") continue;
 
-		if (!item) {
-			debugLog(`Unable to retrieve item for formula UUID: ${formula?.uuid}`);
-			continue;
-		}
-
-		// Some items (especially odd/homebrew/imports) may not have system.slug
-		let rawSlug = item?.system?.slug ?? item?.slug ?? null;
-
-		// Fallback: try the UUID-based slug helper if we still don't have one
-		if (!rawSlug && formula?.uuid) {
+			// Prefer index (this is literally why you built it)
+			let entry = null;
 			try {
-				rawSlug = await qaGetSlugFromUuid(formula.uuid);
+				entry = await qaGetIndexEntry(uuid);
 			} catch (error) {
-				debugLog(3, `removeLowerLevelFormulas() | qaGetSlugFromUuid failed for UUID: ${formula.uuid}`, error);
+				debugLog(3, `removeLowerLevelFormulas() | qaGetIndexEntry failed for UUID: ${uuid}`, error);
 			}
-		}
 
-		const baseSlug = rawSlug ? extractBaseSlug(rawSlug) : null;
-		if (!baseSlug) {
-			debugLog(`Skipping formula with missing/invalid slug: ${item.name} | UUID: ${formula?.uuid}`);
-			continue;
-		}
-		
-		// Skip if this is non-standard alchemical item
-		if (isNonStandardVariant(baseSlug)){
-			debugLog(`Skipping formula ${item.name}: non-standard slug naming`);
-			continue;
-		}
+			let name = entry?.name ?? null;
+			let rawSlug = entry?.slug ?? null;
+			let level = Number(entry?.level);
 
-		const level = Number(item.system.level.value);
-		const currentLevel = formulaMap.has(baseSlug) ? formulaMap.get(baseSlug).level : null;
+			// Fallback if entry is missing (non-alchemical formulas, random equipment, etc.)
+			if (!name || !rawSlug || !Number.isFinite(level)) {
+				let doc = null;
+				try {
+					doc = await fromUuid(uuid);
+				} catch (error) {
+					debugLog(3, `removeLowerLevelFormulas() | fromUuid failed for UUID: ${uuid}`, error);
+				}
 
-		if (!formulaMap.has(baseSlug) || currentLevel < level) {
-			if (formulaMap.has(baseSlug)) {
-				const lowerLevelFormula = formulaMap.get(baseSlug);
-				removedFormulas.push(lowerLevelFormula);
-				debugLog(`Replacing ${lowerLevelFormula.name} (Level ${lowerLevelFormula.level}) with ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
+				name ??= doc?.name ?? null;
+				rawSlug ??= doc?.system?.slug ?? doc?.slug ?? null;
+
+				const docLevel = Number(doc?.system?.level?.value);
+				if (!Number.isFinite(level) && Number.isFinite(docLevel)) level = docLevel;
 			}
-			formulaMap.set(baseSlug, { uuid: formula.uuid, level, name: item.name });
-			debugLog(`Setting ${item.name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
-		} else {
-			removedFormulas.push({ uuid: formula.uuid, name: item.name, level, baseSlug });
-			debugLog(`Marking ${item.name} (Level ${level}) for removal.`);
-		}
 
-		// ✅ Progress update
-		const progress = Math.round(((i + 1) / total) * 100);
-		updateLoadingProgress(progress);
-	}
+			// Still no slug? can't base-group it
+			const baseSlug = rawSlug ? extractBaseSlug(rawSlug) : null;
 
-    // If no formulas to remove, exit early
-    if (removedFormulas.length === 0) {
-        debugLog(`No lower-level formulas to remove for ${actor.name}.`);
-		loadingDialog.close();
-		return;
-    }
-	
-	// Close Dialog if open
-	loadingDialog.close();
-	
-    // Handle ask_all_lower: Compile and prompt for all at once
-    if (mode === "ask_all_lower") {
-        const confirmed = await showFormulaListDialog(actor, removedFormulas.map(f => ({
-            uuid: f.uuid,
-            name: f.name,
-            level: f.level
-        })), true);
-
-        if (!confirmed) {
-            debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
-			return; // Exit if user cancels
-        }
-    } else if (mode === "ask_each_lower") {
-		// Handle ask_each_lower: Prompt for each formula individually
-		const keptFormulas = [];
-		for (const formula of removedFormulas) {
-			const confirmed = await showFormulaDialog(actor, { name: formula.name, level: formula.level }, formula.level, true);
-			if (!confirmed) {
-				debugLog(`Chose to keep ${formula.uuid} ${formula.name} (${formula.level})`);
-				keptFormulas.push(formula); // Keep formulas user declined to remove
+			if (!baseSlug) {
+				debugLog(`Skipping formula with missing/invalid slug: ${name ?? "Unknown"} | UUID: ${uuid}`);
+				continue;
 			}
-		}
-		debugLog(`Kept formulas:\n${keptFormulas.map(f => f.name).join('\n')}`);
 
-		// Filter out formulas to remove
-		removedFormulas = removedFormulas.filter(f => {
-			if (keptFormulas.some(kf => kf.uuid === f.uuid)) {
-				debugLog(`Keeping formula: ${f.name} (Level ${f.level})`);
-				formulaMap.set(f.uuid, { uuid: f.uuid, level: f.level, name: f.name });
-				return false; // Exclude from removal
+			// Skip if this is non-standard alchemical item
+			if (isNonStandardVariant(baseSlug)) {
+				debugLog(`Skipping formula ${name ?? "Unknown"}: non-standard slug naming`);
+				continue;
+			}
+
+			if (!Number.isFinite(level)) {
+				debugLog(2, `Skipping formula with missing/invalid level (index + doc): ${name ?? "Unknown"} | UUID: ${uuid}`, {
+					entryLevel: entry?.level,
+					entry: entry ?? null
+				});
+				continue;
+			}
+
+			// Safe map read
+			const existing = formulaMap.get(baseSlug);
+			const currentLevel = Number.isFinite(existing?.level) ? existing.level : null;
+
+			debugLog(`[COMPARE ${i + 1}/${total}]`, {
+				baseSlug,
+				level,
+				existing,
+				currentLevel
+			});
+
+			if (!existing || currentLevel === null || currentLevel < level) {
+				if (existing?.uuid) {
+					removedFormulas.push(existing);
+					debugLog(`Replacing ${existing.name} (Level ${existing.level}) with ${name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
+				}
+
+				formulaMap.set(baseSlug, { uuid, level, name: name ?? "Unknown" });
+				debugLog(`Setting ${name} (Level ${level}) as the highest-level version of ${baseSlug}.`);
 			} else {
-				debugLog(`Removing formula: ${f.name} (Level ${f.level})`);
-				return true; // Include in removal
+				removedFormulas.push({ uuid, name: name ?? "Unknown", level, baseSlug });
+				debugLog(`Marking ${name} (Level ${level}) for removal.`);
 			}
-		});
+
+			// Progress update
+			const progress = Math.round(((i + 1) / total) * 100);
+			updateLoadingProgress(progress);
+		}
+
+		if (removedFormulas.length === 0) {
+			debugLog(`No lower-level formulas to remove for ${actor.name}.`);
+
+			new foundry.applications.api.DialogV2({
+				window: { title: LOCALIZED_TEXT.LEVELUP_WAIT_TITLE },
+				content: `<p>${LOCALIZED_TEXT.LEVELUP_NO_LOWER_FORMULAS} ${actor.name}.</p>`,
+				buttons: [
+					{
+						action: "ok",
+						label: LOCALIZED_TEXT.OK,
+						icon: "",
+						callback: () => {}
+					}
+				]
+			}).render(true);
+
+			return;
+		}
+
+		// Ask modes
+		if (mode === "ask_all_lower") {
+			const confirmed = await showFormulaListDialog(actor, removedFormulas.map(f => ({
+				uuid: f.uuid,
+				name: f.name,
+				level: f.level
+			})), true);
+
+			if (!confirmed) {
+				debugLog(`User declined to remove lower-level formulas for ${actor.name}.`);
+				return;
+			}
+		} else if (mode === "ask_each_lower") {
+			const keptFormulas = [];
+
+			for (const f of removedFormulas) {
+				const confirmed = await showFormulaDialog(actor, { name: f.name, level: f.level }, f.level, true);
+
+				// confirmed === true means "remove", false means "keep"
+				if (!confirmed) keptFormulas.push(f);
+			}
+
+			debugLog(`Kept formulas:\n${keptFormulas.map(f => f.name).join('\n')}`);
+
+			removedFormulas = removedFormulas.filter(f => !keptFormulas.some(k => k.uuid === f.uuid));
+		}
+
+		if (removedFormulas.length === 0) {
+			debugLog(`No lower-level formulas were removed for ${actor.name} after prompts.`);
+			return;
+		}
+
+		// Remove ONLY what we decided to remove; do not rebuild from formulaMap
+		const uuidsToRemove = new Set(removedFormulas.map(f => f.uuid));
+		const updatedFormulas = knownFormulas.filter(f => !uuidsToRemove.has(f.uuid));
+
+		if (updatedFormulas.length !== knownFormulas.length) {
+			await actor.update({ "system.crafting.formulas": updatedFormulas });
+			debugLog(`Updated formulas for ${actor.name}: Removed lower-level versions:\n${removedFormulas.map(f => f.name).join('\n')}`);
+		}
+
+		if (addNewFormulasToChat && removedFormulas.length > 0) {
+			const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
+			ChatMessage.create({
+				content: `<strong>${actor.name}</strong> ${LOCALIZED_TEXT.LEVELUP_REMOVEDLOWER_CHAT_MSG}:<br><br>${removedFormulaNames}`
+			});
+		}
+	} catch (error) {
+		debugLog("removeLowerLevelFormulas() | HARD FAILURE", { error, stack: error?.stack });
+		throw error;
+	} finally {
+		try { loadingDialog.close(); } catch (e) {}
 	}
-
-    // Filter out formulas to keep
-    const uuidsToKeep = Array.from(formulaMap.values()).map(entry => entry.uuid);
-    const updatedFormulas = knownFormulas.filter(f => uuidsToKeep.includes(f.uuid));
-
-    // Update the actor's formulas if changes were made
-    if (updatedFormulas.length !== knownFormulas.length) {
-        await actor.update({ 'system.crafting.formulas': updatedFormulas });
-        debugLog(`Updated formulas for ${actor.name}: Removed lower-level versions:\n${updatedFormulas.map(f => f.name).join('\n')}`);
-    }
-
-    // Output to chat if enabled
-    if (addNewFormulasToChat && removedFormulas.length > 0) {
-        const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
-        ChatMessage.create({
-            content: `<strong>${actor.name}</strong> ${LOCALIZED_TEXT.LEVELUP_REMOVEDLOWER_CHAT_MSG}:<br><br>${removedFormulaNames}`
-        });
-    }
 }
 
 // Old function for macro (for now) 
