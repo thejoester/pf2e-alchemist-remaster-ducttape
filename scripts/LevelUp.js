@@ -413,7 +413,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 			debugLog(`No lower-level formulas to remove for ${actor.name}.`);
 
 			new foundry.applications.api.DialogV2({
-				window: { title: LOCALIZED_TEXT.LEVELUP_WAIT_TITLE },
+				window: { title: LOCALIZED_TEXT.LEVELUP_WAIT_TITLE() },
 				content: `<p>${LOCALIZED_TEXT.LEVELUP_NO_LOWER_FORMULAS} ${actor.name}.</p>`,
 				buttons: [
 					{
@@ -457,6 +457,20 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 
 		if (removedFormulas.length === 0) {
 			debugLog(`No lower-level formulas were removed for ${actor.name} after prompts.`);
+			// Show dialog
+			new foundry.applications.api.DialogV2({
+				window: { title: LOCALIZED_TEXT.LEVELUP_WAIT_TITLE() },
+				content: `<p>${LOCALIZED_TEXT.LEVELUP_NO_LOWER_FORMULAS} ${actor.name}.</p>`,
+				buttons: [
+					{
+						action: "ok",
+						label: LOCALIZED_TEXT.OK,
+						icon: "",
+						callback: () => {}
+					}
+				]
+			}).render(true);
+
 			return;
 		}
 
