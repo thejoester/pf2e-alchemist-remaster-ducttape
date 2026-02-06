@@ -9,3 +9,6 @@ package-lock.json
 
 # LevelDB junk
 /packs/*/lost/
+
+#markdownlint
+.markdownlint.json
