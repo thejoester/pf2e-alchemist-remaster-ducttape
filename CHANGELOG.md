@@ -11,8 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.15.1] - 2026-02-04
 ### Fixed
-- **Level Up:**
-  - Fixed issue preventing lower level versions of formulas from being removed when leveling up or running macro. 
+- **Level Up:** Fixed issue preventing lower level versions of formulas from being removed when leveling up or running macro. 
 
 ## [2.15.0] - 2025-11-16
 ### Added
