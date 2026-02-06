@@ -7,8 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.15.2] - 2026-02-04
 ## Changed
-- **Localization:**
-  - Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
+- **Localization:** Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
 
 ## [2.15.1] - 2026-02-04
 ### Fixed
