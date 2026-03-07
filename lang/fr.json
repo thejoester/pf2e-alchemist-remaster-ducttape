@@ -167,6 +167,8 @@
     "LEVELUP_REMOVE_LOWERLEVEL_FORMULAS": "Supprimer les formules de niveau inférieur",
     "LEVELUP_NEW_FORMULAS_DISCOVERED": "Nouvelles formules découvertes",
     "LEVELUP_HIGHER_VERSION": "obtient une version supérieure de la formule",
+    "LEVELUP_NO_LOWER_FORMULAS": "Aucune formule de niveau inférieur à supprimer pour",
+    "LEVELUP_WAIT_TITLE": "Ruban adhésif pour l'alchimiste",
     "POWERFUL_ALCHEMY_UPDATED_CLASS_DC": "mis à jour à l'aide du DD de classe",
     "VIALSEARCH_MESSAGE": "{actorName} a passé {explorationTime} minutes en mode exploration. Souhaitez-vous ajouter {foundVials} fioles polyvalentes ?",
     "VIALSEARCH_MAX": "Maximum",
