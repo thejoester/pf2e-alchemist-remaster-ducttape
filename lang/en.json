@@ -141,6 +141,8 @@
 		"QUICK_ALCHEMY_APPLY_BEFORE_USE": "Apply before using:",
 
 		"POWERFUL_ALCHEMY": "Powerful Alchemy",
+		"POWERFUL_ALCHEMY_UPDATED_CLASS_DC":"updated using Class DC",
+		"POWERFUL_ALCHEMY_CLASS_DC_SAVE":"Class DC Save",
 
 		"HEALING_VIAL_CHOICE_TITLE": "Healing Quick Vial",
 		"HEALING_VIAL_CHOICE_DESC": "<h4>Choose how to use your Healing Quick Vial:</h4> <p><b>Throw</b> it up to 20 feet at a willing ally, <br>or <br><b>Craft</b> it for drinking.",
@@ -154,6 +156,7 @@
 		"CHOOSE_WEAPON": "Choose a weapon to poison",
 		"ADV_PERSIST_LABEL": "Toxicologist Advanced Vial Poison (Persistent)", 
 		
+		"UNSTABLE_ALCHEMICAL_CONSUMABLE": "Alchemical Consumable",
 		"UNSTABLE_CONCOCTION_BTN": "Unstable Concoction",
 		"UNSTABLE_CONCOCTION_TITLE": "Unstable Concoction",
 		"UNSTABLE_CONCOCTION_DESC": "Boost the initial dice of an alchemical consumable by one size. On activation, DC 10 flat check or take acid damage equal to the item's level.",
@@ -178,8 +181,6 @@
 		"LEVELUP_HIGHER_VERSION": "has a higher version of formula",
 		"LEVELUP_NO_LOWER_FORMULAS": "No lower-level formulas to remove for",
 		"LEVELUP_WAIT_TITLE": "Alchemist Duct Tape",		
-		
-		"POWERFUL_ALCHEMY_UPDATED_CLASS_DC":"updated using Class DC",
 		
 		"VIALSEARCH_MESSAGE":"{actorName} has spent {explorationTime} minutes in exploration mode. Would you like to add {foundVials} versatile vials?",
 		"VIALSEARCH_MAX": "Maximum",

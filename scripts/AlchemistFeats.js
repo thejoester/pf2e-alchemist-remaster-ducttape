@@ -120,6 +120,43 @@ Hooks.on("ready", () => {
 
 		await sendPowerfulAlchemyNotification(item, alchemistCheck.dc);
 	});
+
+	// PF2e re-fetches Note rule text from its own localization at damage-roll render time,
+	// ignoring any stored rule.text changes. Patch data-pf2-dc in the rendered DOM instead.
+	Hooks.on("renderChatMessage", (message, html) => {
+		if (!message.isDamageRoll) return;
+		if (!getSetting("enablePowerfulAlchemy")) return;
+
+		const root = html instanceof HTMLElement ? html : html[0];
+		if (!root) return;
+
+		const noteChecks = root.querySelectorAll(".roll-note a.inline-check[data-pf2-dc][data-item-uuid]");
+		if (!noteChecks.length) return;
+
+		for (const checkEl of noteChecks) {
+			// Parse "Actor.<actorId>.Item.<itemId>" synchronously — no await needed
+			const match = checkEl.getAttribute("data-item-uuid")?.match(/^Actor\.([^.]+)\.Item\.([^.]+)$/);
+			if (!match) continue;
+			const actor = game.actors?.get(match[1]);
+			const item = actor?.items?.get(match[2]);
+			if (!item?.system?.ductTaped) continue;
+			if (!hasFeat(actor, "powerful-alchemy")) continue;
+
+			const alchemistCheck = isAlchemist(actor);
+			if (!alchemistCheck.qualifies || !alchemistCheck.dc) continue;
+
+			const currentDC = parseInt(checkEl.getAttribute("data-pf2-dc"));
+			if (currentDC === alchemistCheck.dc) continue;
+
+			debugLog(`AlchemistFeats.js | renderChatMessage | Patching inline-check DC: ${currentDC} → ${alchemistCheck.dc} for ${item.name}`);
+			checkEl.setAttribute("data-pf2-dc", String(alchemistCheck.dc));
+
+			// Update the visible DC number inside the button — replace just the number so
+			// localized abbreviations ("DD", "SG", etc.) are unaffected
+			const dcSpan = checkEl.querySelector("span[data-visibility]");
+			if (dcSpan) dcSpan.textContent = dcSpan.textContent.replace(new RegExp(`\\b${currentDC}\\b`), String(alchemistCheck.dc));
+		}
+	});
 });
 
 /* ============================================================================
@@ -175,7 +212,7 @@ async function sendPowerfulAlchemyNotification(item, alchemistDC, description = 
 		: `DC ${alchemistDC}`;
 	await ChatMessage.create({
 		author: game.user?.id,
-		content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.classDCSave}: ${inlineCheck}</p>`,
+		content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_CLASS_DC_SAVE}: ${inlineCheck}</p>`,
 		speaker: { alias: LOCALIZED_TEXT.POWERFUL_ALCHEMY }
 	});
 }
@@ -226,21 +263,36 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 		// Always fire the chat notification (pass updatedDescription so inline check uses the new DC)
 		await sendPowerfulAlchemyNotification(item, alchemistDC, updatedDescription);
 
-		// Update any matching Note rule elements with the new description
-		let updatedRules = item.system.rules.map(rule => {
-			if (rule.key === "Note" && rule.selector.includes("{item|_id}-damage")) {
-				debugLog(`AlchemistFeats.js | Updating Note Rule Element for ${item.name}`);
-				return {
-					...rule,
-					text: updatedDescription
-				};
+		// Update any matching Note rule elements with the corrected DC.
+		// rule.text may be a PF2e localization key (e.g. "PF2E.BombNotes.SkunkBomb.Moderate.success")
+		// so we resolve it first, apply the DC replacement, then store the resolved text back.
+		// Use _source (raw stored data) and deepClone to ensure plain objects, not proxies.
+		const rawRules = foundry.utils.deepClone(item._source?.system?.rules ?? []);
+		debugLog(`AlchemistFeats.js | Note rule check: ${rawRules.length} rules on ${item.name}`);
+		let rulesChanged = false;
+		for (let i = 0; i < rawRules.length; i++) {
+			const rule = rawRules[i];
+			if (rule?.key !== "Note") continue;
+			if (typeof rule.selector !== "string" || !rule.selector.includes("{item|_id}-damage")) continue;
+			const rawText = typeof rule.text === "string" ? rule.text : "";
+			if (!rawText) { debugLog(`AlchemistFeats.js | Note rule[${i}] has no text, skipping`); continue; }
+			const resolvedText = game.i18n.localize(rawText);
+			debugLog(`AlchemistFeats.js | Note rule[${i}] rawText="${rawText}" | resolvedText="${resolvedText.substring(0, 120)}"`);
+			let updatedText = resolvedText;
+			for (const { pattern, replaceFn } of replacements) {
+				updatedText = updatedText.replace(pattern, replaceFn);
 			}
-			return rule;
-		});
-
-		if (JSON.stringify(updatedRules) !== JSON.stringify(item.system.rules)) {
-			await item.updateSource({ "system.rules": updatedRules });
-			debugLog(`AlchemistFeats.js | Updated Note Rule Element for ${item.name} to use new description.`);
+			if (updatedText !== resolvedText) {
+				rawRules[i] = { ...rule, text: updatedText };
+				rulesChanged = true;
+				debugLog(`AlchemistFeats.js | Note rule[${i}] DC updated to ${alchemistDC}`);
+			} else {
+				debugLog(`AlchemistFeats.js | Note rule[${i}] - no DC pattern matched in resolved text`);
+			}
+		}
+		if (rulesChanged) {
+			await item.updateSource({ "system.rules": rawRules });
+			debugLog(`AlchemistFeats.js | updateSource applied for rules on ${item.name}`);
 		}
 	} catch (err) {
 		debugLog(`AlchemistFeats.js | Error in applyPowerfulAlchemy: ${err.message}`);
@@ -406,7 +458,7 @@ export async function displayUnstableConcoctionDialog(actor) {
 				<div class="qa-wrapper" style="display:flex;flex-direction:column;gap:.5rem;">
 					<h3 style="margin:0;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_TITLE}</h3>
 					<p style="margin:0;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
-					${hasVialFns ? `<p style="margin:0;opacity:.85;">${LOCALIZED_TEXT.VERSATILE_VIALS ?? "Versatile Vials"}: <strong>${vialCount}</strong></p>` : ""}
+					${hasVialFns ? `<p style="margin:0;opacity:.85;">${LOCALIZED_TEXT.VERSATILE_VIALS}: <strong>${vialCount}</strong></p>` : ""}
 				</div>
 			`,
 			buttons: [
@@ -424,7 +476,7 @@ export async function displayUnstableConcoctionDialog(actor) {
 					label: LOCALIZED_TEXT.CRAFT,
 					icon: "fas fa-hammer",
 					disabled: !canCraft,
-					tooltip: canCraft ? "" : (LOCALIZED_TEXT.NOTIF_NO_VIAL_AVAIL ?? "No Versatile Vials available"),
+					tooltip: canCraft ? "" : LOCALIZED_TEXT.NOTIF_NO_VIAL_AVAIL,
 					callback: (_ev, _btn, dialog) => {
 						if (!canCraft) return;
 						try { dialog?.close?.(); } catch {}
@@ -602,7 +654,7 @@ export async function displayUnstableCraftDialog(actor) {
 			content: `
 				<form>
 					<div class="qa-wrapper">
-						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Alchemical Consumable")}</h3>
+						<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(LOCALIZED_TEXT.UNSTABLE_ALCHEMICAL_CONSUMABLE)}</h3>
 						<select id="unstable-formula" style="display:inline-block;margin-top:5px;width:100%;">${options}</select>
 						<hr/>
 						<p style="opacity:.8;">${LOCALIZED_TEXT.UNSTABLE_CONCOCTION_DESC}</p>
