@@ -134,7 +134,7 @@ Hooks.on("ready", () => {
 		if (!noteChecks.length) return;
 
 		for (const checkEl of noteChecks) {
-			// Parse "Actor.<actorId>.Item.<itemId>" synchronously — no await needed
+			// Parse "Actor.<actorId>.Item.<itemId>" synchronously, no await needed
 			const match = checkEl.getAttribute("data-item-uuid")?.match(/^Actor\.([^.]+)\.Item\.([^.]+)$/);
 			if (!match) continue;
 			const actor = game.actors?.get(match[1]);
@@ -151,7 +151,7 @@ Hooks.on("ready", () => {
 			debugLog(`AlchemistFeats.js | renderChatMessage | Patching inline-check DC: ${currentDC} → ${alchemistCheck.dc} for ${item.name}`);
 			checkEl.setAttribute("data-pf2-dc", String(alchemistCheck.dc));
 
-			// Update the visible DC number inside the button — replace just the number so
+			// Update the visible DC number inside the button, replace just the number so
 			// localized abbreviations ("DD", "SG", etc.) are unaffected
 			const dcSpan = checkEl.querySelector("span[data-visibility]");
 			if (dcSpan) dcSpan.textContent = dcSpan.textContent.replace(new RegExp(`\\b${currentDC}\\b`), String(alchemistCheck.dc));
@@ -301,7 +301,7 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 }
 
 /* ============================================================================
-	Unstable Concoction — minimal flow (chooser + inventory + craft) 
+	Unstable Concoction, minimal flow (chooser + inventory + craft) 
 ============================================================================ */
 async function _unstablePostCreateUse(actor, itemDoc) {
 	try {
