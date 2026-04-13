@@ -1149,6 +1149,8 @@ async function craftItem(selectedItem, selectedActor, count = 1) {
 		// Item exists, increase quantity of existing infused item
 		const newQty = itemExists.system.quantity + 1;
 		await itemExists.update({ "system.quantity": newQty });
+		// Notify AlchemistFeats so Powerful Alchemy chat message still fires
+		Hooks.callAll("ardt:existingItemCrafted", itemExists, selectedActor);
 	} else {
 		// Duplicate and modify the item, adding custom flags
 		const modifiedItem = foundry.utils.duplicate(selectedItem);
@@ -3154,3 +3156,53 @@ export async function qaCraftAttack() {
 	qaDialog(actor);
 
 }
+
+/* v14 Compatibility: Inject close button into PF2e strike popout ============
+	In v14 the PF2e system's strike popout no longer renders a close button.
+	This hook detects any application window whose title contains "(*Temporary)"
+	(all items crafted by this module use that suffix) and injects an X button
+	if none is present.
+============================================================================ */
+function injectARDTCloseButton(app, html) {
+	try {
+		debugLog(`injectARDTCloseButton() | game.release.generation = ${game.release.generation}`);
+
+		// Only needed for Foundry v14+; v13 renders a close button natively
+		if (game.release.generation < 14) return;
+
+		// Normalise to an HTMLElement (ApplicationV1 passes jQuery, V2 passes Element)
+		const root = html instanceof HTMLElement ? html : (html instanceof jQuery ? html[0] : null);
+		if (!root) return;
+
+		// Only target windows for ARDT temporary items
+		const titleEl = root.querySelector(".window-title");
+		debugLog(`injectARDTCloseButton() | window title = "${titleEl?.textContent?.trim()}"`);
+		if (!titleEl?.textContent?.includes("(*Temporary)")) return;
+		debugLog("injectARDTCloseButton() | (*Temporary) window detected");
+
+		const header = root.querySelector(".window-header");
+		if (!header) return;
+
+		// Bail if a close button is already present
+		if (header.querySelector('button[data-action="close"], .header-button.close, button.close, a.ardt-close')) return;
+
+		debugLog("injectARDTCloseButton() | Injecting close button into PF2e strike popout (v14 compat)");
+
+		const closeLink = document.createElement("a");
+		closeLink.className = "ardt-close";
+		closeLink.innerHTML = 'Close <i class="fa-solid fa-x"></i>';
+		closeLink.style.cssText = "margin-left: auto; cursor: pointer; font-size: 0.85em; padding: 0 4px;";
+		closeLink.addEventListener("click", (e) => {
+			e.preventDefault();
+			app.close();
+		});
+		header.appendChild(closeLink);
+	} catch (e) {
+		debugLog(2, "injectARDTCloseButton() | Failed to inject close button:", e);
+	}
+}
+
+// v13: generic ApplicationV1 hook (also fires in some v14 legacy apps)
+Hooks.on("renderApplication", injectARDTCloseButton);
+// v14: PF2e uses AttackPopout as the class name (confirmed from Foundry render log)
+Hooks.on("renderAttackPopout", injectARDTCloseButton);

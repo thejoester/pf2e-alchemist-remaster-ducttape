@@ -80,7 +80,7 @@ Hooks.on("ready", () => {
 		}
 		
 		/* POWERFUL ALCHEMY ===========================================================
-			Check if the actor has Powerful Alchemy - 
+			Check if the actor has Powerful Alchemy -
 			if not enabled, skip processing
 		============================================================================ */
 		const paEnabled = getSetting("enablePowerfulAlchemy");
@@ -91,7 +91,34 @@ Hooks.on("ready", () => {
 			}else{
 				debugLog(`AlchemistFeats.js | Actor (${actor.name}) does not have Powerful alchemy, ignoring!`);
 			}
-		}			
+		}
+	});
+
+	// Fires when craftItem() reuses an existing (*Temporary) item instead of creating a new one.
+	// preCreateItem never fires in that path, so Powerful Alchemy notification must be triggered here.
+	Hooks.on("ardt:existingItemCrafted", async (item, actor) => {
+		debugLog(`AlchemistFeats.js | ardt:existingItemCrafted fired for ${item?.name}`);
+		if (!actor) return;
+
+		const activeOwnersExist = hasActiveOwners(actor);
+		if (activeOwnersExist) {
+			if (!actor.isOwner) return;
+		} else {
+			if (!game.user.isGM) return;
+		}
+
+		if (!item?.system?.ductTaped) return;
+
+		const alchemistCheck = isAlchemist(actor);
+		if (!alchemistCheck.qualifies || !alchemistCheck.dc) return;
+
+		if (item.system.traits.value.includes("healing")) return;
+
+		const paEnabled = getSetting("enablePowerfulAlchemy");
+		if (!paEnabled) return;
+		if (!hasFeat(actor, "powerful-alchemy")) return;
+
+		await sendPowerfulAlchemyNotification(item, alchemistCheck.dc);
 	});
 });
 
@@ -135,6 +162,24 @@ async function annotateEffectLinkBeforeUse(item) {
 	//}, 100);
 }
 
+// Send the Powerful Alchemy chat notification for a given item and DC.
+// description param overrides item.system.description.value (used when a pre-create update has been applied)
+async function sendPowerfulAlchemyNotification(item, alchemistDC, description = null) {
+	const desc = description ?? item.system?.description?.value ?? "";
+	const saveTypeMatch = desc.match(/@Check\[(?!flat)[^\]]*?type:(\w+)/)
+		|| desc.match(/@Check\[(?!flat)(\w+)\|dc:/);
+	const saveType = saveTypeMatch?.[1] ?? null;
+	const saveBasic = /basic:true/i.test(desc);
+	const inlineCheck = saveType
+		? `@Check[type:${saveType}|dc:${alchemistDC}${saveBasic ? "|basic:true" : ""}]`
+		: `DC ${alchemistDC}`;
+	await ChatMessage.create({
+		author: game.user?.id,
+		content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.classDCSave}: ${inlineCheck}</p>`,
+		speaker: { alias: LOCALIZED_TEXT.POWERFUL_ALCHEMY }
+	});
+}
+
 //	Function to apply Powerful Alchemy effects to item created by Alchemist
 async function applyPowerfulAlchemy(item,actor,alchemistDC){
 	// Delay to allow item to finish embedding (avoids Foundry V12 timing issues)
@@ -155,7 +200,7 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 
 		const replacements = [
 			{
-				pattern: /@Check\[(?!flat)\w+\|dc:(\d+)(?:\|[^\]]+)?\]/g,
+				pattern: /@Check\[(?!flat)[^\]]*?\bdc:(\d+)[^\]]*?\]/g,
 				replaceFn: (match, p1) => match.replace(`dc:${p1}`, `dc:${alchemistDC}`)
 			},
 			{
@@ -176,13 +221,10 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 		if (updatedDescription !== description) {
 			await item.updateSource({ "system.description.value": updatedDescription });
 			debugLog(`AlchemistFeats.js | Description was updated to Class DC: ${alchemistDC}`);
-
-			await ChatMessage.create({
-				author: game.user?.id,
-				content: `<h5>${LOCALIZED_TEXT.POWERFUL_ALCHEMY}:</h5><p>${item.name} ${LOCALIZED_TEXT.POWERFUL_ALCHEMY_UPDATED_CLASS_DC} ${alchemistDC}!</p>`,
-				speaker: { alias: LOCALIZED_TEXT.POWERFUL_ALCHEMY }
-			});
 		}
+
+		// Always fire the chat notification (pass updatedDescription so inline check uses the new DC)
+		await sendPowerfulAlchemyNotification(item, alchemistDC, updatedDescription);
 
 		// Update any matching Note rule elements with the new description
 		let updatedRules = item.system.rules.map(rule => {
