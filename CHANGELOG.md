@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [13.0.0] 2026-04-13
+## [13.0.0] - 2026-04-13
 ### Changed
 - **V14:** PF2e Alchemist Remaster Duct Tape is officially released for FoundryVTT v14!
 - **Localization:** Updated and cleaned up english localizations.
