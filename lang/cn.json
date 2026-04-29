@@ -111,7 +111,7 @@
         "LEVELUP_PROMPT_ADD_FORMULA": "你要添加该配方吗？",
         "LEVELUP_NEW_FORMULAS_DISCOVERED": "已发现新配方",
         "QUICK_ALCHEMY_DB_PROMPT": "你还要使用双重调制制作另一件物品吗？",
-        "QUICK_ALCHEMY_CHOOSE_ITEM": "选择物品或'-无-'退出",
+        "QUICK_ALCHEMY_CHOOSE_ITEM": "选择物品或“无”退出",
         "QUICK_ALCHEMY_DB_CRAFT_VV": "你还持有{vialcount}份万用制剂，是否使用双重调制制作其他物品？",
         "QUICK_ALCHEMY_NO_VV": "你已无可消耗的万用制剂。",
         "QUICK_ALCHEMY_10_MIN": "你必须花费10分钟收集试剂，以制作出更多万用制剂。",
@@ -213,6 +213,8 @@
         "POWERFUL_ALCHEMY": "强效炼金术",
         "QUICK_ALCHEMY_APPLY_BEFORE_USE": "提前应用于使用：",
         "LEVELUP_NO_LOWER_FORMULAS": "没有需要移除的更低等级的配方",
-        "LEVELUP_WAIT_TITLE": "炼金术士导管补丁"
+        "LEVELUP_WAIT_TITLE": "炼金术士导管补丁",
+        "UNSTABLE_ALCHEMICAL_CONSUMABLE": "炼金消耗品",
+        "POWERFUL_ALCHEMY_CLASS_DC_SAVE": "职业DC豁免"
     }
 }
