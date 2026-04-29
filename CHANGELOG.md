@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed version typo, 13.0.0 should have been 3.0.0! 
 
-## [13.0.0] - 2026-04-13
+## [3.0.0] - 2026-04-13
 ### Changed
 - **V14:** PF2e Alchemist Remaster Duct Tape is officially released for FoundryVTT v14!
 - **Localization:** Updated and cleaned up english localizations.
