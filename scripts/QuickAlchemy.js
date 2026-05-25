@@ -1,4 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
+import { throwHealingBomb } from './HealingBomb.js';
 import { getAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
 import { displayUnstableConcoctionDialog } from "./AlchemistFeats.js";
 import { LOCALIZED_TEXT } from "./localization.js";
@@ -1833,12 +1834,16 @@ async function craftHealingBomb(actor, elixirUuid) {
 	try {
 		async function throwBomb(createdItem) {
 			debugLog("craftHealingBomb() | throwBomb() - Item Selection: ", createdItem);
-			const createdItemUuid = createdItem.uuid; //`Actor.${selectedActor.id}.Item.${createdItem[0].id}`;
+			const createdItemUuid = createdItem.uuid;
 			await createdItem.update({
 				"system.equipped.carryType": "held",
 				"system.equipped.handsHeld": "1",
 			});
-			sendWeaponAttackMessage(createdItemUuid);
+			if (getSetting("healingBombPC2Errata")) {
+				await throwHealingBomb(actor, createdItem);
+			} else {
+				sendWeaponAttackMessage(createdItemUuid);
+			}
 		}
 
 		// Find the item in the compendium

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-05-25
+### Added
+- **Healing Bomb:** Added setting "Healing Bomb: Use Player Core 2 Errata Rules" (enabled by default). Based on the [Player Core 2 errata (Spring 2026, 1st Printing)](https://paizo.com/pathfinder/faq), Healing Bomb is now an Interact action that automatically hits with no attack roll required. The target within 20 feet is healed as though they drank the elixir, and adjacent creatures receive splash healing equal to the elixir's number of dice. Disable this setting to use the original rules, which require a ranged Strike roll.
+### Changed
+- **Settings:** The module settings page now has labeled section headers (Quick Alchemy, Powerful Alchemy, Healing Bomb, Level Up, Vial Search, Display, Module) to make it easier to find what you're looking for.
+
 ## [3.0.1] - 2026-04-29
 ### Changed
 - **Localization:** Updated French localization. Credit [Rectulo](https://github.com/rectulo).

@@ -216,7 +216,12 @@
 		"HEALING_BOMB_SELECT_CRAFT_INVENTORY":"Do you want to craft a new Elixir of Life<br />or<br />use one from your inventory?",
 		"HEALING_BOMB_CRAFT": "Craft Healing Bomb",
 		"HEALING_BOMB_SELECT_INVENTORY":"Select which Elixir of Life to use from the inventory",
-		
+		"SETTING_HEALING_BOMB_PC2_ERRATA": "Healing Bomb: Use Player Core 2 Errata Rules",
+		"SETTING_HEALING_BOMB_PC2_ERRATA_HINT": "When enabled, Healing Bomb is treated as an Interact action that automatically hits (no attack roll required, range 20 ft). Disable to use the original rules requiring a ranged Strike roll.",
+		"HEALING_BOMB_THROW": "Throw",
+		"HEALING_BOMB_NO_TARGET": "You must have a target selected to throw a Healing Bomb.",
+		"HEALING_BOMB_OUT_OF_RANGE": "Warning: Target appears to be more than 20 feet away (errata range limit).",
+
 		"INDEX_PROGRESS_TITLE": "Building Alchemical Index…",
 		"INDEX_PROGRESS_HINT": "You can close this window; indexing will continue.",
 		"INDEX_PROGRESS_PACK": "Scanning {pack}…",

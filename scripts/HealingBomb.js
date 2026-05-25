@@ -1,20 +1,100 @@
 console.log("%cPF2e Alchemist Remaster Duct Tape | HealingBomb.js loaded","color: aqua; font-weight: bold;");
-import { debugLog, hasFeat } from './settings.js';
+import { debugLog, hasFeat, getSetting } from './settings.js';
 import { LOCALIZED_TEXT } from "./localization.js";
+
+// Creates a synthetic chat message for an errata-mode auto-hit Healing Bomb throw.
+// item is optional; if omitted the first Healing Bomb on the actor is used.
+export async function throwHealingBomb(actor, item = null) {
+	if (!item) item = actor.items.find(i => i.name.includes("Healing Bomb"));
+	if (!item) {
+		ui.notifications.warn("No Healing Bomb item found on this actor.");
+		return;
+	}
+
+	const targets = [...game.user.targets];
+	if (targets.length === 0) {
+		ui.notifications.warn(LOCALIZED_TEXT.HEALING_BOMB_NO_TARGET);
+		return;
+	}
+
+	const targetToken = targets[0];
+	const targetUuid = targetToken.document.uuid;
+
+	// Range check: errata rules limit the throw to 20 feet. Warn in chat but allow anyway.
+	let rangeWarning = "";
+	const sourceToken = actor.getActiveTokens(true)[0];
+	if (sourceToken) {
+		const distance = canvas.grid.measurePath([sourceToken.center, targetToken.center]).distance;
+		debugLog(1, `[Healing Bomb] Range check: ${Math.round(distance)} ft to ${targetToken.name}`);
+		if (distance > 20) {
+			rangeWarning = `<p class="ardt-range-warning">${LOCALIZED_TEXT.HEALING_BOMB_OUT_OF_RANGE}</p>`;
+		}
+	}
+
+	// Build minimal PF2e-style chat card HTML so the renderChatMessage hook
+	// can overwrite traits and inject healing buttons as normal.
+	const content = `
+		<header class="card-header flexrow">
+			<img src="${item.img}" style="flex:0 0 36px;border:none;margin-right:5px" />
+			<span class="flavor-text">
+				<h4 class="action"><strong>${item.name}</strong></h4>
+				<div class="traits"></div>
+			</span>
+		</header>
+		${rangeWarning}
+	`;
+
+	debugLog(1, `[Healing Bomb] Errata throw: ${actor.name} -> ${targetToken.name} (${targetUuid})`);
+
+	await ChatMessage.create({
+		content,
+		speaker: ChatMessage.getSpeaker({ actor }),
+		flags: {
+			pf2e: {
+				origin: { uuid: `Actor.${actor.id}.Item.${item.id}` },
+				context: {
+					domains: ["healing-bomb-ardt-attack"],
+					target: { token: targetUuid },
+					outcome: "success"
+				}
+			}
+		}
+	});
+}
 
 // Hook to modify actor sheet buttons
 Hooks.on("renderActorSheet", (app, html, data) => {
 	const actor = app.actor;
 	if (!actor) return;
 
+	const useErrata = getSetting("healingBombPC2Errata");
+
 	const $html = $(html);
 	$html.find("ol.actions-list.item-list.directory-list.strikes-list>li").each((index, element) => {
 		const name = $(element).find("section>h4.name>a").text();
 		if (name.includes("Healing Bomb")) {
-			// Remove damage/crit buttons – healing is now handled in chat
-			$(element).find("button[data-action=strike-damage]").remove();
-			$(element).find("button[data-action=strike-critical]").remove();
-			// Leave strike/attack buttons untouched
+			if (useErrata) {
+				// PC2 Errata: Healing Bomb is an Interact action - auto-hit, no Strike roll or MAP.
+				// Remove damage/crit buttons and 2nd/3rd attack variants (MAP doesn't apply).
+				$(element).find("button[data-action=strike-damage]").remove();
+				$(element).find("button[data-action=strike-critical]").remove();
+				$(element).find("[data-action=strike-attack][data-variant-index='1']").remove();
+				$(element).find("[data-action=strike-attack][data-variant-index='2']").remove();
+				// Relabel the first attack button from "Strike" to "Throw"
+				$(element).find("button[data-action=strike-attack][data-variant-index='0'] span.name").text(LOCALIZED_TEXT.HEALING_BOMB_THROW);
+				// Intercept all remaining strike-attack clicks (image div + first variant button)
+				$(element).find("[data-action=strike-attack]").on("click", async (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					e.stopImmediatePropagation();
+					await throwHealingBomb(actor);
+				});
+			} else {
+				// Original rules: strike roll required - remove only damage/crit buttons,
+				// leave attack roll buttons untouched.
+				$(element).find("button[data-action=strike-damage]").remove();
+				$(element).find("button[data-action=strike-critical]").remove();
+			}
 		}
 	});
 });

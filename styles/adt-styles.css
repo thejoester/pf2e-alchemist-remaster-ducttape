@@ -67,3 +67,15 @@
 	flex-shrink: 0 !important;
 }
 
+.ardt-range-warning {
+	color: rgb(135, 55, 0) !important;
+	font-style: italic;
+	margin: 4px 0 0;
+	font-size: 0.85em;
+}
+
+.ardt-settings-header {
+	border-bottom: 1px solid var(--color-border-light-tertiary);
+	padding-bottom: 0.25em;
+}
+

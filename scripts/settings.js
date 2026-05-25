@@ -363,6 +363,35 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	}
 
 
+/* ===== Settings Section Headers =====
+*/
+	const ARDT_SETTINGS_SECTIONS = [
+		{ before: "showFormulaDescription",  label: "Quick Alchemy" },
+		{ before: "enablePowerfulAlchemy",   label: "Powerful Alchemy" },
+		{ before: "healingBombPC2Errata",    label: "Healing Bomb" },
+		{ before: "addFormulasOnLevelUp",    label: "Level Up" },
+		{ before: "vialSearchReminder",      label: "Vial Search" },
+		{ before: "searchableFormulas",      label: "Display" },
+		{ before: "debugLevel",              label: "Module" },
+	];
+
+	function injectSettingsSectionHeaders(html) {
+		const section = html.querySelector('[data-tab="pf2e-alchemist-remaster-ducttape"][data-category="pf2e-alchemist-remaster-ducttape"]');
+		if (!section) return;
+		for (const { before, label } of ARDT_SETTINGS_SECTIONS) {
+			const key = `pf2e-alchemist-remaster-ducttape.${before}`;
+			const input = section.querySelector(`[data-setting-id="${key}"], input[name="${key}"], select[name="${key}"]`);
+			if (!input) continue;
+			const group = input.closest(".form-group");
+			if (!group) continue;
+			if (group.previousElementSibling?.classList?.contains("ardt-settings-header")) continue;
+			const h3 = document.createElement("h3");
+			h3.className = "ardt-settings-header";
+			h3.textContent = label;
+			group.before(h3);
+		}
+	}
+
 /* ===== Hooks =====
 */
 	Hooks.once("init", () => {
@@ -504,6 +533,17 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 			requiresReload: true
 		});
 		
+	//	Healing Bomb Settings
+		game.settings.register("pf2e-alchemist-remaster-ducttape", "healingBombPC2Errata", {
+			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_HEALING_BOMB_PC2_ERRATA"),
+			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_HEALING_BOMB_PC2_ERRATA_HINT"),
+			scope: "world",
+			config: true,
+			type: Boolean,
+			default: true,
+			requiresReload: false,
+		});
+
 	//	LevelUp - auto add formulas
 		// Add higher level versions of known formulas on level up?
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
@@ -773,6 +813,11 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 					removeNote();
 				}
 			});
+		});
+
+	//	Settings section headers
+		Hooks.on("renderSettingsConfig", (app, html) => {
+			injectSettingsSectionHeaders(html);
 		});
 
 	//	Help Button
