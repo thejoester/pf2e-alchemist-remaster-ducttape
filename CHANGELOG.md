@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.0.0] - 2026-05-25
+### Changed
+- **Versioning:** Correcting error of previously released 13.0.0 that should have been 3.0.0, which prevented users on that version from receiving updates. This release is equivalent to 3.1.0 with the versioning correction. Resetting version to 14.x going forward as this release is for the Foundry v14 release (still compatible with v13 for now). 
+
 ## [3.1.0] - 2026-05-25
 ### Added
 - **Healing Bomb:** Added setting "Healing Bomb: Use Player Core 2 Errata Rules" (enabled by default). Based on the [Player Core 2 errata (Spring 2026, 1st Printing)](https://paizo.com/pathfinder/faq), Healing Bomb is now an Interact action that automatically hits with no attack roll required. The target within 20 feet is healed as though they drank the elixir, and adjacent creatures receive splash healing equal to the elixir's number of dice. Disable this setting to use the original rules, which require a ranged Strike roll.
