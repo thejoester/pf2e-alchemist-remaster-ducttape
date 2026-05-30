@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.0.0] - 2026-05-30
+### Changed
+- **Localization:** Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
+- **Localization:** Updated French localization. Credit [Rectulo](https://github.com/rectulo).
+
 ## [14.0.0] - 2026-05-25
 ### Changed
 - **Versioning:** Correcting error of previously released 13.0.0 that should have been 3.0.0, which prevented users on that version from receiving updates. This release is equivalent to 3.1.0 with the versioning correction. Resetting version to 14.x going forward as this release is for the Foundry v14 release (still compatible with v13 for now). 
