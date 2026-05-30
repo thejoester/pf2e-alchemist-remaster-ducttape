@@ -182,13 +182,13 @@
         "SETTING_SHOW_FORMULA_DESC_HINT": "启用时，高速炼金对话框将显示一个随你的选择更新的详情描述。",
         "INDEX_PROGRESS_PACK": "扫描{pack}中…",
         "INDEX_DONE_TITLE": "索引已完成",
-        "INDEX_CLEAR_DONE": "炼金索引已清除。",
-        "INDEX_CLEAR_ABORTED": "清除进程已取消。",
+        "INDEX_CLEAR_DONE": "炼金索引已删除。",
+        "INDEX_CLEAR_ABORTED": "删除进程已取消。",
         "INDEX_DONE_BODY": "已为{count}个炼金物品建立索引。",
         "GM_ONLY": "仅限GM。",
         "INDEX_CLEAR_PROMPT_TITLE": "清除炼金索引？",
         "INDEX_CLEAR_PROMPT_BODY": "这将删除该世界的炼金物品索引缓存。\n\n下一次加载世界或运行重建时，系统将提示您重建索引。\n\n是否继续？",
-        "INDEX_CLEAR_FAILED": "清除炼金索引失败。",
+        "INDEX_CLEAR_FAILED": "删除炼金索引失败。",
         "INDEX_PROGRESS_TITLE": "为炼金物品建立索引中…",
         "INDEX_PROGRESS_HINT": "你可以关闭此窗口，索引进程将继续运行。",
         "VERSATILE_VIALS": "万用制剂",
@@ -215,6 +215,11 @@
         "LEVELUP_NO_LOWER_FORMULAS": "没有需要移除的更低等级的配方",
         "LEVELUP_WAIT_TITLE": "炼金术士导管补丁",
         "UNSTABLE_ALCHEMICAL_CONSUMABLE": "炼金消耗品",
-        "POWERFUL_ALCHEMY_CLASS_DC_SAVE": "职业DC豁免"
+        "POWERFUL_ALCHEMY_CLASS_DC_SAVE": "职业DC豁免",
+        "SETTING_HEALING_BOMB_PC2_ERRATA": "治疗炸弹：使用《玩家核心2》勘误规则",
+        "HEALING_BOMB_THROW": "投掷",
+        "HEALING_BOMB_NO_TARGET": "要投掷治疗炸弹，你必须先选择一个目标。",
+        "SETTING_HEALING_BOMB_PC2_ERRATA_HINT": "若启用，治疗炸弹将被视为自动命中目标的交互动作（无需攻击掷骰，射程20尺）。若禁用，则使用原规则，即该动作需进行一次远程攻击掷骰。",
+        "HEALING_BOMB_OUT_OF_RANGE": "警告：该目标似乎距你超出20尺范围（勘误射程限制）。"
     }
 }
