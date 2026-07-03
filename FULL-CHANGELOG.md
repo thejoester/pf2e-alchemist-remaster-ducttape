@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.0.3] - 2026-07-03
+### Fixed
+- **Quick Alchemy:** Fixed error with healing quick vial when choosing "Thrown" preventing chat message from being created with "Roll Healing" button. 
+
+## [14.0.2] - 2026-05-30
+### Changed
+- **Localization:** Updated Polish translations. Credit: [Lioheart](https://github.com/Lioheart)!
+
+## [14.0.1] - 2026-05-30
+### Changed
+- **Localization:** Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
+- **Localization:** Updated French localization. Credit [Rectulo](https://github.com/rectulo).
+
+## [14.0.0] - 2026-05-25
+### Changed
+- **Versioning:** Correcting error of previously released 13.0.0 that should have been 3.0.0, which prevented users on that version from receiving updates. This release is equivalent to 3.1.0 with the versioning correction. Resetting version to 14.x going forward as this release is for the Foundry v14 release (still compatible with v13 for now).
+
+## [3.1.0] - 2026-05-25
+### Added
+- **Healing Bomb:** Added setting "Healing Bomb: Use Player Core 2 Errata Rules" (enabled by default). Based on the [Player Core 2 errata (Spring 2026, 1st Printing)](https://paizo.com/pathfinder/faq), Healing Bomb is now an Interact action that automatically hits with no attack roll required. The target within 20 feet is healed as though they drank the elixir, and adjacent creatures receive splash healing equal to the elixir's number of dice. Disable this setting to use the original rules, which require a ranged Strike roll.
+### Changed
+- **Settings:** The module settings page now has labeled section headers (Quick Alchemy, Powerful Alchemy, Healing Bomb, Level Up, Vial Search, Display, Module) to make it easier to find what you're looking for.
+
+## [3.0.1] - 2026-04-29
+### Changed
+- **Localization:** Updated French localization. Credit [Rectulo](https://github.com/rectulo).
+- **Localization:** Updated Polish translations. Credit: [Lioheart](https://github.com/Lioheart)!
+- **Localization:** Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
+### Fixed
+- Fixed version typo, 13.0.0 should have been 3.0.0!
+
+## [3.0.0] - 2026-04-13
+### Changed
+- **V14:** PF2e Alchemist Remaster Duct Tape is officially released for FoundryVTT v14!
+- **Localization:** Updated and cleaned up english localizations.
+### Fixed
+- **Powerful Alchemy:** Save DC in damage roll is now updated to Alchemist Class DC if alchemist has **Powerful Alchemy**.
+  - Also added inline check to the **Powerful Alchemy** message when item is created with **Quick Alchemy** with Class DC.
+
+## [2.15.4] - 2026-03-10
+### Changed
+- **Localization:** Updated French localization. Credit [Rectulo](https://github.com/rectulo).
+
+## [2.15.3] - 2026-02-09
+### Changed
+- **Localization:** Updated Polish translations. Credit: [Lioheart](https://github.com/Lioheart)!
+
+## [2.15.2] - 2026-02-04
+### Changed
+- **Localization:** Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
+
+## [2.15.1] - 2026-02-04
+### Fixed
+- **Level Up:** Fixed issue preventing lower level versions of formulas from being removed when leveling up or running macro.
+
 ## [2.15.0] - 2025-11-16
 ### Added
 - **Quick Alchemy:** Added support for [Improbable Elixirs](https://2e.aonprd.com/Feats.aspx?ID=5800) feat. 
