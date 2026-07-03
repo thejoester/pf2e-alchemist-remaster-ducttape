@@ -354,9 +354,11 @@ Hooks.once("ready", () => {
 								context: {
 									type: "damage-roll",
 									sourceType: "item",
-									actor: actorForRoll?.id ?? actorForRoll?.uuid ?? null,
+									actor: actorForRoll?.uuid ?? null,
 									token: originTokenDoc?.uuid ?? null,
-									target: targetTokenDoc?.uuid ?? null,	// ← wire target like Heal
+									target: targetTokenDoc
+										? { actor: targetTokenDoc.actor?.uuid ?? null, token: targetTokenDoc.uuid }
+										: null,	// ← target must be {actor, token}, not a bare UUID string
 									domains: ["damage", "healing", "item-healing"],
 									options: ["healing", "alchemical", "consumable"],
 									skipDialog: true
@@ -387,7 +389,7 @@ Hooks.once("ready", () => {
 				await ChatMessage.create({
 					user: game.user.id,
 					speaker: ChatMessage.getSpeaker({ token: originTokenDoc ?? actorForRoll }),
-					type: CONST.CHAT_MESSAGE_TYPES.OTHER,
+					style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 					content: applyContent,
 					classes: ["pf2e", "chat-card"],
 					trusted: true
@@ -895,7 +897,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 			await ChatMessage.create({
 				user: game.user.id,
 				speaker: ChatMessage.getSpeaker({ actor: selectedActor, token: originToken ?? selectedActor }),
-				type: CONST.CHAT_MESSAGE_TYPES.OTHER,
+				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 				content,
 				classes: ["pf2e", "chat-card"],
 				trusted: true,	// keep the button intact
