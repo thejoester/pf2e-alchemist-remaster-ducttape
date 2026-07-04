@@ -214,7 +214,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	//	AddCompendiumsApp class object
 	window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             title: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_MANAGE_HOMEBREW_COMPENDIUM"),
             template: 'modules/pf2e-alchemist-remaster-ducttape/templates/add-compendiums.html',
             width: 600,

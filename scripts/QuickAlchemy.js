@@ -2513,7 +2513,7 @@ async function displayCraftingDialog(actor, itemType) {
 				}
 
 				// Apply the effect to the actor
-				const newEffect = duplicate(effect.toObject());
+				const newEffect = foundry.utils.duplicate(effect.toObject());
 				await actor.createEmbeddedDocuments("Item", [newEffect]);
 
 				debugLog(1, `displayCraftingDialog() | Applied effect "${newEffect.name}" to ${actor.name}`);
