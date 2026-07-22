@@ -1,5 +1,5 @@
 import { debugLog, getSetting } from './settings.js';
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | AlchIndex.js loaded","color: aqua; font-weight: bold;");
 
 // Ensure a global namespace for macros to call into
@@ -90,7 +90,7 @@ window.PF2E_ARDT_INDEX ??= {};
 			});
 
 			if (!silent) {
-				debugLog(LOCALIZED_TEXT.INDEX_DONE_BODY?.(itemCount) ?? "Alchemical index rebuilt.");
+				debugLog(LT.indexDoneBody({ count: itemCount }));
 			}
 
 			debugLog("AlchIndex.js: qaForceRebuildAlchIndex complete");
@@ -106,17 +106,17 @@ window.PF2E_ARDT_INDEX ??= {};
 		const NS = "pf2e-alchemist-remaster-ducttape";
 		try {
 			if (!game.user.isGM) {
-				ui.notifications.warn(game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.GM_ONLY"));
+				ui.notifications.warn(game.i18n.localize("ardt.gmOnly"));
 				return;
 			}
 
 			const ok = await foundry.applications.api.DialogV2.confirm({
-				window: { title: LOCALIZED_TEXT.INDEX_CLEAR_PROMPT_TITLE },
-				content: `<p style="white-space:pre-wrap">${LOCALIZED_TEXT.INDEX_CLEAR_PROMPT_BODY}</p>`
+				window: { title: LT.indexClearPromptTitle() },
+				content: `<p style="white-space:pre-wrap">${LT.indexClearPromptBody()}</p>`
 			});
 			debugLog("AlchIndex.js: clear prompt choice:", ok ? "OK" : "Cancel");
 			if (!ok) {
-				ui.notifications.info(LOCALIZED_TEXT.INDEX_CLEAR_ABORTED);
+				ui.notifications.info(LT.indexClearAborted());
 				return;
 			}
 
@@ -129,10 +129,10 @@ window.PF2E_ARDT_INDEX ??= {};
 			});
 
 			debugLog("AlchIndex.js: alchIndex + alchIndexMeta cleared");
-			ui.notifications.info(LOCALIZED_TEXT.INDEX_CLEAR_DONE);
+			ui.notifications.info(LT.indexClearDone());
 		} catch (err) {
 			debugLog(3, `AlchIndex.js: clearIndexWithPrompt error: ${err?.message ?? err}`);
-			ui.notifications.error(LOCALIZED_TEXT.INDEX_CLEAR_FAILED);
+			ui.notifications.error(LT.indexClearFailed());
 		}
 	};
 

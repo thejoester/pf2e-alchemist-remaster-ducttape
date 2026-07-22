@@ -1,6 +1,6 @@
 console.log("%cPF2e Alchemist Remaster Duct Tape | HealingBomb.js loaded","color: aqua; font-weight: bold;");
 import { debugLog, hasFeat, getSetting } from './settings.js';
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 
 // Creates a synthetic chat message for an errata-mode auto-hit Healing Bomb throw.
 // item is optional; if omitted the first Healing Bomb on the actor is used.
@@ -13,7 +13,7 @@ export async function throwHealingBomb(actor, item = null) {
 
 	const targets = [...game.user.targets];
 	if (targets.length === 0) {
-		ui.notifications.warn(LOCALIZED_TEXT.HEALING_BOMB_NO_TARGET);
+		ui.notifications.warn(LT.healingBombNoTarget());
 		return;
 	}
 
@@ -27,7 +27,7 @@ export async function throwHealingBomb(actor, item = null) {
 		const distance = canvas.grid.measurePath([sourceToken.center, targetToken.center]).distance;
 		debugLog(1, `[Healing Bomb] Range check: ${Math.round(distance)} ft to ${targetToken.name}`);
 		if (distance > 20) {
-			rangeWarning = `<p class="ardt-range-warning">${LOCALIZED_TEXT.HEALING_BOMB_OUT_OF_RANGE}</p>`;
+			rangeWarning = `<p class="ardt-range-warning">${LT.healingBombOutOfRange()}</p>`;
 		}
 	}
 
@@ -81,7 +81,7 @@ Hooks.on("renderActorSheet", (app, html, data) => {
 				$(element).find("[data-action=strike-attack][data-variant-index='1']").remove();
 				$(element).find("[data-action=strike-attack][data-variant-index='2']").remove();
 				// Relabel the first attack button from "Strike" to "Throw"
-				$(element).find("button[data-action=strike-attack][data-variant-index='0'] span.name").text(LOCALIZED_TEXT.HEALING_BOMB_THROW);
+				$(element).find("button[data-action=strike-attack][data-variant-index='0'] span.name").text(LT.healingBombThrow());
 				// Intercept all remaining strike-attack clicks (image div + first variant button)
 				$(element).find("[data-action=strike-attack]").on("click", async (e) => {
 					e.preventDefault();
@@ -134,15 +134,15 @@ Hooks.on('renderChatMessage', async (message, html) => {
 	const $html = $(html);
 
 	// Setup localization for trait tags
-	const tagHealing = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_HEALING");
-	const tagManipulate = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_MANIPULATE");
-	const tagAlchemical = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_ALCHEMICAL");
-	const tagConsumable = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_CONSUMABLE");
-	const tagSplash = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_SPLASH");
-	const tagRangeInc30 = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.HEALING_BOMB_TRAIT_RANGE30");
+	const tagHealing = game.i18n.localize("ardt.healingBombTraitHealing");
+	const tagManipulate = game.i18n.localize("ardt.healingBombTraitManipulate");
+	const tagAlchemical = game.i18n.localize("ardt.healingBombTraitAlchemical");
+	const tagConsumable = game.i18n.localize("ardt.healingBombTraitConsumable");
+	const tagSplash = game.i18n.localize("ardt.healingBombTraitSplash");
+	const tagRangeInc30 = game.i18n.localize("ardt.healingBombTraitRange30");
 
 	// Overwrite traits
-	$html.find("header>span.flavor-text>h4.action>strong").text(LOCALIZED_TEXT.HEALING_BOMB_TITLE);
+	$html.find("header>span.flavor-text>h4.action>strong").text(LT.healingBombTitle());
 	$html.find("header>span.flavor-text>div.traits").html(`
 		<span class="tag" data-slug="healing">${tagHealing}</span>
 		<span class="tag" data-slug="manipulate">${tagManipulate}</span>
@@ -164,15 +164,15 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		if (isChirurgeon) {
 			const dieSize = parseInt(item.system.damage.die.replace("d", ""));
 			const maxHeal = item.system.damage.dice * dieSize + item.system.damage.modifier;
-			healingButtons += `<button type="button" class="success" ${healDisabled} data-action="apply-healing-bomb" data-target="${targetUuid}" data-heal="${maxHeal}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_CHIRURGEON}</button>`;
-			healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_SPLASH}</button>`;
+			healingButtons += `<button type="button" class="success" ${healDisabled} data-action="apply-healing-bomb" data-target="${targetUuid}" data-heal="${maxHeal}" data-splash="${splash}">${LT.healingBombButtonChirurgeon()}</button>`;
+			healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LT.healingBombButtonSplash()}</button>`;
 		} else {
-			healingButtons += `<button type="button" class="success" ${healDisabled} data-action="roll-healing-bomb" data-target="${targetUuid}" data-formula="${formula}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_HEAL}</button>`;
-			healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_SPLASH}</button>`;
+			healingButtons += `<button type="button" class="success" ${healDisabled} data-action="roll-healing-bomb" data-target="${targetUuid}" data-formula="${formula}" data-splash="${splash}">${LT.healingBombButtonHeal()}</button>`;
+			healingButtons += `<button type="button" class="splash" ${splashDisabled} data-action="apply-splash-only" data-target="${targetUuid}" data-splash="${splash}">${LT.healingBombButtonSplash()}</button>`;
 		}
 	} else if (outcome === "failure") {
 		const splash = parseInt(item.system.splashDamage.value || 0);
-		healingButtons += `<button type="button" class="failure" ${failDisabled} data-action="apply-failure-healing" data-target="${targetUuid}" data-splash="${splash}">${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_FAILURE}</button>`;
+		healingButtons += `<button type="button" class="failure" ${failDisabled} data-action="apply-failure-healing" data-target="${targetUuid}" data-splash="${splash}">${LT.healingBombButtonFailure()}</button>`;
 
 	}
 
@@ -221,7 +221,7 @@ Hooks.on('renderChatMessage', async (message, html) => {
 		if (!actor) return;
 		const roll = new Roll(btn.dataset.formula);
 		await roll.evaluate({ async: true });
-		await roll.toMessage({ flavor: `${LOCALIZED_TEXT.HEALING_BOMB_BUTTON_ROLLED}: ${roll.total}` });
+		await roll.toMessage({ flavor: `${LT.healingBombButtonRolled()}: ${roll.total}` });
 		await actor.applyDamage({ damage: -roll.total, token, heal: true, skipIWR: true });
 	});
 
@@ -277,7 +277,7 @@ Hooks.on('renderChatMessage', async (message, html) => {
 			const speaker = ChatMessage.getSpeaker({ token: originToken.document });
 			await ChatMessage.create({
 				speaker,
-				content: `💧 <strong>${LOCALIZED_TEXT.HEALING_BOMB}</strong> ${LOCALIZED_TEXT.HEALING_BOMB_SPLASH_APPLIED} ${nearby.map(t => t.name).join(", ")} for ${splashHealing} HP.`
+				content: `💧 <strong>${LT.healingBomb()}</strong> ${LT.healingBombSplashApplied()} ${nearby.map(t => t.name).join(", ")} for ${splashHealing} HP.`
 			});
 		}
 	});

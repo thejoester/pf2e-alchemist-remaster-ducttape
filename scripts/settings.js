@@ -1,4 +1,4 @@
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
 
 // ===== Globals ===== 
@@ -194,7 +194,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		if (!isWorkbenchInstalled) return; // Not installed - exit early
 		
 		if (!game.settings.settings.has(workbenchSettingKey)) {// settings key not found
-			console.log(game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_WORKBENCH_NOT_FOUND"));
+			console.log(LT.settingWorkbenchNotFound());
 			return;
 		}
 		const currentWorkbenchSetting = game.settings.get("xdy-pf2e-workbench", "autoCollapseItemChatCardContent");
@@ -215,7 +215,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	window.AddCompendiumsApp = class AddCompendiumsApp extends FormApplication {
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            title: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_MANAGE_HOMEBREW_COMPENDIUM"),
+            title: LT.settingManageHomebrewCompendium(),
             template: 'modules/pf2e-alchemist-remaster-ducttape/templates/add-compendiums.html',
             width: 600,
             height: 'auto',
@@ -241,12 +241,12 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
             const pack = game.packs.get(input);
             if (this.tempCompendiums?.some(comp => comp.name === input)) {
-                ui.notifications.warn(LOCALIZED_TEXT.SETTING_COMPENDIUM_ALREADY_IN_LIST(input));
+                ui.notifications.warn(LT.settingCompendiumAlreadyInList({ input }));
                 return;
             }
 
             if (!pack || pack.documentName !== 'Item') {
-                ui.notifications.error(LOCALIZED_TEXT.SETTING_COMPENDIUM_INVALID(input));
+                ui.notifications.error(LT.settingCompendiumInvalid({ input }));
                 return;
             }
             this.tempCompendiums = [...(this.tempCompendiums || []), { name: input, valid: !!pack }];
@@ -267,7 +267,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
             const updatedCompendiums = savedCompendiums.filter(c => c !== compendiumToDelete);
 
             await game.settings.set('pf2e-alchemist-remaster-ducttape', 'compendiums', updatedCompendiums);
-            ui.notifications.info(LOCALIZED_TEXT.SETTING_COMPENDIUM_REMOVED(compendiumToDelete));
+            ui.notifications.info(LT.settingCompendiumRemoved({ compendium: compendiumToDelete }));
             this.render();
         });
 
@@ -285,11 +285,11 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
             if (invalidEntries.length > 0) {
                 new Dialog({
                     title: 'Invalid or Duplicate Entries',
-                    content: `${game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COMPENDIUM_LIST_INVALID")}<br>${invalidEntries.join('<br>')}`,
+                    content: `${LT.settingCompendiumListInvalid()}<br>${invalidEntries.join('<br>')}`,
                     buttons: {
                         ok: {
                             icon: '<i class="fas fa-check"></i>',
-                            label: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.OK")
+                            label: LT.ok()
                         }
                     }
                 }).render(true);
@@ -301,7 +301,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
                 'compendiums',
                 [...new Set([...savedCompendiums, ...uniqueCompendiums.keys()])]
             );
-            ui.notifications.info(game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SAVED"));
+            ui.notifications.info(LT.settingSaved());
             this.tempCompendiums = [];
             this.close();
         });
@@ -400,8 +400,6 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
 		// Alchemical Index blob (uuid -> { name, desc, updatedAt })
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "alchIndex", {
-			name: game.i18n.localize("PF2E_ALCHDT.INDEX_STORE_NAME"),
-			hint: game.i18n.localize("PF2E_ALCHDT.INDEX_STORE_HINT"),
 			scope: "world",
 			config: false,
 			type: Object,
@@ -410,8 +408,6 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
 		// Metadata we compare against to know when to prompt
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "alchIndexMeta", {
-			name: game.i18n.localize("PF2E_ALCHDT.INDEX_META_NAME"),
-			hint: game.i18n.localize("PF2E_ALCHDT.INDEX_META_HINT"),
 			scope: "world",
 			config: false,
 			type: Object,
@@ -447,8 +443,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
 		// Show description in QA dialog
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "showFormulaDescription", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_FORMULA_DESC_NAME"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_FORMULA_DESC_HINT"),
+			name: LT.settingShowFormulaDescName(),
+			hint: LT.settingShowFormulaDescHint(),
 			scope: "client",
 			config: true,
 			type: Boolean,
@@ -460,7 +456,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		});
 		// Quick Alchemy: remove temporary items at end of turn
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtTurnChange", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_REMOVE_TEMP_START_TURN"),
+			name: LT.settingRemoveTempStartTurn(),
 			scope: "world",
 			config: true,
 			default: true,
@@ -470,7 +466,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Quick Alchemy: remove temporary items at end of combat
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "removeTempItemsAtEndCombat", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_REMOVE_TEMP_END_COMBAT"),
+			name: LT.settingRemoveTempEndCombat(),
 			scope: "world",
 			config: true,
 			default: true,
@@ -480,7 +476,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Quick Alchemy: Send chat message when removing temp quick alchemy items
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "createRemovedTempItemsMsg", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SEND_CHAT_REMOVE_TEMP"),
+			name: LT.settingSendChatRemoveTemp(),
 			scope: "world",
 			config: true,
 			default: true,
@@ -490,8 +486,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Send attack messages to chat
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "sendAtkToChat", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SEND_CRAFTED_ITEM_TO_CHAT"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SEND_CRAFTED_ITEM_TO_CHAT_HINT"),
+			name: LT.settingSendCraftedItemToChat(),
+			hint: LT.settingSendCraftedItemToChatHint(),
 			scope: "world",
 			config: true,    
 			default: false,  
@@ -501,15 +497,15 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Sized Based Alchemy Settings
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "enableSizeBasedAlchemy", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SIZEBASED_ALCHEMY"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SIZEBASED_ALCHEMY_HINT"),
+			name: LT.settingSizebasedAlchemy(),
+			hint: LT.settingSizebasedAlchemyHint(),
 			scope: "world",
 			config: true,
 			type: String,
 			choices: {
-				disabled: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.DISABLED"),
-				tinyOnly: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.TINY_ONLY"),
-				allSizes: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ALL_SIZES")
+				disabled: LT.disabled(),
+				tinyOnly: LT.tinyOnly(),
+				allSizes: LT.allSizes()
 			},
 			default: "tinyOnly",
 			onChange: (value) => {
@@ -521,8 +517,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	//	Powerful Alchemy Settings
 		console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Powerful Alchemy settings...","color: aqua; font-weight: bold;");
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_POWERFUL_ALCHEMY"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_POWERFUL_ALCHEMY_HINT"),
+			name: LT.settingEnablePowerfulAlchemy(),
+			hint: LT.settingEnablePowerfulAlchemyHint(),
 			scope: "world",
 			config: true,
 			type: Boolean,
@@ -535,8 +531,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 	//	Healing Bomb Settings
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "healingBombPC2Errata", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_HEALING_BOMB_PC2_ERRATA"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_HEALING_BOMB_PC2_ERRATA_HINT"),
+			name: LT.settingHealingBombPc2Errata(),
+			hint: LT.settingHealingBombPc2ErrataHint(),
 			scope: "world",
 			config: true,
 			type: Boolean,
@@ -547,16 +543,16 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	//	LevelUp - auto add formulas
 		// Add higher level versions of known formulas on level up?
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasOnLevelUp", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_ADD_HIGHER"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_ADD_HIGHER_HINT"),
+			name: LT.settingLevelupAddHigher(),
+			hint: LT.settingLevelupAddHigherHint(),
 			scope: "world",
 			config: true,
 			type: String,
 			choices: {
-				disabled: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.DISABLED"),
-				ask_all: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ASK_ALL"),
-				ask_each: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ASK_EACH"),
-				auto: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.AUTO")
+				disabled: LT.disabled(),
+				ask_all: LT.askAll(),
+				ask_each: LT.askEach(),
+				auto: LT.auto()
 			},
 			default: "ask_all",
 			requiresReload: false,
@@ -564,15 +560,15 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// How to handle lower level formulas
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "handleLowerFormulasOnLevelUp", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_HANDLE_LOWER_LEVEL"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_HANDLE_LOWER_LEVEL_HINT"),
+			name: LT.settingLevelupHandleLowerLevel(),
+			hint: LT.settingLevelupHandleLowerLevelHint(),
 			scope: "world",
 			config: true,
 			type: String,
 			choices: {
-				disabled: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.DISABLED"),
-				add_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ADD_LOWER"),
-				remove_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.REMOVE_LOWER")
+				disabled: LT.disabled(),
+				add_lower: LT.addLower(),
+				remove_lower: LT.removeLower()
 			},
 			default: "remove_lower",
 			requiresReload: false,
@@ -580,15 +576,15 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Prompt setting for handleLowerFormulasOnLevelUp
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "promptLowerFormulasOnLevelUp", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_PROMPT_REMOVE_LOWER_LEVEL_HINT"),
+			name: LT.settingLevelupPromptRemoveLowerLevel(),
+			hint: LT.settingLevelupPromptRemoveLowerLevelHint(),
 			scope: "world",
 			config: true,
 			type: String,
 			choices: {
-				// auto_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.AUTO"),
-				ask_all_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ASK_ALL"),
-				ask_each_lower: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.ASK_EACH")
+				// auto_lower: LT.auto(),
+				ask_all_lower: LT.askAll(),
+				ask_each_lower: LT.askEach()
 			},
 			default: "ask_all_lower",
 			requiresReload: false,
@@ -596,14 +592,14 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Who is asked by default to add/remove formulas
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "addFormulasPermission", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_PERMISSION_LEVEL"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_PERMISSION_LEVEL_HINT"),
+			name: LT.settingLevelupPermissionLevel(),
+			hint: LT.settingLevelupPermissionLevelHint(),
 			scope: "world",
 			config: true,
 			type: String,
 			choices: {
-				gm_only: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.GM"),
-				actor_owner: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.OWNER")
+				gm_only: LT.gm(),
+				actor_owner: LT.owner()
 			},
 			default: "actor_owner",
 			requiresReload: false,
@@ -611,7 +607,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// add list of new formulas learned to chat
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "addNewFormulasToChat", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_LEVELUP_SEND_NEW_REMOVED_TO_CHAT"),
+			name: LT.settingLevelupSendNewRemovedToChat(),
 			hint: "",
 			scope: "world",
 			config: true,
@@ -621,8 +617,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		});
 		
 		game.settings.register('pf2e-alchemist-remaster-ducttape', 'compendiums', {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COMPENDIUM_CHECK"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COMPENDIUM_CHECK_HINT"),
+			name: LT.settingCompendiumCheck(),
+			hint: LT.settingCompendiumCheckHint(),
 			scope: 'world',
 			config: false,
 			type: Array,
@@ -630,9 +626,9 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		});
 
 		game.settings.registerMenu('pf2e-alchemist-remaster-ducttape', 'addCompendiumsMenu', {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ADD_COMPENDIUM"),
-			label: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ADD_COMPENDIUM_LABEL"), // This will be the button text
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ADD_COMPENDIUM_HINT"),
+			name: LT.settingAddCompendium(),
+			label: LT.settingAddCompendiumLabel(), // This will be the button text
+			hint: LT.settingAddCompendiumHint(),
 			icon: 'fas fa-plus-circle', // Icon for the button
 			type: AddCompendiumsApp, // The FormApplication class to open
 			restricted: true // Only accessible by GMs
@@ -712,8 +708,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	//	Vial Search 
 		// Enable Vial Search
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "vialSearchReminder", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_VIAL_SEARCH_REMINDER"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_VIAL_SEARCH_REMINDER_HINT"),
+			name: LT.settingVialSearchReminder(),
+			hint: LT.settingVialSearchReminderHint(),
 			scope: "world", 
 			config: true,    
 			type: Boolean,   
@@ -723,8 +719,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 		// Suppress "Max Vials" Message
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "maxVialsMessage", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISPLAY_MAX_VIAL"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISPLAY_MAX_VIAL_HINT"),
+			name: LT.settingDisplayMaxVial(),
+			hint: LT.settingDisplayMaxVialHint(),
 			scope: "world", 
 			config: true,    
 			type: Boolean,   
@@ -734,8 +730,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 	//	Searchable Formulas
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableFormulas", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_FORMULA_SEARCH"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_ENABLE_FORMULA_SEARCH_HINT"),
+			name: LT.settingEnableFormulaSearch(),
+			hint: LT.settingEnableFormulaSearchHint(),
 			scope: "client", 
 			config: true, 
 			type: Boolean, 
@@ -748,8 +744,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		
 	//	Collapse Item Description in chat
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COLLAPSE_ITEM_DESC_CHAT"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_COLLAPSE_ITEM_DESC_CHAT_HINT"),
+			name: LT.settingCollapseItemDescChat(),
+			hint: LT.settingCollapseItemDescChatHint(),
 			scope: "world", 
 			config: true, 
 			type: Boolean,
@@ -783,7 +779,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 				const note = document.createElement("p");
 				note.className = "notes";
 				note.style.color = "red";
-				note.innerText = game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DISABLED_WORKBENCH");
+				note.innerText = LT.settingDisabledWorkbench();
 				wrapper.appendChild(note);
 			};
 			const removeNote = () => wrapper.querySelector(".notes")?.remove();
@@ -822,8 +818,8 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
 	//	Help Button
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "showQuickAlchemyHelp", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_HELP"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_SHOW_HELP_HINT"),
+			name: LT.settingShowHelp(),
+			hint: LT.settingShowHelpHint(),
 			scope: "client",
 			config: true,
 			type: Boolean,
@@ -834,16 +830,16 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 	//	Debugging
 		// Register debugLevel setting
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "debugLevel", {
-			name: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_LEVEL"),
-			hint: game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_LEVEL_HINT"),
+			name: LT.settingDebugLevel(),
+			hint: LT.settingDebugLevelHint(),
 			scope: "world",
 			config: true,
 			type: String,
 			choices: {
-				"none": game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_NONE"),
-				"error": game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_ERROR"),
-				"warn": game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_WARN"),
-				"all": game.i18n.localize("PF2E_ALCHEMIST_REMASTER_DUCTTAPE.SETTING_DEBUG_ALL")
+				"none": LT.settingDebugNone(),
+				"error": LT.settingDebugError(),
+				"warn": LT.settingDebugWarn(),
+				"all": LT.settingDebugAll()
 			},
 			default: "none", // Default to no logging
 			requiresReload: false

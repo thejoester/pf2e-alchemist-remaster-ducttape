@@ -1,0 +1,28 @@
+{
+  "name": "Mutagenist Versatile Vial",
+  "type": "script",
+  "command": "/* ==== Field Vials (Mutagenist) ==== \n  Drink a versatile vial to suppress the \n  drawback of one active mutagen for 1 \n  minute. Requires the Mutagenist research \n  field and at least 1 versatile vial.\n*/\n\ndisplayFieldVialsDialog();",
+  "img": "icons/consumables/potions/bottle-round-corked-blue.webp",
+  "_id": "l0qSWdjSx7sGnzqq",
+  "author": "U2OCxXAmOSozc3K9",
+  "scope": "global",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "U2OCxXAmOSozc3K9": 3
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.364",
+    "systemId": "pf2e",
+    "systemVersion": "8.3.0",
+    "createdTime": 1783590255517,
+    "modifiedTime": 1783590382261,
+    "lastModifiedBy": "U2OCxXAmOSozc3K9",
+    "exportSource": null,
+    "compendiumSource": null,
+    "duplicateSource": null
+  },
+  "sort": 0,
+  "_key": "!macros!l0qSWdjSx7sGnzqq"
+}

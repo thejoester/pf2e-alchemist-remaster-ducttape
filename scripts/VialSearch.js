@@ -1,5 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 
 // See if VialSearch option enabled, default to false
 let vialSearchReminder = false;
@@ -124,8 +124,8 @@ Hooks.once('init', () => {
 					
 					
 					const messageContent = `
-                        <p>${LOCALIZED_TEXT.VIALSEARCH_MESSAGE(actor.name,explorationBlocks * 10,foundVials)} (${LOCALIZED_TEXT.VIALSEARCH_MAX}: ${maxVials}, ${LOCALIZED_TEXT.VIALSEARCH_CURRENT}: ${currentVials})</p>
-						<button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">${LOCALIZED_TEXT.VIALSEARCH_ADD_VIALS}</button>
+                        <p>${LT.vialsearchMessage({ actorName: actor.name, explorationTime: explorationBlocks * 10, foundVials })} (${LT.vialsearchMax()}: ${maxVials}, ${LT.vialsearchCurrent()}: ${currentVials})</p>
+						<button class="add-vials-button" data-actor-id="${actor.id}" data-found-vials="${foundVials}">${LT.vialsearchAddVials()}</button>
                     `;
 
                     // Make sure to only send to owner of actor
@@ -148,7 +148,7 @@ Hooks.once('init', () => {
 					if (getSetting('maxVialsMessage')) { // Check settings if we are sending messages
 						// Send chat message visible to all players
 						ChatMessage.create({
-							content: `${actor.name} ${LOCALIZED_TEXT.VIALSEARCH_HAS_MAX_VIALS}`,
+							content: `${actor.name} ${LT.vialsearchHasMaxVials()}`,
 							speaker: { alias: "Game Master" }
 						});
 					}
@@ -175,7 +175,7 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	
     // Check if the player has owner permission on the actor
     if (!actor.testUserPermission(game.user, 'OWNER')) {
-        ui.notifications.warn(LOCALIZED_TEXT.NOTIF_NO_PERMS);
+        ui.notifications.warn(LT.notifNoPerms());
         return;
     }
 
@@ -186,11 +186,11 @@ $(document).on('click', '.add-vials-button', async (event) => {
 		
         // Send chat message visible to all players
         ChatMessage.create({
-            content: LOCALIZED_TEXT.VIALSEARCH_CHAT_FOUND_VIALS(actor.name,vialsToAdd),
+            content: LT.vialsearchChatFoundVials({ actorname: actor.name, vialcount: vialsToAdd }),
             speaker: { alias: "Game Master" }
         });
     } else {
-        ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ALREADY_MAX_VIALS(actor.name));
+        ui.notifications.warn(LT.notifAlreadyMaxVials({ actorname: actor.name }));
     }
 	
 	// Once clicked - delete button from chat mesasage

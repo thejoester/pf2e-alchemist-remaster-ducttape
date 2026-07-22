@@ -1,6 +1,6 @@
 import { debugLog, getSetting, isAlchemist, hasActiveOwners  } from './settings.js';
 import { qaGetIndexEntry, qaGetSlugFromUuid, getAlchIndex } from "./AlchIndex.js";
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
 
 // Settings placeholders
@@ -92,9 +92,9 @@ Hooks.once('init', () => {
 async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting, previousLevel) {
 	
 	const loadingDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
+		window: { title: LT.macroWaitTitle() },
 		content: `
-			<p>${LOCALIZED_TEXT.MACRO_CHECKING_NEW_FORMULAS}</p>
+			<p>${LT.macroCheckingNewFormulas()}</p>
 			<div class="progress-bar-container" style="width: 100%; height: 20px; background: #444; border-radius: 5px; overflow: hidden;">
 				<div id="progress-fill" style="width: 0%; height: 100%; background: #0c8; transition: width 0.2s;"></div>
 			</div>
@@ -103,7 +103,7 @@ async function grantAlchemistFormulas(actor, newLevel, mode = addFormulasSetting
 		buttons: [
 			{
 			  action: "hidden",
-			  label: LOCALIZED_TEXT.OK,
+			  label: LT.ok(),
 			  icon: "",
 			  callback: () => {}
 			}
@@ -293,9 +293,9 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 	
 	// Display dialog
 	const loadingDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
+		window: { title: LT.macroWaitTitle() },
 		content: `
-			<p>${LOCALIZED_TEXT.MACRO_CHECKING_LOWER_FORMULAS}</p>
+			<p>${LT.macroCheckingLowerFormulas()}</p>
 			<div class="progress-bar-container" style="width: 100%; height: 20px; background: #444; border-radius: 5px; overflow: hidden;">
 				<div id="progress-fill" style="width: 0%; height: 100%; background: #0c8; transition: width 0.2s;"></div>
 			</div>
@@ -304,7 +304,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 		buttons: [
 			{
 				action: "hidden",
-				label: LOCALIZED_TEXT.OK,
+				label: LT.ok(),
 				icon: "",
 				callback: () => {}
 			}
@@ -413,12 +413,12 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 			debugLog(`No lower-level formulas to remove for ${actor.name}.`);
 
 			new foundry.applications.api.DialogV2({
-				window: { title: LOCALIZED_TEXT.LEVELUP_WAIT_TITLE },
-				content: `<p>${LOCALIZED_TEXT.LEVELUP_NO_LOWER_FORMULAS} ${actor.name}.</p>`,
+				window: { title: LT.levelupWaitTitle() },
+				content: `<p>${LT.levelupNoLowerFormulas()} ${actor.name}.</p>`,
 				buttons: [
 					{
 						action: "ok",
-						label: LOCALIZED_TEXT.OK,
+						label: LT.ok(),
 						icon: "",
 						callback: () => {}
 					}
@@ -459,12 +459,12 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 			debugLog(`No lower-level formulas were removed for ${actor.name} after prompts.`);
 			// Show dialog
 			new foundry.applications.api.DialogV2({
-				window: { title: LOCALIZED_TEXT.LEVELUP_WAIT_TITLE },
-				content: `<p>${LOCALIZED_TEXT.LEVELUP_NO_LOWER_FORMULAS} ${actor.name}.</p>`,
+				window: { title: LT.levelupWaitTitle() },
+				content: `<p>${LT.levelupNoLowerFormulas()} ${actor.name}.</p>`,
 				buttons: [
 					{
 						action: "ok",
-						label: LOCALIZED_TEXT.OK,
+						label: LT.ok(),
 						icon: "",
 						callback: () => {}
 					}
@@ -486,7 +486,7 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 		if (addNewFormulasToChat && removedFormulas.length > 0) {
 			const removedFormulaNames = removedFormulas.map(f => f.name).join('<br>');
 			ChatMessage.create({
-				content: `<strong>${actor.name}</strong> ${LOCALIZED_TEXT.LEVELUP_REMOVEDLOWER_CHAT_MSG}:<br><br>${removedFormulaNames}`
+				content: `<strong>${actor.name}</strong> ${LT.levelupRemovedlowerChatMsg()}:<br><br>${removedFormulaNames}`
 			});
 		}
 	} catch (error) {
@@ -501,9 +501,9 @@ async function removeLowerLevelFormulas(actor, mode = promptLowerFormulasOnLevel
 async function grantFormulasFull(actor, newLevel, mode = addFormulasSetting, previousLevel) {
 	
 	const loadingDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.MACRO_WAIT_TITLE },
+		window: { title: LT.macroWaitTitle() },
 		content: `
-			<p>${LOCALIZED_TEXT.MACRO_CHECKING_NEW_FORMULAS}</p>
+			<p>${LT.macroCheckingNewFormulas()}</p>
 			<div class="progress-bar-container" style="width: 100%; height: 20px; background: #444; border-radius: 5px; overflow: hidden;">
 				<div id="progress-fill" style="width: 0%; height: 100%; background: #0c8; transition: width 0.2s;"></div>
 			</div>
@@ -512,7 +512,7 @@ async function grantFormulasFull(actor, newLevel, mode = addFormulasSetting, pre
 		buttons: [
 			{
 			  action: "hidden",
-			  label: LOCALIZED_TEXT.OK,
+			  label: LT.ok(),
 			  icon: "",
 			  callback: () => {}
 			}
@@ -836,7 +836,7 @@ function newFormulasChatMsg(actorName, newFormulas, newFormulaCount) {
 	if (addNewFormulasToChat && newFormulaCount > 0) { // if option enabled and there was formulas added, display in chat
       try {
           ChatMessage.create({ 
-              content: `<strong>${actorName}</strong> ${LOCALIZED_TEXT.LEVELUP_ADDED_CHAT_MSG}:<br><br> ${newFormulas}`
+              content: `<strong>${actorName}</strong> ${LT.levelupAddedChatMsg()}:<br><br> ${newFormulas}`
           });
       } catch (error) {
           debugLog(`Failed to send chat message for ${actorName}: ${error.message}`);
@@ -856,20 +856,20 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
 
 		const sortedFormulas = formulas.sort((a, b) => a.level - b.level);
 		const formulaListHTML = sortedFormulas.map(f =>
-			`<li>${LOCALIZED_TEXT.LEVELUP_LEVEL} ${f.level}: <strong>${f.name}</strong></li>`
+			`<li>${LT.levelupLevel()} ${f.level}: <strong>${f.name}</strong></li>`
 		).join('');
 
 		const title = isRemoving
-			? LOCALIZED_TEXT.LEVELUP_REMOVE_LOWERLEVEL_FORMULAS
-			: LOCALIZED_TEXT.LEVELUP_NEW_FORMULAS_DISCOVERED;
+			? LT.levelupRemoveLowerlevelFormulas()
+			: LT.levelupNewFormulasDiscovered();
 
 		const content = isRemoving
-			? `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_LOWER_LEVEL_BEING_REPLACED}:</p>
+			? `<p>${actor.name} ${LT.levelupLowerLevelBeingReplaced()}:</p>
 				<ul>${formulaListHTML}</ul>
-				<p>${LOCALIZED_TEXT.LEVELUP_PROMPT_REMOVE_FORMULAS}</p>`
-			: `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_UNLOCKED_FORMULAS}:</p>
+				<p>${LT.levelupPromptRemoveFormulas()}</p>`
+			: `<p>${actor.name} ${LT.levelupUnlockedFormulas()}:</p>
 				<ul>${formulaListHTML}</ul>
-				<p>${LOCALIZED_TEXT.LEVELUP_PROMPT_ADD_FORMULAS}</p>`;
+				<p>${LT.levelupPromptAddFormulas()}</p>`;
 
 		let resolved = false;
 
@@ -879,13 +879,13 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
 			buttons: [
 				{
 					action: "yes",
-					label: LOCALIZED_TEXT.BTN_YES,
+					label: LT.btnYes(),
 					icon: "fas fa-check",
 					default: true
 				},
 				{
 					action: "no",
-					label: LOCALIZED_TEXT.BTN_NO,
+					label: LT.btnNo(),
 					icon: "fas fa-times"
 				}
 			],
@@ -916,12 +916,12 @@ async function showFormulaListDialog(actor, formulas, isRemoving = false) {
 async function showFormulaDialog(actor, formula, level, isRemoving = false) {
 	return new Promise((resolve) => {
 		const title = isRemoving
-		? LOCALIZED_TEXT.LEVELUP_REMOVE_LOWERLEVEL_FORMULAS
-		: LOCALIZED_TEXT.LEVELUP_NEW_FORMULAS_DISCOVERED;
+		? LT.levelupRemoveLowerlevelFormulas()
+		: LT.levelupNewFormulasDiscovered();
 
 		const content = isRemoving
-		? `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_HIGHER_VERSION} <strong>${formula.name}</strong> (${LOCALIZED_TEXT.LEVELUP_LEVEL} ${level}). ${LOCALIZED_TEXT.LEVELUP_PROMPT_REMOVE_FORMULA}</p>`
-		: `<p>${actor.name} ${LOCALIZED_TEXT.LEVELUP_UNLOCKED_FORMULA} <strong>${formula.name}</strong> (${LOCALIZED_TEXT.LEVELUP_LEVEL} ${level}). ${LOCALIZED_TEXT.LEVELUP_PROMPT_ADD_FORMULA}</p>`;
+		? `<p>${actor.name} ${LT.levelupHigherVersion()} <strong>${formula.name}</strong> (${LT.levelupLevel()} ${level}). ${LT.levelupPromptRemoveFormula()}</p>`
+		: `<p>${actor.name} ${LT.levelupUnlockedFormula()} <strong>${formula.name}</strong> (${LT.levelupLevel()} ${level}). ${LT.levelupPromptAddFormula()}</p>`;
 
 		new foundry.applications.api.DialogV2({
 			window: { title },
@@ -929,14 +929,14 @@ async function showFormulaDialog(actor, formula, level, isRemoving = false) {
 			buttons: [
 				{
 				  action: "yes",
-				  label: LOCALIZED_TEXT.BTN_YES,
+				  label: LT.btnYes(),
 				  icon: "fas fa-check",
 				  default: true,
 				  callback: () => {}
 				},
 				{
 				  action: "no",
-				  label: LOCALIZED_TEXT.BTN_NO,
+				  label: LT.btnNo(),
 				  icon: "fas fa-times",
 				  callback: () => {}
 				}
@@ -1081,7 +1081,7 @@ async function promptTokenFormulaAdd() {
 	
 	const token = canvas.tokens.controlled[0];
 	if (!token || !token.actor) {
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_SELECT_ALCHEMIST);
+		ui.notifications.warn(LT.notifSelectAlchemist());
 		return;
 	}
 	const actor = token.actor;
@@ -1091,43 +1091,43 @@ async function promptTokenFormulaAdd() {
 	
 	const alchemistCheck = isAlchemist(actor);
 	if (!alchemistCheck) {
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_SELECT_ALCHEMIST);
+		ui.notifications.warn(LT.notifSelectAlchemist());
 		return;
 	}
 	
 	// Check defaults for form
 	let defaultAddMode = "";
 	if (addFormulasSetting === "ask_each"){
-		defaultAddMode = `<option value="ask_each" selected>${LOCALIZED_TEXT.ASK_EACH}</option>`;
+		defaultAddMode = `<option value="ask_each" selected>${LT.askEach()}</option>`;
 	}else if (addFormulasSetting === "ask_all"){
-		defaultAddMode = `<option value="ask_all" selected>${LOCALIZED_TEXT.ASK_ALL}</option>`;
+		defaultAddMode = `<option value="ask_all" selected>${LT.askAll()}</option>`;
 	}else if (addFormulasSetting === "auto"){
-		defaultAddMode = `<option value="auto" selected>${LOCALIZED_TEXT.AUTO}</option>`;
+		defaultAddMode = `<option value="auto" selected>${LT.auto()}</option>`;
 	}
 	
 	const formContent = `
 		<div style="min-width: 400px; overflow-y: auto; padding-right: 1em;">
 			<form>
 				<div class="form-group">
-					<label>${LOCALIZED_TEXT.MACRO_ADD_FORMULAS}</label>
+					<label>${LT.macroAddFormulas()}</label>
 					<select name="addFormulas">
-						<option value="yes">${LOCALIZED_TEXT.BTN_YES}</option>
-						<option value="no">${LOCALIZED_TEXT.BTN_NO}</option>
+						<option value="yes">${LT.btnYes()}</option>
+						<option value="no">${LT.btnNo()}</option>
 					</select>
 				</div>
 				<br />
 				<div class="form-group">
-					<label>${LOCALIZED_TEXT.MACRO_PROMPT_STYLE}</label>
+					<label>${LT.macroPromptStyle()}</label>
 					<select name="mode">
 						${defaultAddMode}
-						<option value="auto">${LOCALIZED_TEXT.AUTO}</option>
-						<option value="ask_each">${LOCALIZED_TEXT.ASK_EACH}</option>
-						<option value="ask_all">${LOCALIZED_TEXT.ASK_ALL}</option>
+						<option value="auto">${LT.auto()}</option>
+						<option value="ask_each">${LT.askEach()}</option>
+						<option value="ask_all">${LT.askAll()}</option>
 					</select>
 				</div>
 				<br />
 				<div class="form-group">
-					<label for="level">${LOCALIZED_TEXT.MACRO_START_LEVEL}</label>
+					<label for="level">${LT.macroStartLevel()}</label>
 					<input type="number" name="startlevel" id="startlevel" value="${prevLevel}" min="1" max="20" />
 				</div>
 			</form>
@@ -1135,12 +1135,12 @@ async function promptTokenFormulaAdd() {
 	`;
 
 	const dialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.MACRO_ADD_TITLE },
+		window: { title: LT.macroAddTitle() },
 		content: formContent,
 		buttons: [
 			{
 				action: "submit",
-				label: LOCALIZED_TEXT.OK,
+				label: LT.ok(),
 				type: "submit",
 				default: true,
 				callback: (event, button, dialog) => {
@@ -1155,7 +1155,7 @@ async function promptTokenFormulaAdd() {
 			},
 			{
 				action: "cancel",
-				label: LOCALIZED_TEXT.BTN_CANCEL
+				label: LT.btnCancel()
 			}
 		],
 		submit: async (result) => {
@@ -1175,7 +1175,7 @@ async function promptTokenFormulaRemove() {
 	
 	const token = canvas.tokens.controlled[0];
 	if (!token || !token.actor) {
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_SELECT_ALCHEMIST);
+		ui.notifications.warn(LT.notifSelectAlchemist());
 		return;
 	}
 	const actor = token.actor;
@@ -1183,30 +1183,30 @@ async function promptTokenFormulaRemove() {
 	const currentLevel = actor.system.details.level.value;
 	const alchemistCheck = isAlchemist(actor);
 	if (!alchemistCheck) {
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_SELECT_ALCHEMIST);
+		ui.notifications.warn(LT.notifSelectAlchemist());
 		return;
 	}
 	
 	// Check defaults for form
 	let defaultRemovemode = "";
 	if (addFormulasSetting === "ask_each_lower"){
-		defaultRemovemode = `<option value="ask_each_lower" selected>${LOCALIZED_TEXT.ASK_EACH}</option>`;
+		defaultRemovemode = `<option value="ask_each_lower" selected>${LT.askEach()}</option>`;
 	}else if (addFormulasSetting === "ask_all_lower"){
-		defaultRemovemode = `<option value="ask_all_lower" selected>${LOCALIZED_TEXT.ASK_ALL}</option>`;
+		defaultRemovemode = `<option value="ask_all_lower" selected>${LT.askAll()}</option>`;
 	}
 	
 	const formContent = `
 		<form>
 			<div class="form-group">
-				<label>${LOCALIZED_TEXT.MACRO_REMOVE_FORMULAS}</label>
+				<label>${LT.macroRemoveFormulas()}</label>
 			</div>
 			
 			<div class="form-group">
-				<label>${LOCALIZED_TEXT.MACRO_PROMPT_STYLE}</label>
+				<label>${LT.macroPromptStyle()}</label>
 				<select name="mode">
 					${defaultRemovemode}
-					<option value="ask_each_lower">${LOCALIZED_TEXT.ASK_EACH}</option>
-					<option value="ask_all_lower">${LOCALIZED_TEXT.ASK_ALL}</option>
+					<option value="ask_each_lower">${LT.askEach()}</option>
+					<option value="ask_all_lower">${LT.askAll()}</option>
 				</select>
 			</div>
 			
@@ -1214,12 +1214,12 @@ async function promptTokenFormulaRemove() {
 	`;
 
 	const dialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.MACRO_REMOVE_TITLE },
+		window: { title: LT.macroRemoveTitle() },
 		content: formContent,
 		buttons: [
 			{
 				action: "submit",
-				label: LOCALIZED_TEXT.OK,
+				label: LT.ok(),
 				type: "submit",
 				default: true,
 				callback: (event, button, dialog) => {
@@ -1232,7 +1232,7 @@ async function promptTokenFormulaRemove() {
 			},
 			{
 				action: "cancel",
-				label: LOCALIZED_TEXT.BTN_CANCEL
+				label: LT.btnCancel()
 			}
 		],
 		submit: async (result) => {

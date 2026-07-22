@@ -1,5 +1,5 @@
 import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 
 console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","color: aqua; font-weight: bold;");
 
@@ -17,8 +17,8 @@ function addFormulaSearch(html) {
 	// Updated HTML for the search bar
 	const searchBarHtml = `
 		<div class="search-bar-container">
-			<input type="text" id="formula-search" placeholder="${LOCALIZED_TEXT.FORMULA_SEARCH_SEARCH}" />
-			<button id="clear-search" class="clear-btn">${LOCALIZED_TEXT.BTN_CLEAR}</button>
+			<input type="text" id="formula-search" placeholder="${LT.formulaSearchSearch()}" />
+			<button id="clear-search" class="clear-btn">${LT.btnClear()}</button>
 		</div>
 	`;
 
@@ -98,7 +98,7 @@ Hooks.on("ready", () => {
 		Hooks.on("renderActorSheet", (app, html, data) => {
 			const actor = app.actor;
             if (!actor) {
-                debugLog(3,`${LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND}: `,app);
+                debugLog(3,`${LT.notifActorNotfound()}: `,app);
                 return;
             }
 		

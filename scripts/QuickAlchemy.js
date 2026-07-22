@@ -2,7 +2,7 @@ import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
 import { throwHealingBomb } from './HealingBomb.js';
 import { getAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
 import { displayUnstableConcoctionDialog } from "./AlchemistFeats.js";
-import { LOCALIZED_TEXT } from "./localization.js";
+import { LT } from "./localization.js";
 
 let isArchetype = false;
 let QA_TEXT_EDITOR;	// v13 Text editor
@@ -171,7 +171,7 @@ Hooks.on("renderChatMessage", (message, html) => {
 		// Ensure a target is selected
 		const target = game.user.targets.first();
 		if (!target) {
-			ui.notifications.error(LOCALIZED_TEXT.QUICK_ALCHEMY_PLEASE_TARGET);
+			ui.notifications.error(LT.quickAlchemyPleaseTarget());
 			return;
 		}
 		
@@ -380,7 +380,7 @@ Hooks.once("ready", () => {
 									data-action="ardt-apply-healing"
 									data-target="${targetActorUuid ?? ""}"
 									data-heal="${total}">
-									${LOCALIZED_TEXT?.APPLY_HEALING_BTN ?? "Apply Healing"}
+									${LT.applyHealingBtn()}
 								</button>
 							</section>
 						</div>
@@ -468,12 +468,12 @@ async function deleteTempItems(actor, endTurn = false) {
 		if (getSetting("createRemovedTempItemsMsg")) {
 
 			const messageContent = `
-					${LOCALIZED_TEXT.QUICK_ALCHEMY_MSG_ITEMS_REMOVED(actor.name)}
+					${LT.quickAlchemyMsgItemsRemoved({ actorname: actor.name })}
 					<ul>${removedItems.map(name => `<li>${name}</li>`).join('')}</ul>
 				`;
 			ChatMessage.create({
 				user: game.user.id,
-				speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY },
+				speaker: { alias: LT.quickAlchemy() },
 				content: messageContent
 			});
 		}
@@ -508,13 +508,13 @@ export async function sendConsumableUseMessage(itemUuid) {
 		if (entry) {
 			name = entry.name ?? "(no name)";
 			img = entry.img ?? "icons/svg/mystery-man.svg";
-			description = entry.description ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+			description = entry.description ?? `<em>${LT.quickAlchemyNoDesc()}</em>`;
 			traits = entry.traits ?? [];
 		} else {
 			// fallback: actually load it
 			item = await fromUuid(itemUuid);
 			if (!item) {
-				ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
+				ui.notifications.warn(LT.notifItemNotfound());
 				return;
 			}
 			name = item.name;
@@ -528,7 +528,7 @@ export async function sendConsumableUseMessage(itemUuid) {
 		debugLog(`sendConsumableUseMessage() | Pulling from item path`);
 		item = fromUuidSync(itemUuid) ?? await fromUuid(itemUuid);
 		if (!item) {
-			ui.notifications.warn(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
+			ui.notifications.warn(LT.notifItemNotfound());
 			return;
 		}
 		actor = item.actor ?? null;
@@ -585,7 +585,7 @@ export async function sendConsumableUseMessage(itemUuid) {
 			${actor ? `
 				<div class="card-buttons">
 					<button type="button" class="use-consumable" data-item-id="${itemId}" data-actor-id="${actorId}">
-						${LOCALIZED_TEXT.BTN_USE}
+						${LT.btnUse()}
 					</button>
 				</div>
 			` : ""}
@@ -595,7 +595,7 @@ export async function sendConsumableUseMessage(itemUuid) {
 	// Post Chat Message
 	ChatMessage.create({
 		user: game.user.id,
-		speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY, actor: actor?.id ?? null },
+		speaker: { alias: LT.quickAlchemy(), actor: actor?.id ?? null },
 		content
 	});
 }
@@ -612,7 +612,7 @@ async function sendVialAttackMessage(itemUuid, actor) {
 	// Fetch the item (weapon) from the provided full UUID
 	const item = await fromUuid(itemUuid);
 	if (!item) {
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
+		ui.notifications.error(LT.notifItemNotfound());
 		debugLog(3, `sendVialAttackMessage() | Failed to fetch item with UUID ${itemUuid}`);
 		return;
 	}
@@ -622,17 +622,17 @@ async function sendVialAttackMessage(itemUuid, actor) {
 		const actor = item.actor;
 	}
 	if (!actor) {
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOT_ASSOC_ITEM);
+		ui.notifications.error(LT.notifActorNotAssocItem());
 		return;
 	}
 
 	// Construct the chat message content with buttons for attack rolls
 	const content = `
-			<p><strong>${actor.name} ${LOCALIZED_TEXT.QUICK_ALCHEMY_CREATED_QV_MSG}</strong></p>
+			<p><strong>${actor.name} ${LT.quickAlchemyCreatedQvMsg()}</strong></p>
 			<div class="collapsible-message">
 				<i class="fas fa-eye toggle-icon"></i>
 				<div class="collapsible-content" style="display: none;">
-					<p>${item.system.description.value || LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</p>
+					<p>${item.system.description.value || LT.quickAlchemyNoDesc()}</p>
 				</div>
 			</div>
 			<script>
@@ -646,7 +646,7 @@ async function sendVialAttackMessage(itemUuid, actor) {
 				toggleIcon.classList.toggle('fa-eye-slash', isHidden);
 			  });
 			</script>
-			<button class="roll-attack" data-uuid="${itemUuid}" data-actor-id="${actor.id}" data-item-id="${item.id}" data-map="0" style="margin-top: 5px;">${LOCALIZED_TEXT.BTN_ROLL_ATK}</button>
+			<button class="roll-attack" data-uuid="${itemUuid}" data-actor-id="${actor.id}" data-item-id="${item.id}" data-map="0" style="margin-top: 5px;">${LT.btnRollAtk()}</button>
 		`;
 
 	// Send the message to chat
@@ -667,21 +667,21 @@ export async function sendWeaponAttackMessage(itemUuid) {
 	// Fetch the item (weapon) from the provided full UUID
 	const item = await fromUuid(itemUuid);
 	if (!item) {
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ITEM_NOTFOUND);
+		ui.notifications.error(LT.notifItemNotfound());
 		debugLog(3, `sendWeaponAttackMessage() | Failed to fetch item with UUID ${itemUuid}`);
 		return;
 	}
 
 	// Ensure the item is a weapon
 	if (item.type !== "weapon") {
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ITEM_NOT_WEAPON);
+		ui.notifications.error(LT.notifItemNotWeapon());
 		return;
 	}
 
 	// Fetch the actor associated with the item
 	const actor = item.actor;
 	if (!actor) {
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOT_ASSOC_ITEM);
+		ui.notifications.error(LT.notifActorNotAssocItem());
 		debugLog(3, "sendWeaponAttackMessage() | No actor associated with this item: ", item);
 		return;
 	}
@@ -692,7 +692,7 @@ export async function sendWeaponAttackMessage(itemUuid) {
 	// Construct the chat message content
 	const itemName = item.name;
 	const itemImg = item.img || "path/to/default-image.webp";
-	const itemDescription = item.system?.description?.value || LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC;
+	const itemDescription = item.system?.description?.value || LT.quickAlchemyNoDesc();
 	const content = `
 			<div class="pf2e chat-card item-card" data-actor-id="${actor.id}" data-item-id="${item.id}" data-source="weapon">
 				<header class="card-header flexrow">
@@ -715,7 +715,7 @@ export async function sendWeaponAttackMessage(itemUuid) {
 
 				<div class="card-buttons">
 					<button type="button" class="roll-attack" data-uuid="${itemUuid}" data-actor-id="${actor.id}" data-item-id="${item.id}" data-map="0">
-						${LOCALIZED_TEXT.BTN_ROLL_ATK}
+						${LT.btnRollAtk()}
 					</button>
 				</div>
 			</div>
@@ -724,7 +724,7 @@ export async function sendWeaponAttackMessage(itemUuid) {
 	// Send the message to chat
 	ChatMessage.create({
 		user: game.user.id,
-		speaker: { alias: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		speaker: { alias: LT.quickAlchemy() },
 		content: content,
 	});
 
@@ -753,7 +753,7 @@ async function equipItemBySlug(slug, actor) {
 		"system.equipped.handsHeld": "1",
 	});
 
-	ui.notifications.info(LOCALIZED_TEXT.NOTIF_ITEM_EQUIPPED(item.name));
+	ui.notifications.info(LT.notifItemEquipped({ itemname: item.name }));
 	return item._id;
 }
 
@@ -799,17 +799,16 @@ async function craftHealingVial(selectedItem, selectedActor) {
 				modal: true,
 				width: 520,
 				classes: ["quick-alchemy-dialog"],
-				window: { title: (LOCALIZED_TEXT?.HEALING_VIAL_CHOICE_TITLE ?? "Healing Quick Vial") },
+				window: { title: LT.healingVialChoiceTitle() },
 				content: `
 					<div style="max-width:520px">
-						<p>${LOCALIZED_TEXT?.HEALING_VIAL_CHOICE_DESC
-							?? "Choose how to use your Healing Quick Vial: throw it up to 20 feet at a willing ally (heals equal to the vial’s initial damage), or craft it for drinking."}</p>
+						<p>${LT.healingVialChoiceDesc()}</p>
 					</div>
 				`,
 				buttons: [
 					{
 						action: "throw",
-						label: (LOCALIZED_TEXT?.BTN_THROW ?? "Throw"),
+						label: LT.btnThrow(),
 						icon: "fa-solid fa-flask",
 						callback: () => {
 							if (!resolved) { resolved = true; resolve("throw"); }
@@ -817,7 +816,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 					},
 					{
 						action: "craft",
-						label: (LOCALIZED_TEXT?.BTN_CRAFT ?? "Craft"),
+						label: LT.btnCraft(),
 						icon: "fa-solid fa-vial",
 						default: true,
 						callback: () => {
@@ -874,7 +873,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 					</header>
 					<div class="message-content">
 						<p><strong>${foundry.utils.escapeHTML(selectedActor?.name ?? "Someone")}</strong> ${
-							LOCALIZED_TEXT?.THROWS_AT ?? "throws a healing vial at"
+							LT.throwsAt()
 						} <strong>${foundry.utils.escapeHTML(targetToken?.name ?? targetActorUuid ?? "target")}</strong>.</p>
 					</div>
 					<div class="message-buttons horizontal" data-identifier="quick-vial-roll">
@@ -887,7 +886,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 								data-target-actor="${foundry.utils.escapeHTML(targetActorUuid ?? "")}"
 								data-target-token="${foundry.utils.escapeHTML(targetTokenUuid ?? "")}"
 								data-formula="${foundry.utils.escapeHTML(itemFormula)}">
-								${LOCALIZED_TEXT?.ROLL_HEALING_BTN ?? "Roll Healing"}
+								${LT.rollHealingBtn()}
 							</button>
 						</section>
 					</div>
@@ -1226,7 +1225,7 @@ export async function consumeVersatileVial(actor, slug, count = 1) {
 
 	// No vial available to consume
 	debugLog("consumeVersatileVial(): No versatile vials available to consume.");
-	ui.notifications.warn(LOCALIZED_TEXT.NOTIF_NO_VIAL_CONSUME);
+	ui.notifications.warn(LT.notifNoVialConsume());
 	return false;
 }
 
@@ -1246,18 +1245,18 @@ export async function processFormulasWithProgress(actor) {
 	const total = formulas.length;
 
 	const progressDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		window: { title: LT.quickAlchemy() },
 		classes: ["quick-alchemy-dialog"],
 		content: `
 			<div>
-				<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
+				<p>${LT.quickAlchemyProcessingMsg({ formulacount: formulaCount })}</p>
 				<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
 			</div>
 		`,
 		buttons: [
 			{
                 action: "noop",
-                label: LOCALIZED_TEXT.OK,
+                label: LT.ok(),
                 icon: "",
                 callback: () => {},
                 disabled: true
@@ -1408,18 +1407,18 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 	let progress = 0;
 	const total = formulas.length;
 	const progressDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		window: { title: LT.quickAlchemy() },
 		classes: ["quick-alchemy-dialog"],
 		content: `
 				<div>
-					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(formulaCount)}</p>
+					<p>${LT.quickAlchemyProcessingMsg({ formulacount: formulaCount })}</p>
 					<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
 				</div>
 			`,
 		buttons: [
 			{
 				action: "noop",
-				label: LOCALIZED_TEXT.OK,
+				label: LT.ok(),
 				icon: "",
 				callback: () => { },
 				disabled: true
@@ -1580,18 +1579,18 @@ export async function processFilteredInventoryWithProgress(actor, type, slug) {
 	var listProcessedInventory = "";
 
 	const progressDialog = new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+		window: { title: LT.quickAlchemy() },
 		classes: ["quick-alchemy-dialog"],
 		content: `
 				<div>
-					<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROCESSING_MSG(inventoryCount)}</p>
+					<p>${LT.quickAlchemyProcessingMsg({ formulacount: inventoryCount })}</p>
 					<progress id="progress-bar" value="0" max="${total}" style="width: 100%;"></progress>
 				</div>
 			`,
 		buttons: [
 			{
 				action: "noop",
-				label: LOCALIZED_TEXT.OK,
+				label: LT.ok(),
 				icon: "",
 				callback: () => { },
 				disabled: true
@@ -1706,14 +1705,14 @@ async function handleCrafting(uuid, actor, { quickVial = false, doubleBrew = fal
 	const vialConsumed = await consumeVersatileVial(actor, temporaryItem.slug, 1);
 	if (!vialConsumed) {
 		debugLog("handleCrafting() | No versatile vials available.");
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_NO_VIAL_AVAIL);
+		ui.notifications.error(LT.notifNoVialAvail());
 		return;
 	}
 	debugLog(`handleCrafting() | equipItemBySlug(${temporaryItem.slug}, ${actor.name})`);
 	const newUuid = await equipItemBySlug(temporaryItem.slug, actor);
 	if (!newUuid) {
 		debugLog(3, `handleCrafting() | Failed to equip item with slug: ${temporaryItem.slug}`);
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_FAILED_EQUIP_ITEM);
+		ui.notifications.error(LT.notifFailedEquipItem());
 		return;
 	}
 
@@ -1820,7 +1819,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`elixir: `, elixir);
 	if (!elixir) {
 		debugLog(`craftHealingBomb() | Actor not found`);
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+		ui.notifications.error(LT.notifActorNotfound());
 		return;
 	}
 	const elixirStrength = (elixir.system?.slug ?? "").split("-").at(-1).toLowerCase();
@@ -1969,12 +1968,12 @@ export function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype })
 		// Return a promise for async processing of formulas
 		return processFormulasWithProgress(actor).then(({ weaponOptions, consumableOptions }) => {
 			return `
-				<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-				<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_PROMPT}</p>
+				<h3>${LT.doubleBrewFeat()}</h3>
+				<p>${LT.quickAlchemyDbPrompt()}</p>
 				<div>
-					<label for="db-item-selection">${LOCALIZED_TEXT.QUICK_ALCHEMY_CHOOSE_ITEM}:</label>
+					<label for="db-item-selection">${LT.quickAlchemyChooseItem()}:</label>
 					<select id="db-item-selection" name="db-item-selection">
-						<option value="none">${LOCALIZED_TEXT.NONE}</option>
+						<option value="none">${LT.none()}</option>
 						${weaponOptions}
 						${consumableOptions}
 					</select>
@@ -1985,11 +1984,11 @@ export function getDoubleBrewFormContent({ actor, doubleBrewFeat, isArchetype })
 		// Static option to create a versatile vial
 		content = `
 			<div>
-				<h3>${LOCALIZED_TEXT.DOUBLE_BREW_FEAT}</h3>
-				<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_DB_CRAFT_VV(vialCount)}</p>
-				<label for="db-item-selection">${LOCALIZED_TEXT.DOUBLE_BREW}:</label>
+				<h3>${LT.doubleBrewFeat()}</h3>
+				<p>${LT.quickAlchemyDbCraftVv({ vialcount: vialCount })}</p>
+				<label for="db-item-selection">${LT.doubleBrew()}:</label>
 				<select id="db-item-selection" name="db-item-selection">
-					<option value="none">${LOCALIZED_TEXT.NONE}</option>
+					<option value="none">${LT.none()}</option>
 					<option value="Compendium.pf2e.equipment-srd.Item.ljT5pe8D7rudJqus">Versatile Vial</option>
 				</select>
 			</div>
@@ -2007,7 +2006,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		let content = `
 						<form>
 							<div>
-								<h3 style="text-align:center;padding-bottom:10px;">${LOCALIZED_TEXT.HEALING_BOMB_SELECT_INVENTORY}</h3>
+								<h3 style="text-align:center;padding-bottom:10px;">${LT.healingBombSelectInventory()}</h3>
 								<select id="item-selection" name="item-selection" style="display: inline-block;margin-top: 5px; overflow-y: auto;">${options}</select>
 								<br/><br/>
 							</div>
@@ -2016,7 +2015,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		const buttons = [
 			{
 				action: "crafthealingbomb",
-				label: LOCALIZED_TEXT.HEALING_BOMB_CRAFT,
+				label: LT.healingBombCraft(),
 				icon: "fas fa-hammer",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
@@ -2029,7 +2028,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 			},
 			{
 				action: "back",
-				label: LOCALIZED_TEXT.BACK,
+				label: LT.back(),
 				icon: "fas fa-arrow-left",
 				callback: () => qaDialog(actor)
 			}
@@ -2037,7 +2036,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 
 		new foundry.applications.api.DialogV2({
 			window: {
-				title: LOCALIZED_TEXT.HEALING_BOMB,
+				title: LT.healingBomb(),
 				// width: 450
 			},
 			classes: ["quick-alchemy-dialog"],
@@ -2065,7 +2064,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		let content = `
 						<form>
 							<div>
-								<h4 style="text-align:center;padding-bottom:10px;">${LOCALIZED_TEXT.HEALING_BOMB_SELECT_CRAFT_INVENTORY}</h4>
+								<h4 style="text-align:center;padding-bottom:10px;">${LT.healingBombSelectCraftInventory()}</h4>
 								<br/><br/>
 							</div>
 						</form>`;
@@ -2073,7 +2072,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 		const buttons = [
 			{
 				action: "craft",
-				label: LOCALIZED_TEXT.CRAFT,
+				label: LT.craft(),
 				icon: "fas fa-hammer",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
@@ -2085,7 +2084,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 			},
 			{
 				action: "inventory",
-				label: LOCALIZED_TEXT.INVENTORY,
+				label: LT.inventory(),
 				icon: "fas fa-hammer",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
@@ -2099,7 +2098,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 			},
 			{
 				action: "back",
-				label: LOCALIZED_TEXT.BACK,
+				label: LT.back(),
 				icon: "fas fa-arrow-left",
 				callback: () => qaDialog(actor)
 			}
@@ -2107,7 +2106,7 @@ async function displayHealingBombDialog(actor, alreadyCrafted = false, elixir = 
 
 		new foundry.applications.api.DialogV2({
 			window: {
-				title: LOCALIZED_TEXT.HEALING_BOMB,
+				title: LT.healingBomb(),
 				// width: 450
 			},
 			classes: ["quick-alchemy-dialog"],
@@ -2219,7 +2218,7 @@ async function displayCraftingDialog(actor, itemType) {
 		// Make Sure target is selected
 		const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
 		if (!target) {
-			ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
+			ui.notifications.error(LT.notifPleaseTarget());
 			qaDialog(actor);
 			return;
 		}
@@ -2330,9 +2329,9 @@ async function displayCraftingDialog(actor, itemType) {
 				eff.system.tokenIcon = { show: true };
 
 				// Localization labels
-				const FIELD_LABEL = LOCALIZED_TEXT.FIELDVIAL_LBL;
-				const ADV_LABEL = LOCALIZED_TEXT.ADVFIELDVIAL_LBL;
-				const ADV_PERSIST_LABEL = LOCALIZED_TEXT.ADV_PERSIST_LABEL;
+				const FIELD_LABEL = LT.fieldvialLbl();
+				const ADV_LABEL = LT.advfieldvialLbl();
+				const ADV_PERSIST_LABEL = LT.advPersistLabel();
 
 				// If the pack stored names as keys, force-localize the item name
 				if (typeof eff.name === "string") {
@@ -2371,7 +2370,7 @@ async function displayCraftingDialog(actor, itemType) {
 				}
 
 				debugLog(`Applied ${created.name} (${damageType}) to ${actor.name}`);
-				ui.notifications.info(LOCALIZED_TEXT.NOTIF_SELECT_WEAPON_FOR_POISON ?? "Select a weapon for the Toxicologist poison, then make your Strike.");
+				ui.notifications.info(LT.notifSelectWeaponForPoison());
 			} catch (err) {
 				debugLog(3, "applyToxicologistPoisonEffectPrompt() | Error:", err);
 			}
@@ -2380,8 +2379,8 @@ async function displayCraftingDialog(actor, itemType) {
 		// If actor has chirurgeon feat
 		if (hasFeat(actor, "chirurgeon")) {
 			const userConfirmed = await foundry.applications.api.DialogV2.confirm({
-				content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_CRAFT_HEALING_VIAL}</p>`,
-				window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_CHIRURGEON },
+				content: `<p>${LT.quickAlchemyCraftHealingVial()}</p>`,
+				window: { title: LT.quickAlchemyChirurgeon() },
 				classes: ["quick-alchemy-dialog"],
 				rejectClose: false,
 				modal: true
@@ -2399,23 +2398,23 @@ async function displayCraftingDialog(actor, itemType) {
 
 			// Prompt for damage type
 			selectedType = await foundry.applications.api.DialogV2.prompt({
-				window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_FIELD_VIAL_BOMBER },
+				window: { title: LT.quickAlchemyFieldVialBomber() },
 				classes: ["quick-alchemy-dialog"],
 				content: `
 						<form>
 							<div class="form-group" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-								<label for="damage-type">${LOCALIZED_TEXT.DMG_TYPE}:</label>
+								<label for="damage-type">${LT.dmgType()}:</label>
 								<select id="damage-type" name="damage-type">
-									<option value="acid">${LOCALIZED_TEXT.ACID}</option>
-									<option value="cold">${LOCALIZED_TEXT.COLD}</option>
-									<option value="electricity">${LOCALIZED_TEXT.ELECTRICITY}</option>
-									<option value="fire">${LOCALIZED_TEXT.FIRE}</option>
+									<option value="acid">${LT.acid()}</option>
+									<option value="cold">${LT.cold()}</option>
+									<option value="electricity">${LT.electricity()}</option>
+									<option value="fire">${LT.fire()}</option>
 								</select>
 							</div>
 						</form>
 					`,
 				ok: {
-					label: LOCALIZED_TEXT.OK,
+					label: LT.ok(),
 					callback: (event, button, dialog) => button.form.elements["damage-type"].value
 				}
 			});
@@ -2424,23 +2423,23 @@ async function displayCraftingDialog(actor, itemType) {
 			if (hasFeat(actor, "advanced-vials-bomber")) {
 				debugLog(`displayCraftingDialog() | Feat 'advanced-vials-bomber' detected.`);
 				specialIngredient = await foundry.applications.api.DialogV2.prompt({
-					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_ADV_VIAL_BOMBER },
+					window: { title: LT.quickAlchemyAdvVialBomber() },
 					classes: ["quick-alchemy-dialog"],
 					content: `
 							<form>
 								<div class="form-group" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
-									<label for="special-ingredient">${LOCALIZED_TEXT.SPECIAL_INGREDIENT}:</label>
+									<label for="special-ingredient">${LT.specialIngredient()}:</label>
 									<select id="special-ingredient" name="special-ingredient">
-										<option value="none">${LOCALIZED_TEXT.NONE}</option>
-										<option value="adamantine">${LOCALIZED_TEXT.ADAMANTINE}</option>
-										<option value="cold-iron">${LOCALIZED_TEXT.COLD_IRON}</option>
-										<option value="dawnsilver">${LOCALIZED_TEXT.DAWNSILVER}</option>
+										<option value="none">${LT.none()}</option>
+										<option value="adamantine">${LT.adamantine()}</option>
+										<option value="cold-iron">${LT.coldIron()}</option>
+										<option value="dawnsilver">${LT.dawnsilver()}</option>
 									</select>
 								</div>
 							</form>
 						`,
 					ok: {
-						label: LOCALIZED_TEXT.ADD,
+						label: LT.add(),
 						callback: (event, button, dialog) => button.form.elements["special-ingredient"].value
 					}
 				});
@@ -2455,23 +2454,23 @@ async function displayCraftingDialog(actor, itemType) {
 			// Prompt for injury poison or Quick Vial bomb
 			const isInjuryPoison = await new Promise((resolve) => {
 				new foundry.applications.api.DialogV2({
-					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_TOXICOLOGIST_OPTIONS },
+					window: { title: LT.quickAlchemyToxicologistOptions() },
 					classes: ["quick-alchemy-dialog"],
-					content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_APPLY_INJURY_POISON}</p>`,
+					content: `<p>${LT.quickAlchemyApplyInjuryPoison()}</p>`,
 					buttons: [
 						{
 							action: "yes",
-							label: LOCALIZED_TEXT.INJURY_POISON,
+							label: LT.injuryPoison(),
 							callback: () => resolve(true)
 						},
 						{
 							action: "no",
-							label: LOCALIZED_TEXT.QUICK_VIAL_BOMB,
+							label: LT.quickVialBomb(),
 							callback: () => resolve(false)
 						},
 						{
 							action: "back",
-							label: LOCALIZED_TEXT.BACK,
+							label: LT.back(),
 							icon: "fas fa-arrow-left",
 							callback: () => {
 								qaDialog(actor);
@@ -2517,7 +2516,7 @@ async function displayCraftingDialog(actor, itemType) {
 				await actor.createEmbeddedDocuments("Item", [newEffect]);
 
 				debugLog(1, `displayCraftingDialog() | Applied effect "${newEffect.name}" to ${actor.name}`);
-				ui.notifications.info(LOCALIZED_TEXT.NOTIF_APPLY_EFFECT_ACTOR(newEffect.name, actor.name));
+				ui.notifications.info(LT.notifApplyEffectActor({ effectname: newEffect.name, actorname: actor.name }));
 			}
 
 			// Setup dialog
@@ -2525,7 +2524,7 @@ async function displayCraftingDialog(actor, itemType) {
 				const buttons = [
 					{
 						action: "qv",
-						label: LOCALIZED_TEXT.QUICK_VIAL,
+						label: LT.quickVial(),
 						icon: "pf2-icon D",
 						callback: async () => {
 							await applyEffectFromCompendium(actor);
@@ -2537,7 +2536,7 @@ async function displayCraftingDialog(actor, itemType) {
 				if (getVersatileVialCount(actor) >= 1) {
 					buttons.push({
 						action: "vv",
-						label: LOCALIZED_TEXT.VERSATILE_VIAL,
+						label: LT.versatileVial(),
 						icon: "pf2-icon A",
 						callback: async () => {
 							let selectedSlug = "none";
@@ -2550,15 +2549,15 @@ async function displayCraftingDialog(actor, itemType) {
 
 				buttons.push({
 					action: "no",
-					label: LOCALIZED_TEXT.BTN_NO,
+					label: LT.btnNo(),
 					icon: "fas fa-times",
 					callback: () => resolve(null)
 				});
 
 				new foundry.applications.api.DialogV2({
-					window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_MUTAGENIST_OPTIONS },
+					window: { title: LT.quickAlchemyMutagenistOptions() },
 					classes: ["quick-alchemy-dialog"],
-					content: `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_CONSUME_VIAL}</p>`,
+					content: `<p>${LT.quickAlchemyConsumeVial()}</p>`,
 					buttons,
 					default: "qv"
 				}).render(true);
@@ -2586,7 +2585,7 @@ async function displayCraftingDialog(actor, itemType) {
 		const buttons = [
 			{
 				action: "craftAttack",
-				label: LOCALIZED_TEXT.CRAFT_ATTACK,
+				label: LT.craftAttack(),
 				icon: "fas fa-bomb",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
@@ -2596,7 +2595,7 @@ async function displayCraftingDialog(actor, itemType) {
 
 					const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
 					if (!target) {
-						ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
+						ui.notifications.error(LT.notifPleaseTarget());
 						displayCraftingDialog(actor, 'vial');
 						return;
 					}
@@ -2612,11 +2611,11 @@ async function displayCraftingDialog(actor, itemType) {
 			},
 			{
 				action: "craft",
-				label: LOCALIZED_TEXT.CRAFT,
+				label: LT.craft(),
 				icon: "fas fa-hammer",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
-						debugLog(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+						debugLog(LT.notifActorNotfound());
 						return;
 					}
 
@@ -2629,7 +2628,7 @@ async function displayCraftingDialog(actor, itemType) {
 			},
 			{
 				action: "back",
-				label: LOCALIZED_TEXT.BACK,
+				label: LT.back(),
 				icon: "fas fa-arrow-left",
 				callback: () => qaDialog(actor)
 			}
@@ -2637,7 +2636,7 @@ async function displayCraftingDialog(actor, itemType) {
 
 		new foundry.applications.api.DialogV2({
 			window: {
-				title: LOCALIZED_TEXT.QUICK_ALCHEMY,
+				title: LT.quickAlchemy(),
 				// width: 450
 			},
 			classes: ["quick-alchemy-dialog"],
@@ -2675,7 +2674,7 @@ async function displayCraftingDialog(actor, itemType) {
 			<form>
 				${descStyle}
 				<div class="qa-wrapper">
-					<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE("Elixir of Life")}:</h3>
+					<h3>${LT.quickAlchemySelectItemType({ itemtype: "Elixir of Life" })}:</h3>
 					<select id="item-selection" name="item-selection"
 							style="display:inline-block;margin-top:5px;overflow-y:auto;width:100%;">
 						${options}
@@ -2690,11 +2689,11 @@ async function displayCraftingDialog(actor, itemType) {
 		const buttons = [
 			{
 				action: "craft",
-				label: LOCALIZED_TEXT.CRAFT,
+				label: LT.craft(),
 				icon: "fas fa-hammer",
 				callback: async (event, button, dialog) => {
 					if (!actor) {
-						ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+						ui.notifications.error(LT.notifActorNotfound());
 						return;
 					}
 					const selectedUuid   = button.form.elements["item-selection"]?.value || "none";
@@ -2706,7 +2705,7 @@ async function displayCraftingDialog(actor, itemType) {
 			},
 			{
 				action: "back",
-				label: LOCALIZED_TEXT.BACK,
+				label: LT.back(),
 				icon: "fas fa-arrow-left",
 				callback: () => qaDialog(actor)
 			}
@@ -2714,7 +2713,7 @@ async function displayCraftingDialog(actor, itemType) {
 
 		// Show dialog
 		await qaOpenDialogV2({
-			window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+			window: { title: LT.quickAlchemy() },
 			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
@@ -2792,7 +2791,7 @@ async function displayCraftingDialog(actor, itemType) {
 				const raw =
 					entry?.description ??
 					first?.system?.description?.value ?? // safety if something slipped through
-					`<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC} ${LOCALIZED_TEXT.QUICK_ALCHEMY_REOPEN_SHEET}</em>`;
+					`<em>${LT.quickAlchemyNoDesc()} ${LT.quickAlchemyReopenSheet()}</em>`;
 
 				html = await QA_TEXT_EDITOR.enrichHTML(raw, {
 					async: true,
@@ -2803,7 +2802,7 @@ async function displayCraftingDialog(actor, itemType) {
 				debugLog(3, `initial enrich failed: ${e?.message ?? e}`);
 			}
 
-			initialDesc = html ?? `<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC}</em>`;
+			initialDesc = html ?? `<em>${LT.quickAlchemyNoDesc()}</em>`;
 		}
 
 		// Build dialog content (includes Double Brew for non-food)
@@ -2811,7 +2810,7 @@ async function displayCraftingDialog(actor, itemType) {
 			<form>
 				${descStyle}
 				<div class="qa-wrapper">
-					<h3>${LOCALIZED_TEXT.QUICK_ALCHEMY_SELECT_ITEM_TYPE(itemType)}:</h3>
+					<h3>${LT.quickAlchemySelectItemType({ itemtype: itemType })}:</h3>
 					<select id="item-selection" name="item-selection" style="display:inline-block;margin-top:5px;overflow-y:auto;width:100%;">
 						${options}
 					</select>
@@ -2838,13 +2837,13 @@ async function displayCraftingDialog(actor, itemType) {
 		if (itemType === "weapon") {
 			buttons.push({
 				action: "craftAttack",
-				label: LOCALIZED_TEXT.CRAFT_ATTACK,
+				label: LT.craftAttack(),
 				icon: "fas fa-bomb",
 				callback: async (event, button, dialog) => {
-					if (!actor) return ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+					if (!actor) return ui.notifications.error(LT.notifActorNotfound());
 					const target = game.user.targets.size > 0 ? [...game.user.targets][0] : null;
 					if (!target) {
-						ui.notifications.error(LOCALIZED_TEXT.NOTIF_PLEASE_TARGET);
+						ui.notifications.error(LT.notifPleaseTarget());
 						displayCraftingDialog(actor, "weapon");
 						return;
 					}
@@ -2857,10 +2856,10 @@ async function displayCraftingDialog(actor, itemType) {
 		}
 		buttons.push({
 			action: "craft",
-			label: LOCALIZED_TEXT.CRAFT,
+			label: LT.craft(),
 			icon: "fas fa-hammer",
 			callback: async (event, button, dialog) => {
-				if (!actor) return ui.notifications.error(LOCALIZED_TEXT.NOTIF_ACTOR_NOTFOUND);
+				if (!actor) return ui.notifications.error(LT.notifActorNotfound());
 				const selectedUuid	= button.form.elements["item-selection"]?.value || "none";
 				const dbSelectedUuid = button.form.elements["db-item-selection"]?.value || "none";
 				debugLog(`displayCraftingDialog() | selectedUuid: ${selectedUuid} | dbSelectedUuid: ${dbSelectedUuid}`);
@@ -2869,14 +2868,14 @@ async function displayCraftingDialog(actor, itemType) {
 		});
 		buttons.push({
 			action: "back",
-			label: LOCALIZED_TEXT.BACK,
+			label: LT.back(),
 			icon: "fas fa-arrow-left",
 			callback: () => qaDialog(actor)
 		});
 
 		// Open dialog and wire description updates (delegate on host)
 		await qaOpenDialogV2({
-			window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY },
+			window: { title: LT.quickAlchemy() },
 			classes: ["quick-alchemy-dialog"],
 			content,
 			buttons,
@@ -2920,7 +2919,7 @@ async function displayCraftingDialog(actor, itemType) {
 
 							const raw =
 								ixEntry?.description ??
-								`<em>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_DESC} ${LOCALIZED_TEXT.QUICK_ALCHEMY_REOPEN_SHEET}</em>`;
+								`<em>${LT.quickAlchemyNoDesc()} ${LT.quickAlchemyReopenSheet()}</em>`;
 
 							html = await QA_TEXT_EDITOR.enrichHTML(raw, {
 								async: true,
@@ -2983,18 +2982,18 @@ export async function qaDialog(actor) {
 	//	if they have none we will prompt them to search for 10
 	//	minutes, unless they are archetype. 
 	if (vialCount < 1) { //	If vial count is less than 1
-		content += `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_NO_VV}</p>`;
-		if (!isArchetype) content += `${LOCALIZED_TEXT.QUICK_ALCHEMY_10_MIN}<br/><br/>`;
+		content += `<p>${LT.quickAlchemyNoVv()}</p>`;
+		if (!isArchetype) content += `${LT.quickAlchemy10Min()}<br/><br/>`;
 
 		// Buttons
 		buttons.push({
 			action: "ok",
-			label: LOCALIZED_TEXT.OK,
+			label: LT.ok(),
 			icon: "fas fa-check",
 			callback: () => { } // just closes
 		}, {
 			action: "vial",
-			label: LOCALIZED_TEXT.QUICK_VIAL,
+			label: LT.quickVial(),
 			icon: "fas fa-vial",
 			callback: () => displayCraftingDialog(actor, 'vial')
 		});
@@ -3003,7 +3002,7 @@ export async function qaDialog(actor) {
 		if (hasFeat(actor, "healing-bomb")){
 			buttons.push({
 				action: "healing-bomb",
-				label: LOCALIZED_TEXT.HEALING_BOMB,
+				label: LT.healingBomb(),
 				icon: "fas fa-hospital",
 				callback: () => displayHealingBombDialog(actor)
 			});
@@ -3014,7 +3013,7 @@ export async function qaDialog(actor) {
 			if (hasFeat(actor, "unstable-concoction")) {
 				buttons.push({
 					action: "unstable-concoction",
-					label: LOCALIZED_TEXT.UNSTABLE_CONCOCTION_BTN,
+					label: LT.unstableConcoctionBtn(),
 					icon: "fas fa-flask",
 					callback: (_ev, _btn, dialog) => {
 						try { dialog?.close?.(); } catch {}
@@ -3041,21 +3040,21 @@ export async function qaDialog(actor) {
 			});
 		}
 	} else {
-		content += `<p>${LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_TYPE}</p>`;
+		content += `<p>${LT.quickAlchemyPromptType()}</p>`;
 
 		buttons.push({
 			action: "weapon",
-			label: LOCALIZED_TEXT.WEAPON,
+			label: LT.weapon(),
 			icon: "fas fa-bomb",
 			callback: () => displayCraftingDialog(actor, 'weapon')
 		}, {
 			action: "consumable",
-			label: LOCALIZED_TEXT.CONSUMABLE,
+			label: LT.consumable(),
 			icon: "fas fa-flask",
 			callback: () => displayCraftingDialog(actor, 'consumable')
 		}, {
 			action: "vial",
-			label: LOCALIZED_TEXT.QUICK_VIAL,
+			label: LT.quickVial(),
 			icon: "fas fa-vial",
 			callback: () => displayCraftingDialog(actor, 'vial')
 		});
@@ -3063,7 +3062,7 @@ export async function qaDialog(actor) {
 		if (hasFeat(actor, "healing-bomb")){
 			buttons.push({
 				action: "healing-bomb",
-				label: LOCALIZED_TEXT.HEALING_BOMB,
+				label: LT.healingBomb(),
 				icon: "fas fa-hospital",
 				callback: () => displayHealingBombDialog(actor)
 			});
@@ -3073,7 +3072,7 @@ export async function qaDialog(actor) {
 			if (hasFeat(actor, "unstable-concoction")) {
 				buttons.push({
 					action: "unstable-concoction",
-					label: LOCALIZED_TEXT.UNSTABLE_CONCOCTION_BTN,
+					label: LT.unstableConcoctionBtn(),
 					icon: "fas fa-flask",
 					callback: (_ev, _btn, dialog) => {
 						try { dialog?.close?.(); } catch {}
@@ -3101,7 +3100,7 @@ export async function qaDialog(actor) {
 	}
 
 	new foundry.applications.api.DialogV2({
-		window: { title: LOCALIZED_TEXT.QUICK_ALCHEMY_PROMPT_ITEM_TYPE },
+		window: { title: LT.quickAlchemyPromptItemType() },
 		content,
 		buttons,
 		classes: ["quick-alchemy-dialog"],
@@ -3136,7 +3135,7 @@ export async function qaCraftAttack() {
 	}
 	if (!actor) {
 		// Neither a token nor a selected character exists
-		ui.notifications.error(LOCALIZED_TEXT.NOTIF_SELECT_TOKEN_FIRST);
+		ui.notifications.error(LT.notifSelectTokenFirst());
 		return;
 	}
 	window.qaCurrentActorForQA = actor;
@@ -3150,7 +3149,7 @@ export async function qaCraftAttack() {
 	const alchemistCheck = isAlchemist(actor);
 	if (!alchemistCheck.qualifies) {
 		debugLog(`qaCraftAttack() | Selected Character ( ${actor.name} ) is not an Alchemist - Ignoring`);
-		ui.notifications.warn(LOCALIZED_TEXT.NOTIF_SELECT_ALCHEMIST);
+		ui.notifications.warn(LT.notifSelectAlchemist());
 		return;
 	}
 

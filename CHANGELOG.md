@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.1.0] - 2026-07-20
+### Added
+- **Mutagenist Field Vials:** Added macro to support [Mutagenist Field Vials](https://2e.aonprd.com/ResearchFields.aspx) benefits, allowing alchemist to drink a versatile vial to suppress a mutagen's drawback for 1 minute (skill penalties, energy weaknesses, imposed conditions such as Hydra's Clumsy and Pallesthetic's Blinded, degree-of-success downgrades, and more) while leaving its benefits intact, then restores it automatically when the minute is up. 
+  - A short-lived marker effect shows the suppression on the token; delete it to end the suppression early.
+  - If multiple mutagens are active, it will prompt which to mutagen to suppress the effects of. 
+  - Macro is named `Mutagenist Field Vial` and is in the compendium. 
+### Changed
+- **Localization (translators, please read):** Converted localization keys from `SCREAMING_CASE` to `camelCase`. All language files were renamed mechanically, so no translated text changed. Any in-progress translation work will need the same rename applied. 
+- **Localization:** Dynamic localization implemented. 
+### Fixed
+- **Localization:** Chat text and buttons for the healing vial features were hardcoded in English and are now localized.
+
 ## [14.0.4] - 2026-07-03
 ### Fixed
 - **Quick Alchemy:** Fixed error with mutagenist Advanced Vial feature when making quick vials.
