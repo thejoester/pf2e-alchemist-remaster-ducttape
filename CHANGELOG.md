@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [14.1.1] - 2026-08-12
 ### Fixed
 - **[#87](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/87) Quick Alchemy (Wandering Chef):** Fixed the "Select a food to craft" dropdown showing empty. Alchemical foods are identified by the `alchemical-food` otherTag, which was not stored in the alchemical index, so the food lookup never matched. The index now stores `otherTags`, and the food check reads it from both index entries and full documents. The index schema was bumped so existing worlds rebuild automatically on next load. 
+### Changed
+- **Logging:** Standardized console log prefixes to `PF2e Alchemist Remaster Duct Tape`, fixing a typo (`P2Fe`) and inconsistent casing in the debug log output.
 
 ## [14.1.0] - 2026-07-20
 ### Added
