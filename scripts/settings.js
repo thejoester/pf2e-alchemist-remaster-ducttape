@@ -80,30 +80,30 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		if (objObject) {
 			switch (intLogType) {
 				case 1: // Info/Log (all)
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
 					break;
 				case 2: // Warning
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;", objObject);
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;", objObject);
 					break;
 				case 3: // Critical/Error
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;", objObject);
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;", objObject);
 					break;
 				default:
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;", objObject);
 			}
 		} else {
 			switch (intLogType) {
 				case 1: // Info/Log (all)
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
 					break;
 				case 2: // Warning
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;");
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | WARNING: ${formattedLogMsg}`, "color: orange; font-weight: bold;");
 					break;
 				case 3: // Critical/Error
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;");
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | ERROR: ${formattedLogMsg}`, "color: red; font-weight: bold;");
 					break;
 				default:
-					console.log(`%cP2Fe Alchemist Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
+					console.log(`%cPF2e Alchemist Remaster Duct Tape [${timestamp}] | ${formattedLogMsg}`, "color: aqua; font-weight: bold;");
 			}
 		}
 	}
@@ -509,13 +509,13 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 			},
 			default: "tinyOnly",
 			onChange: (value) => {
-				console.log(`PF2E Alchemist Remaster Duct Tape | Size-based alchemy mode set to: ${value}`);
+				console.log(`PF2e Alchemist Remaster Duct Tape | Size-based alchemy mode set to: ${value}`);
 			},
 			requiresReload: false
 		});
 		
 	//	Powerful Alchemy Settings
-		console.log("%cPF2E Alchemist Remaster Duct Tape | Initializing Powerful Alchemy settings...","color: aqua; font-weight: bold;");
+		console.log("%cPF2e Alchemist Remaster Duct Tape | Initializing Powerful Alchemy settings...","color: aqua; font-weight: bold;");
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "enablePowerfulAlchemy", {
 			name: LT.settingEnablePowerfulAlchemy(),
 			hint: LT.settingEnablePowerfulAlchemyHint(),
@@ -524,7 +524,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 			type: Boolean,
 			default: true,
 			onChange: (value) => {
-				console.log(`PF2E Alchemist Remaster Duct Tape | Powerful Alchemy enabled: ${value}`);
+				console.log(`PF2e Alchemist Remaster Duct Tape | Powerful Alchemy enabled: ${value}`);
 			},
 			requiresReload: true
 		});
@@ -737,7 +737,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 			type: Boolean, 
 			default: true, 
 			onChange: (value) => {
-				console.log(`PF2E Alchemist Remaster Duct Tape | FormulaSearch enabled: ${value}`);
+				console.log(`PF2e Alchemist Remaster Duct Tape | FormulaSearch enabled: ${value}`);
 			},
 			requiresReload: true
 		});
@@ -751,7 +751,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 			type: Boolean,
 			default: false,
 			onChange: (value) => {
-				console.log(`PF2E Alchemist Remaster Duct Tape | collapseChatDesc enabled: ${value}`);
+				console.log(`PF2e Alchemist Remaster Duct Tape | collapseChatDesc enabled: ${value}`);
 			},
 			requiresReload: false
 		});
@@ -847,7 +847,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 
 		// Log debug status
 		const debugLevel = game.settings.get("pf2e-alchemist-remaster-ducttape", "debugLevel");
-		console.log(`%cPF2E Alchemist Remaster Duct Tape | Debugging Level: ${debugLevel}`,"color: aqua; font-weight: bold;");
+		console.log(`%cPF2e Alchemist Remaster Duct Tape | Debugging Level: ${debugLevel}`,"color: aqua; font-weight: bold;");
 	});
 
 Hooks.once("ready", async () => {

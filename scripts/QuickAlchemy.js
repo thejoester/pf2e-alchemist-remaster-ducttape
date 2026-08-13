@@ -1481,10 +1481,16 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 			}
 			//	Check only food items for Wandering Chef dedication
 			if (type === "food") {
-				const tags = entry.system?.traits?.otherTags ?? [];
+				// otherTags may live on the flattened index entry or a full document
+				const otherTagsRaw =
+					entry?.otherTags ??
+					entry?.system?.traits?.otherTags ??
+					entry?._source?.system?.traits?.otherTags ??
+					[];
+				const tags = Array.isArray(otherTagsRaw) ? otherTagsRaw.map(t => String(t).toLowerCase()) : [];
 				if (tags.includes("alchemical-food")) {
 					if (slug) {
-						if (entry.slug.toLowerCase().includes(slug.toLowerCase())) {
+						if (itemSlug.toLowerCase().includes(slug.toLowerCase())) {
 							filteredEntries.push(entry);
 						}
 						continue;

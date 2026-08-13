@@ -5,6 +5,9 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | AlchIndex.js loaded","color: 
 // Ensure a global namespace for macros to call into
 window.PF2E_ARDT_INDEX ??= {};
 
+// Index schema version; bump when the stored item shape changes to force a rebuild
+const ALCH_INDEX_SCHEMA = 2;
+
 
 /*	===== Exported Functions =====
 
@@ -59,8 +62,13 @@ window.PF2E_ARDT_INDEX ??= {};
 			const items = currentIndex.items ?? {};
 			const hasItems = Object.keys(items).length > 0;
 
-			//	If we have items AND lastBuilt is set AND it's newer than 3 days, skip rebuild
-			if (hasItems && lastBuilt > 0) {
+			//	Force a rebuild when the stored index predates the current schema,
+			//	even if it was built recently (older indexes lack otherTags)
+			const storedSchema = Number(currentIndex?.meta?.schema ?? 0) || 0;
+			const schemaStale = storedSchema < ALCH_INDEX_SCHEMA;
+
+			//	If we have items AND lastBuilt is set AND it's newer than 3 days AND schema is current, skip rebuild
+			if (hasItems && lastBuilt > 0 && !schemaStale) {
 				const ageMs = now - lastBuilt;
 				if (ageMs <= THREE_DAYS_MS) {
 					debugLog(`AlchIndex.js: qaForceRebuildAlchIndex skipped; index age (ms)=${ageMs}`);
@@ -171,7 +179,7 @@ window.PF2E_ARDT_INDEX ??= {};
 			debugLog(`AlchIndex.js: Processing pack ${key}`);
 
 			const idx = await pack.getIndex({
-				fields: ["name", "img", "system.slug", "system.traits.value", "system.traits.rarity", "system.description.value", "system.level.value", "type"]
+				fields: ["name", "img", "system.slug", "system.traits.value", "system.traits.otherTags", "system.traits.rarity", "system.description.value", "system.level.value", "type"]
 			});
 
 			for (const e of idx) {
@@ -179,6 +187,7 @@ window.PF2E_ARDT_INDEX ??= {};
 
 				// Fields to store in Index
 				const traits = e.system?.traits?.value ?? [];
+				const otherTags = e.system?.traits?.otherTags ?? [];
 				const level = e.system?.level?.value ?? null;
 
 				//	Include:
@@ -202,7 +211,7 @@ window.PF2E_ARDT_INDEX ??= {};
 				}
 
 				const uuid = `Compendium.${pack.collection}.Item.${e._id}`;
-				items[uuid] = { uuid, name: e.name, slug, description: html, traits, img, level, rarity, type  };
+				items[uuid] = { uuid, name: e.name, slug, description: html, traits, otherTags, img, level, rarity, type  };
 
 				// Yield occasionally to keep UI responsive
 				if (performance.now() - lastYield > 16) {
@@ -213,8 +222,8 @@ window.PF2E_ARDT_INDEX ??= {};
 
 		}
 
-		// Save index with meta
-		const final = { meta, items };
+		// Save index with meta (stamp schema so stale-shape indexes can be detected)
+		const final = { meta: { ...meta, schema: ALCH_INDEX_SCHEMA }, items };
 		await game.settings.set("pf2e-alchemist-remaster-ducttape", "alchIndex", final);
 		const elapsed = ((performance.now() - start) / 1000).toFixed(2);
 
