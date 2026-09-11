@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [14.1.2] - 2026-09-10
+## [14.1.2-test] - 2026-09-10
 ### Fixed
 - **Quick Alchemy (Munitions Machinist):** Fixed characters with the [Munitions Machinist](https://2e.aonprd.com/Feats.aspx?ID=3172) feat being rejected as "not an Alchemist" when running Quick Alchemy. 
 - **Quick Alchemy (Firework Technician):** Fixed characters with the [Firework Technician](https://2e.aonprd.com/Archetypes.aspx?ID=119) dedication being rejected as "not an Alchemist". Their Quick Alchemy crafts fireworks consumables (fireworks, black powder, sparkler), so they get the Consumable option only, not the Weapon (bomb) or Quick Vial options.
