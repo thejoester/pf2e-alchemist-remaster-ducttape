@@ -1,7 +1,9 @@
 import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: aqua; font-weight: bold;");
 
-// ===== Globals ===== 
+/* ==========================================================================
+	Globals
+========================================================================== */
 
 // Compendium folder migration
 const ARDT_MODULE_ID = "pf2e-alchemist-remaster-ducttape";
@@ -14,10 +16,11 @@ const ARDT_PACK_NAMES = [
 ];
 const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: true, ... }
 
-/*	===== Exported Functions ===== 
-*/
-	
-	//	Function for debugging
+/* ==========================================================================
+	Exported functions
+========================================================================== */
+
+	// console logger gated by the module debug level; level 1 info, 2 warn, 3 error
 	export function debugLog(intLogType, stringLogMsg, objObject = null) {
 		
 		// Get Timestamps
@@ -56,15 +59,15 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 				const fileName = filePath.split("/").pop(); // Extract just the file name
 				// Ensure the file is one of the allowed files
 				const allowedFiles = [
-					"AlchemistFeats.js", 
-					"AlchIndex.js", 
-					"FormulaSearch.js", 
-					"HealingBombs.js", 
-					"LevelUp.js", 
-					"Localization.js",
-					"QAEffects.js", 
-					"QuickAlchemy.js", 
-					"settings.js", 
+					"AlchemistFeats.js",
+					"AlchIndex.js",
+					"FormulaSearch.js",
+					"HealingBomb.js",
+					"LevelUp.js",
+					"localization.js",
+					"QAEffects.js",
+					"QuickAlchemy.js",
+					"settings.js",
 					"VialSearch.js"
 				];
 				if (allowedFiles.includes(fileName)) {
@@ -108,8 +111,7 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		}
 	}
 
-	//	Function to check setting and return it
-	//	will ONLY work for settings for this module!
+	// get a module setting by name; returnIfError is used on any failure. This module's settings only.
 	export function getSetting(settingName, returnIfError = false) {
 		// Validate the setting name
 		if (typeof settingName !== "string" || settingName.trim() === "") {
@@ -140,33 +142,61 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		return actor.itemTypes.feat.some((feat) => feat.slug === slug);
 	}
 
-	//	Checks if a character qualifies for Alchemist benefits.
-	export function isAlchemist(actor) {
-		if (!actor) return { qualifies: false, dc: 0, isArchetype: false, log: `no valid actor passed` };
+	//	Checks if a character qualifies for Quick Alchemy, and how.
+	export function qualifiesForQA(actor) {
+		if (!actor) return { qualifies: false, dc: 0, isArchetype: false, canQuickVial: false, canCraftWeapons: false, explorationVials: false, vialDamageType: "acid", log: `no valid actor passed` };
 
 		// Check if the actor's class matches the localized Alchemist class name
 		const isAlchemistClass = actor?.class?.system?.slug === 'alchemist';
-		
+
 		// Check if the actor has the localized Alchemist Dedication feat
 		const hasAlchemistDedication = hasFeat(actor, "alchemist-dedication");
-		
-		const isAlchemistLog = `${actor.name} is Alchemist: ${isAlchemistClass} | Alchemist Dedication: ${hasAlchemistDedication}`;
-		
+
+		// Archetypes that grant the quick alchemy benefits without a true research field.
+		// Munitions Machinist (Gunslinger) makes bombs/alchemical ammunition; Firework Technician
+		// makes pyrotechnic vials/fireworks. Neither uses the acid/poison research-field Quick Vial.
+		const hasMunitionsMachinist = hasFeat(actor, "munitions-machinist");
+		const hasFireworkTechnician = hasFeat(actor, "firework-technician-dedication");
+
+		const qaLog = `${actor.name} is Alchemist: ${isAlchemistClass} | Alchemist Dedication: ${hasAlchemistDedication} | Munitions Machinist: ${hasMunitionsMachinist} | Firework Technician: ${hasFireworkTechnician}`;
+
+		// These archetypes grant Quick Alchemy but not the acid/poison research-field Quick Vial
+		const archetypeNoResearchVial = (hasMunitionsMachinist || hasFireworkTechnician)
+			&& !isAlchemistClass && !hasAlchemistDedication;
+
+		// Who replenishes versatile vials during exploration: the Alchemist class and
+		// Firework Technician (explicit in its dedication). Plain dedication and Munitions
+		// Machinist only make vials during daily prep, so they are excluded.
+		const explorationVials = isAlchemistClass || hasFireworkTechnician;
+
+		// Firework Technician's pyrotechnic versatile vials are fire; everyone else's are acid.
+		const vialDamageType = (hasFireworkTechnician && !isAlchemistClass) ? "fire" : "acid";
+
+		// Firework Technician's Quick Alchemy makes only fireworks consumables/ammo (black powder,
+		// sparkler, etc.), not bombs, so a firework-only actor gets no Weapon tab. Everyone else can.
+		const fireworkOnly = hasFireworkTechnician
+			&& !isAlchemistClass && !hasAlchemistDedication && !hasMunitionsMachinist;
+		const canCraftWeapons = !fireworkOnly;
+
 		// If the actor qualifies, get the Alchemist Class DC
-		if (isAlchemistClass || hasAlchemistDedication) {
+		if (isAlchemistClass || hasAlchemistDedication || hasMunitionsMachinist || hasFireworkTechnician) {
 			const alchemistClassDC = actor.system.proficiencies.classDCs.alchemist?.dc || 0;
 			return {
 				qualifies: true,
 				dc: alchemistClassDC,
-				isArchetype: hasAlchemistDedication && !isAlchemistClass,
-				log: isAlchemistLog
+				isArchetype: !isAlchemistClass,
+				canQuickVial: !archetypeNoResearchVial,
+				canCraftWeapons,
+				explorationVials,
+				vialDamageType,
+				log: qaLog
 			};
 		}
 		// If the actor doesn't qualify
-		return { qualifies: false, dc: 0, isArchetype: false , log: isAlchemistLog};
+		return { qualifies: false, dc: 0, isArchetype: false, canQuickVial: false, canCraftWeapons: false, explorationVials: false, vialDamageType: "acid", log: qaLog };
 	}
 
-	//  Function to check if actor has any active logged in owners
+	// true if the actor has a non-GM owner currently logged in
 	export function hasActiveOwners(actor) {
 		// Get owners with ownership level 3 ('Owner')
 		const owners = Object.keys(actor.ownership).filter(userId => actor.ownership[userId] === 3);
@@ -175,16 +205,17 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		const loggedInOwners = game.users.contents.filter(user => owners.includes(user.id) && user.active && !user.isGM);
 
 		// Debug output
-		debugLog(`Owners: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
+		debugLog(`Owners for ${actor.name}: ${owners.join(', ')}, Logged-in owners (non-GM): ${loggedInOwners.map(u => u.name).join(', ')}`);
 
 		// Return whether any non-GM logged-in owners exist
 		return loggedInOwners.length > 0;
 	}
 
-/* ===== Internal functions and helpers =====
-*/
+/* ==========================================================================
+	Internal functions and helpers
+========================================================================== */
 
-	//	Function to dynamically manage collapseChatDesc setting based on Workbench's setting
+	// defer chat-collapse to xdy-pf2e-workbench when it is managing collapsibility
 	function adjustCollapseSettingBasedOnWorkbench() {
 		if (!game.user.isGM) return;
 		const settingKey = "pf2e-alchemist-remaster-ducttape.collapseChatDesc";
@@ -345,26 +376,29 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 			}
 
 			// move packs into folder
+			const movedPacks = [], missingPacks = [];
 			for (const name of ARDT_PACK_NAMES) {
 				const cid = `${ARDT_MODULE_ID}.${name}`;
 				const pack = game.packs.get(cid);
-				if (!pack) { debugLog("settings.js | Pack not found, skipping:", cid); continue; }
+				if (!pack) { missingPacks.push(cid); continue; }
 				await pack.configure({ folder: folder.id });
-				debugLog("settings.js | Moved pack into folder:", cid, "→", ARDT_COMP_FOLDER_NAME);
+				movedPacks.push(cid);
 			}
 
 			// update flag
 			await setMigrationFlag("folderMigration", true);
 			ui.compendium.render(true);
-			debugLog("settings.js | Compendium folder migration complete.");
+			debugLog("settings.js | Compendium folder migration complete.", { movedPacks, missingPacks });
 		} catch (err) {
 			debugLog(3, "settings.js | Compendium folder migration failed:", err?.message ?? err);
 		}
 	}
 
 
-/* ===== Settings Section Headers =====
-*/
+/* ==========================================================================
+	Settings section headers
+========================================================================== */
+
 	const ARDT_SETTINGS_SECTIONS = [
 		{ before: "showFormulaDescription",  label: "Quick Alchemy" },
 		{ before: "enablePowerfulAlchemy",   label: "Powerful Alchemy" },
@@ -392,8 +426,10 @@ const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: tru
 		}
 	}
 
-/* ===== Hooks =====
-*/
+/* ==========================================================================
+	Hooks
+========================================================================== */
+
 	Hooks.once("init", () => {
 
 	//	=== Saved Data Settings ===
@@ -865,30 +901,32 @@ Hooks.once("ready", async () => {
 			...(game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") || [])
 		];
 
+		const reindexed = [], missing = [];
 		for (const id of compendiumIds) {
 			const pack = game.packs.get(id);
-			if (!pack) {
-				debugLog(3, `settings.js: Compendium not found: ${id}`);
-				continue;
-			}
+			if (!pack) { missing.push(id); continue; }
 			// request fields so players get slug in the index
 			await pack.getIndex({ fields: ["slug", "system.slug", "name", , "system.traits.value"], reload: true });
-			debugLog(`settings.js: Reindexed with fields: ${id}`);
+			reindexed.push(id);
 		}
-		
-		// preload 
+		debugLog(`settings.js: Reindexed compendiums`, { reindexed, missing });
+
+		// preload
+		const preloaded = [], failedPreload = [];
 		for (const id of compendiumIds) {
 			try {
 				const pack = game.packs.get(id);
 				if (pack) {
 					await pack.getDocuments();
-					debugLog(`settings.js: Preloaded compendium: ${id}`);
+					preloaded.push(id);
 				}
 			} catch (err) {
-				debugLog(3, `settings.js: Error preloading compendium ${id}: ${err?.message ?? err}`);
+				failedPreload.push({ id, reason: err?.message ?? String(err) });
 			}
 		}
-		
+		if (failedPreload.length) debugLog(2, `settings.js: Preloaded compendiums with ${failedPreload.length} failure(s)`, { preloaded, failedPreload });
+		else debugLog(`settings.js: Preloaded compendiums`, { preloaded });
+
 	} catch (err) {
 		debugLog(3, `settings.js: Error reindexing compendiums: ${err?.message ?? err}`);
 	}

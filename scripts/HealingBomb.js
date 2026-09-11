@@ -257,17 +257,10 @@ Hooks.on('renderChatMessage', async (message, html) => {
 
 			const dx = Math.abs(t.document.x - originX) / gridSize;
 			const dy = Math.abs(t.document.y - originY) / gridSize;
-			const isAdjacent = Math.max(dx, dy) <= 1.5;
-
-			if (!isAdjacent) {
-				debugLog(1, `[Healing Bomb] Skipping ${t.name}: not adjacent (dx=${dx}, dy=${dy})`);
-			}
-
-			return isAdjacent;
+			return Math.max(dx, dy) <= 1.5;
 		});
 
-		debugLog(1, `[Healing Bomb] Found ${nearby.length} adjacent token(s) for splash healing.`);
-		for (const t of nearby) debugLog(1, `[Healing Bomb] Healing ${t.name} for ${splashHealing}`);
+		debugLog(1, `[Healing Bomb] splash heal ${splashHealing} to ${nearby.length} adjacent token(s)`, { targets: nearby.map(t => t.name) });
 
 		for (const token of nearby) {
 			await token.actor.applyDamage({ damage: -splashHealing, token, heal: true, skipIWR: true });

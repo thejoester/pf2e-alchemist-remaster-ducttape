@@ -1,4 +1,4 @@
-import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting } from './settings.js';
 import { LT } from "./localization.js";
 
 console.log("%cPF2e Alchemist Remaster Duct Tape: FormulaSearch.js loaded","color: aqua; font-weight: bold;");

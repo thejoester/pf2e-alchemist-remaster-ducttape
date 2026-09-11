@@ -1,10 +1,9 @@
-import { debugLog, getSetting, hasFeat, isAlchemist } from './settings.js';
+import { debugLog, getSetting, hasFeat, qualifiesForQA } from './settings.js';
 import { throwHealingBomb } from './HealingBomb.js';
 import { getAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
 import { displayUnstableConcoctionDialog } from "./AlchemistFeats.js";
 import { LT } from "./localization.js";
 
-let isArchetype = false;
 let QA_TEXT_EDITOR;	// v13 Text editor
 const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
 const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
@@ -84,7 +83,7 @@ Hooks.on("combatTurnChange", async (combat, prior, current) => {
 				if (!priorActor || priorActor.type !== 'character') {
 					debugLog("No valid prior combatant found during combatTurnChange.");
 				}
-				const alchemistCheck = isAlchemist(priorActor);
+				const alchemistCheck = qualifiesForQA(priorActor);
 				if (!alchemistCheck.qualifies) {
 					debugLog(`Prior combatant ${priorActor.name} is not an alchemist`);
 				} else {
@@ -110,7 +109,7 @@ Hooks.on("combatTurnChange", async (combat, prior, current) => {
 			}
 			debugLog(1, `${currentActor.name}'S turn`);
 			// Ensure current combatant is alchemist
-			const alchemistCheck = isAlchemist(currentActor);
+			const alchemistCheck = qualifiesForQA(currentActor);
 			if (alchemistCheck.qualifies) {
 				// Delete temp items
 				await deleteTempItems(currentActor);
@@ -453,14 +452,17 @@ async function deleteTempItems(actor, endTurn = false) {
 	}
 
 	const removedItems = []; // Collect list of removed items
+	const failedItems = [];
 	for (const item of quickAlchemyItems) {
 		try {
-			removedItems.push(item.name);
 			await item.delete();
-			debugLog(`deleteTempItems() | Removed ${item.name} from ${actor.name}.`);
+			removedItems.push(item.name);
 		} catch (err) {
-			debugLog(`deleteTempItems() | Failed to remove ${item.name} from ${actor.name}: `, err);
+			failedItems.push({ name: item.name, reason: err?.message ?? String(err) });
 		}
+	}
+	if (removedItems.length || failedItems.length) {
+		debugLog(failedItems.length ? 2 : 1, `deleteTempItems() | removed ${removedItems.length} from ${actor.name}`, { removedItems, failedItems });
 	}
 
 	// Send a single chat message summarizing removed items
@@ -757,7 +759,7 @@ async function equipItemBySlug(slug, actor) {
 	return item._id;
 }
 
-// Function to clear infused items
+// delete infused items that have dropped to quantity 0
 async function clearInfused(actor) {
 	let itemsToDelete = [];
 	for (let item of actor.items) {
@@ -767,12 +769,10 @@ async function clearInfused(actor) {
 	}
 
 	if (itemsToDelete.length > 0) {
-		// Log before deletion for better debugging
 		debugLog(`clearInfused() | Deleting ${itemsToDelete.length} infused items with quantity 0.`);
 		for (let item of itemsToDelete) {
 			await item.delete();
 		}
-		debugLog(`clearInfused() | Deleting ${itemsToDelete.length} infused items with quantity 0.`);
 	} else {
 		debugLog("clearInfused() | No infused items with quantity 0 found.");
 	}
@@ -1329,7 +1329,8 @@ export async function processFormulasWithProgress(actor) {
 				}
 				weaponEntries.push(entry);
 				listProcessedFormulas += ` | added to weaponEntries`;
-			} else if (entry.type === "consumable") {
+			} else if (entry.type === "consumable" || entry.type === "ammo") {
+				// "ammo" is alchemical ammunition; group it with consumables
 				//Check for improbable-elixirs feat
 				if (hasFeat(actor, "improbable-elixirs")) {
 					if (!improbableElixir && !isAlchemical) {
@@ -1430,18 +1431,18 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 
 	// Arrays to store entry objects
 	const filteredEntries = [];
+	// per-iteration detail folded into one summary after the loop
+	const added = [], skipped = [], nullEntries = [], failed = [];
 
 	// Gather entries in respective arrays
-	//let listProcessedFormulas = "";
 	for (let [index, formula] of formulas.entries()) {
 		try {
 			let entry = await qaGetIndexEntry(formula.uuid);
 			if (!entry || !(entry?.traits?.length || entry?.system?.traits?.value?.length)) {
 				try {
 					entry = await fromUuid(formula.uuid);
-					debugLog(2, `processFilteredFormulasWithProgress() | Index fetch failed for ${formula.uuid}, possibly not Alchemical`);
 				} catch (e) {
-					debugLog(2, `processFilteredFormulasWithProgress() | fromUuid fallback failed for ${formula.uuid}: ${e?.message ?? e}`);
+					failed.push({ uuid: formula.uuid, reason: e?.message ?? String(e) });
 					entry = null;
 				}
 			}
@@ -1453,13 +1454,15 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 
 			// Skip null or partial entries safely
 			if (!entry) {
-				debugLog(`  --> entry is null for uuid=${formula.uuid} — skipping`);
+				nullEntries.push(formula.uuid);
 				continue;
 			}
 
 			// compute once per entry (BEFORE any logs/use)
 			const itemSlug = entry?.slug ?? entry?.system?.slug ?? entry?.name ?? "";
-			const entryType = entry?.type ?? entry?.system?.type?.value ?? "";	
+			const rawType = entry?.type ?? entry?.system?.type?.value ?? "";
+			// Alchemical ammunition is its own "ammo" document type; group it with consumables (Munitions Machinist, etc.)
+			const entryType = rawType === "ammo" ? "consumable" : rawType;
 			const traitsRaw =
 				entry?.system?.traits?.value ??
 				entry?.traits?.value ??			
@@ -1474,11 +1477,7 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 			const improbableElixir = traits.includes("potion") && level !== null && level <= 9;
 			
 			// Skip Versatile Vials
-			if (itemSlug === "versatile-vial") {
-				// do nothing
-				//listProcessedFormulas = `-> ${listProcessedFormulas} skipped (versatile-vial)`;
-				continue;
-			}
+			if (itemSlug === "versatile-vial") continue;
 			//	Check only food items for Wandering Chef dedication
 			if (type === "food") {
 				// otherTags may live on the flattened index entry or a full document
@@ -1501,61 +1500,51 @@ export async function processFilteredFormulasWithProgress(actor, type, slug) {
 				// Require the "alchemical" trait when selecting weapons or consumables
 				const requireAlchemical = type === "weapon" || type === "consumable";
 				if (hasFeat(actor, "improbable-elixirs")) { // if actor has improbable elixirs, allow non-alchemical consumables that meet criteria
-					if (requireAlchemical) {
-						if (!improbableElixir && !isAlchemical) {
-							debugLog(`  --> SKIP (not Alchemical and not eligible for Improbable Elixirs) slug=${itemSlug} | traits=[${traits.join(",")}]`);
-							continue;
-						}
-					}
-				} else {
-					if (requireAlchemical && !isAlchemical) {
-						debugLog(`  --> SKIP (not alchemical) slug=${itemSlug} | traits=[${traits.join(",")}]`);
+					if (requireAlchemical && !improbableElixir && !isAlchemical) {
+						skipped.push({ slug: itemSlug, reason: "not alchemical / not improbable-elixir" });
 						continue;
 					}
+				} else if (requireAlchemical && !isAlchemical) {
+					skipped.push({ slug: itemSlug, reason: "not alchemical" });
+					continue;
 				}
-				
+
 				// Apply slug filter if provided
 				if (slug) {
 					if (itemSlug.toLowerCase().includes(slug.toLowerCase())) {
 						filteredEntries.push(entry);
-						debugLog(`  --> ADD (slug match) ${itemSlug}`);
+						added.push(itemSlug);
 					}
 					continue;
 				}
 
 				filteredEntries.push(entry);
-				debugLog(`  --> ADD ${itemSlug}`);
-			} else { // entry is null
+				added.push(itemSlug);
 			}
 		} catch (err) {
-			debugLog(3, `  --> error at i=${index}, uuid=${formula?.uuid}: ${err?.message ?? err}`);
-			continue; // don’t let a bad record stall the run
+			failed.push({ uuid: formula?.uuid, reason: err?.message ?? String(err) });
+			continue; // don't let a bad record stall the run
 		}
 	}
 
 	// Close progress dialog
 	progressDialog.close();
 
-	// Return categorized entries
-	debugLog(`processFilteredFormulasWithProgress() | Returning filteredEntries: `, filteredEntries);
-
-	// Sort entries by name then level ignoring text in parenthesis 
+	// Sort entries by name then level, ignoring text in parentheses
 	filteredEntries.sort((a, b) => {
-		const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim(); // Remove text in parentheses
+		const nameA = a.name.replace(/\s*\(.*?\)/g, "").trim();
 		const nameB = b.name.replace(/\s*\(.*?\)/g, "").trim();
 		const nameComparison = nameA.localeCompare(nameB);
-		if (nameComparison !== 0) return nameComparison; // Sort by name if names differ
+		if (nameComparison !== 0) return nameComparison;
 		const levelA = (a.system?.level?.value ?? a.level ?? 0);
 		const levelB = (b.system?.level?.value ?? b.level ?? 0);
-		return levelB - levelA; // Otherwise, sort by item level descending
+		return levelB - levelA;
 	});
 
-	// TEMP DEBUG
-	debugLog(`processFilteredFormulasWithProgress() | Returning ${filteredEntries.length} filteredEntries | slugs:\n -> ${filteredEntries.map(i => i.slug ?? i.system?.slug ?? i.name).join("\n -> ")}]`);
+	const summary = { type, kept: filteredEntries.length, added, skipped, nullEntries, failed };
+	if (failed.length) debugLog(2, `processFilteredFormulasWithProgress() | filtered by ${type} with ${failed.length} failure(s)`, summary);
+	else debugLog(`processFilteredFormulasWithProgress() | filtered by ${type}`, summary);
 	return { filteredEntries };
-
-	// Close progress dialog - just in case
-	progressDialog.close();
 }
 
 //	Function to process Filtered inventory with progress bar
@@ -1737,6 +1726,7 @@ async function handleCrafting(uuid, actor, { quickVial = false, doubleBrew = fal
 				sendVialAttackMessage(uuid, actor);
 				break;
 			case 'consumable':
+			case 'ammo':
 				sendConsumableUseMessage(uuid);
 				break;
 			default:
@@ -2153,7 +2143,7 @@ async function displayCraftingDialog(actor, itemType) {
 	debugLog(`displayCraftingDialog() | actor: ${actor.name} | itemType: ${itemType}`);
 
 	// Check if actor has double brew feat
-	const { isArchetype } = isAlchemist(actor);
+	const { isArchetype } = qualifiesForQA(actor);
 	const doubleBrewFeat = hasFeat(actor, "double-brew");
 	debugLog(`displayCraftingDialog() | doubleBrewFeat: ${doubleBrewFeat}`);
 	let content = ``;
@@ -2981,6 +2971,9 @@ export async function qaDialog(actor) {
 	const vialCount = getVersatileVialCount(actor);
 	debugLog(`qaDialog() | Versatile Vial count for ${actor.name}: ${vialCount}`);
 
+	// Qualification + which Quick Alchemy options this actor gets (research-field Quick Vial, bombs, etc.)
+	const { isArchetype, canQuickVial, canCraftWeapons } = qualifiesForQA(actor);
+
 	let content = "";
 	const buttons = [];
 
@@ -2997,13 +2990,17 @@ export async function qaDialog(actor) {
 			label: LT.ok(),
 			icon: "fas fa-check",
 			callback: () => { } // just closes
-		}, {
-			action: "vial",
-			label: LT.quickVial(),
-			icon: "fas fa-vial",
-			callback: () => displayCraftingDialog(actor, 'vial')
 		});
-		
+		// Quick Vial not available when Munitions Machinist is the only Quick Alchemy source
+		if (canQuickVial) {
+			buttons.push({
+				action: "vial",
+				label: LT.quickVial(),
+				icon: "fas fa-vial",
+				callback: () => displayCraftingDialog(actor, 'vial')
+			});
+		}
+
 		// Add Healing Bomb button if actor has feat
 		if (hasFeat(actor, "healing-bomb")){
 			buttons.push({
@@ -3048,22 +3045,30 @@ export async function qaDialog(actor) {
 	} else {
 		content += `<p>${LT.quickAlchemyPromptType()}</p>`;
 
+		// Weapon (bombs) hidden for actors whose Quick Alchemy makes no bombs (Firework Technician)
+		if (canCraftWeapons) {
+			buttons.push({
+				action: "weapon",
+				label: LT.weapon(),
+				icon: "fas fa-bomb",
+				callback: () => displayCraftingDialog(actor, 'weapon')
+			});
+		}
 		buttons.push({
-			action: "weapon",
-			label: LT.weapon(),
-			icon: "fas fa-bomb",
-			callback: () => displayCraftingDialog(actor, 'weapon')
-		}, {
 			action: "consumable",
 			label: LT.consumable(),
 			icon: "fas fa-flask",
 			callback: () => displayCraftingDialog(actor, 'consumable')
-		}, {
-			action: "vial",
-			label: LT.quickVial(),
-			icon: "fas fa-vial",
-			callback: () => displayCraftingDialog(actor, 'vial')
 		});
+		// Quick Vial not available when Munitions Machinist is the only Quick Alchemy source
+		if (canQuickVial) {
+			buttons.push({
+				action: "vial",
+				label: LT.quickVial(),
+				icon: "fas fa-vial",
+				callback: () => displayCraftingDialog(actor, 'vial')
+			});
+		}
 		// Add Healing Bomb button if actor has feat
 		if (hasFeat(actor, "healing-bomb")){
 			buttons.push({
@@ -3110,7 +3115,7 @@ export async function qaDialog(actor) {
 		content,
 		buttons,
 		classes: ["quick-alchemy-dialog"],
-		default: "vial",
+		default: buttons.some(b => b.action === "vial") ? "vial" : buttons[0]?.action,
 		render: (app, html) => {
 			const link = html[0].querySelector("#qa-help-link");
 			if (!link) return;
@@ -3152,15 +3157,12 @@ export async function qaCraftAttack() {
 	}
 	
 	//	Make sure selected token is an alchemist or has archetype
-	const alchemistCheck = isAlchemist(actor);
+	const alchemistCheck = qualifiesForQA(actor);
 	if (!alchemistCheck.qualifies) {
 		debugLog(`qaCraftAttack() | Selected Character ( ${actor.name} ) is not an Alchemist - Ignoring`);
 		ui.notifications.warn(LT.notifSelectAlchemist());
 		return;
 	}
-
-	// Check if character is archetype for features. 
-	isArchetype = alchemistCheck.isArchetype;
 
 	// Delete any items with "infused" tag and 0 qty
 	await clearInfused(actor);

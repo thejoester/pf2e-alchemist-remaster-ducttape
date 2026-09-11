@@ -9,31 +9,30 @@ window.PF2E_ARDT_INDEX ??= {};
 const ALCH_INDEX_SCHEMA = 2;
 
 
-/*	===== Exported Functions =====
+/* ==========================================================================
+	Exported API
+========================================================================== */
 
-*/
-	
-	// Function to search index by uuid and return slug
+	// index entry for a uuid, or null
 	export async function qaGetIndexEntry(uuid) {
 		const index = game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndex") || {};
 		const entry = index?.items?.[uuid] ?? null;
-		// debugLog(`AlchIndex.js: qaGetIndexEntry(${uuid}} \n`, entry);
 		return entry;
 	}
-	
-	// Function to search index by uuid and return slug
+
+	// slug for a uuid, or null
 	export async function qaGetSlugFromUuid(uuid){
 		const entry = getAlchIndex();
 		debugLog(`AlchIndex.js: qaGetSlugFromUuid(${uuid}) \n`, entry?.items?.[uuid]?.slug);
 		return entry?.items?.[uuid]?.slug ?? null;
 	}
-	
-	//	Get Alchemical items Index
+
+	// stored index, or an empty shell
 	export function getAlchIndex() {
 		return game.settings.get("pf2e-alchemist-remaster-ducttape","alchIndex") ?? { items: {}, meta: {} };
 	}
 
-	//	Get Meta data for Alchemical Index (system version / locale)
+	// index meta (system version / locale / last built)
 	export function getAlchIndexMeta() {
 		return game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndexMeta") ?? {
 			systemVersion: "",
@@ -43,7 +42,7 @@ const ALCH_INDEX_SCHEMA = 2;
 		};
 	}
 	
-	// Function to kick off rebuild of index
+	// rebuild the index if stale, empty, or forced
 	export async function qaForceRebuildAlchIndex({ silent = false, reason = "manual" } = {}) {
 		try {
 			debugLog(`AlchIndex.js: qaForceRebuildAlchIndex start | reason=${reason}`);
@@ -107,8 +106,10 @@ const ALCH_INDEX_SCHEMA = 2;
 		}
 	}
 
-/*	===== Macro Functions =====
-*/
+/* ==========================================================================
+	Macro functions
+========================================================================== */
+
 	// GM-only: confirm, then clear the built index + meta
 	PF2E_ARDT_INDEX.clearIndexWithPrompt = async function () {
 		const NS = "pf2e-alchemist-remaster-ducttape";
@@ -144,7 +145,7 @@ const ALCH_INDEX_SCHEMA = 2;
 		}
 	};
 
-	//	Function to build/rebuild index
+	// scan packs, store alchemical and low-level potion items in the index
 	async function qaBuildOrUpdateAlchIndex({ fullRebuild, meta }) {
 		const start = performance.now();
 		debugLog("AlchIndex.js: qaBuildOrUpdateAlchIndex start");
@@ -172,6 +173,7 @@ const ALCH_INDEX_SCHEMA = 2;
 		let done = 0;
 		let lastYield = performance.now();
 
+		try {
 		for (const key of packs) {
 			const pack = game.packs.get(key);
 			if (!pack) continue;
@@ -221,6 +223,11 @@ const ALCH_INDEX_SCHEMA = 2;
 			}
 
 		}
+		} catch (e) {
+			// partial-on-throw: report how far the build got before failing
+			debugLog(3, `AlchIndex.js: qaBuildOrUpdateAlchIndex build failed after ${done}/${total} scanned`, { error: e, indexed: Object.keys(items).length });
+			throw e;
+		}
 
 		// Save index with meta (stamp schema so stale-shape indexes can be detected)
 		const final = { meta: { ...meta, schema: ALCH_INDEX_SCHEMA }, items };
@@ -230,8 +237,9 @@ const ALCH_INDEX_SCHEMA = 2;
 		debugLog(`AlchIndex.js: Saved index with ${Object.keys(items).length} entries in ${elapsed}s`);
 	}
 
-/*	===== Hooks =====
-*/
+/* ==========================================================================
+	Hooks
+========================================================================== */
 
 Hooks.once("ready", async () => {
 	// Make macros accessible

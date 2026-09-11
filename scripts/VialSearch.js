@@ -1,31 +1,79 @@
-import { debugLog, getSetting, hasFeat, isAlchemist  } from './settings.js';
+import { debugLog, getSetting, hasFeat, qualifiesForQA  } from './settings.js';
 import { LT } from "./localization.js";
 
-// See if VialSearch option enabled, default to false
+// vial-search reminder toggle, read at init
 let vialSearchReminder = false;
 let versatileVialName = "versatile vial";
+
+/* ==========================================================================
+	Pyrotechnic (fire) versatile vials
+========================================================================== */
+
+// trait + damage changes to retype an acid versatile vial, or null if none needed
+function vialRetypeUpdate(vial, damageType) {
+	if (!vial || !damageType || damageType === "acid") return null;
+	const traits = [...(vial.system?.traits?.value ?? [])];
+	const isAcid = vial.system?.damage?.damageType === "acid" || traits.includes("acid");
+	if (!isAcid) return null;
+	const i = traits.indexOf("acid");
+	if (i > -1) traits[i] = damageType;
+	else if (!traits.includes(damageType)) traits.push(damageType);
+	const update = { "system.traits.value": traits };
+	if (vial.system?.damage) {
+		update["system.damage.damageType"] = damageType;
+		update["system.damage.critDamageType"] = damageType;
+	}
+	return update;
+}
+
+// retype an existing versatile vial in place to match the actor's vial damage type
+async function retypeVialForActor(actor, vial) {
+	const { vialDamageType } = qualifiesForQA(actor);
+	const update = vialRetypeUpdate(vial, vialDamageType);
+	if (!update) return;
+	await vial.update(update);
+	debugLog(`VialSearch.js | ${actor.name}'s versatile vials retyped to ${vialDamageType}.`);
+}
+
+// New versatile vials (daily prep or otherwise) get retyped before creation, so Firework
+// Technician vials are pyrotechnic without a follow-up write.
+Hooks.on("preCreateItem", (item) => {
+	try {
+		const actor = item?.parent;
+		if (!actor || item.system?.slug !== "versatile-vial") return;
+		const { vialDamageType } = qualifiesForQA(actor);
+		const update = vialRetypeUpdate(item, vialDamageType);
+		if (update) item.updateSource(update);
+	} catch (e) {
+		debugLog(3, `VialSearch.js | preCreateItem vial retype failed: ${e?.message ?? e}`);
+	}
+});
+
+// Catch-up sweep for vials that predate the feat or this feature
+Hooks.once("ready", async () => {
+	if (!game.user.isGM) return;
+	for (const actor of game.actors) {
+		const vial = actor.items.find(i => i.system?.slug === "versatile-vial");
+		if (vial) await retypeVialForActor(actor, vial);
+	}
+});
 
 Hooks.once('init', () => {
     // Check if the vialSearchReminder setting is enabled globally
     vialSearchReminder = getSetting("vialSearchReminder");
 	
     if (vialSearchReminder) {
-		
-		//debug
 		debugLog(`VialSearch.js | Vial Search Reminder enabled!`);
-		
+
 		Hooks.on('updateWorldTime', async () => {
 
 			// Ensure this hook only runs for GMs
 			if (!game.user.isGM) return;
 			
-			/* ============================================================================
-				- Initialize explorationBlocks and get explorationTime and 
-				  previousTime from game settings
-				- explorationTime = total time in exploration mode
-				- currentTime = game world current time
-				- previousTime = game world time before change
-			============================================================================ */	
+			/*
+				explorationTime = accumulated time in exploration mode
+				currentTime = world time now; previousTime = world time at last tick
+			*/
 			let explorationBlocks = 0;
 			let explorationTime = getSetting('explorationTime') ?? 0;
 			let previousTime = getSetting('previousTime');
@@ -94,10 +142,11 @@ Hooks.once('init', () => {
 				if (!actor || actor.type !== 'character') continue; // Actor is character
 
 				// Checking that actor is Alchemist - Archetype does not qualify for this feature
-				const alchemistCheck = isAlchemist(actor);
-				if (!alchemistCheck.qualifies || alchemistCheck.isArchetype) {
-					debugLog(`VialSearch.js | Skipping Vial Search for Actor: ${actor.name} | Qualifies: ${alchemistCheck.qualifies} | is Archtype: ${alchemistCheck.isArchetype}`);	
-					continue; // actor is not alchemist or is an Archetype, stop
+				const alchemistCheck = qualifiesForQA(actor);
+				// Only those who replenish vials during exploration: Alchemist class + Firework Technician.
+				if (!alchemistCheck.qualifies || !alchemistCheck.explorationVials) {
+					debugLog(`VialSearch.js | Skipping Vial Search for Actor: ${actor.name} | Qualifies: ${alchemistCheck.qualifies} | explorationVials: ${alchemistCheck.explorationVials}`);
+					continue; // actor does not get exploration vial replenishment
 				}
 
 				// Avoid processing the same actor multiple times
@@ -214,21 +263,21 @@ $(document).on('click', '.add-vials-button', async (event) => {
 	
 });
 
-//	Function to get the max number of versatile vials actor should have in inventory
+// max vials an actor should hold: 2 + INT mod
 function getMaxVials(actor){
   const maxVials = 2 + actor.system.abilities.int.mod; // 2 + INT modifier
   debugLog(`VialSearch.js | Actor ${actor.name} max vials calculated as: ${maxVials}`);
   return maxVials;
 }
 
-//	function to get the current count of versatile vials in an actor's inventory
+// current versatile vial count in inventory
 function getCurrentVials(actor) {
     const versatileVials = actor.items.filter((item) => item.slug?.toLowerCase() === "versatile-vial");
     const vialCount = versatileVials.reduce((count, vial) => count + vial.system.quantity, 0);
     return vialCount;
 }
 
-//	Custom function to add versatile vials to the actor's inventory
+// add versatile vials to an actor, creating the item or bumping quantity
 export async function addVialsToActor(actor, count) {
 	
 	// Determine the actor's level
@@ -246,7 +295,7 @@ export async function addVialsToActor(actor, count) {
             const currentLevel = vialItem.system.level.value;
             if (currentLevel !== itemLevel) {
                 await vialItem.update({ 'system.level.value': itemLevel });
-                console.log(`${actor.name}'s versatile vial level updated to ${itemLevel}.`);
+                debugLog(`VialSearch.js | ${actor.name}'s versatile vial level updated to ${itemLevel}.`);
             }
 
 			// Update the item's quantity
@@ -266,6 +315,9 @@ export async function addVialsToActor(actor, count) {
 				debugLog(`VialSearch.js | Added item (quantity: ${count}, level: ${vialItem.level}) to ${actor.name}: `, vialItem );
 			}
 		}
+
+		// Firework Technician's versatile vials are pyrotechnic (fire, not acid)
+		if (vialItem) await retypeVialForActor(actor, vialItem);
 	} catch (error) {
 		debugLog(`VialSearch.js | Error adding versatile vial for actor ${actor.name}:`, error);
 	}

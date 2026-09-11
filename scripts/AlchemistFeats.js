@@ -1,15 +1,11 @@
-import { debugLog, getSetting, hasFeat, isAlchemist, hasActiveOwners  } from './settings.js';
+import { debugLog, getSetting, hasFeat, qualifiesForQA, hasActiveOwners  } from './settings.js';
 import { qaOpenDialogV2, qaClampDialog, qaCraftAttack, getVersatileVialCount, consumeVersatileVial, sendConsumableUseMessage, sendWeaponAttackMessage } from "./QuickAlchemy.js";
 import { qaGetIndexEntry } from "./AlchIndex.js";
 import { LT } from "./localization.js";
 
 const __unstableProcessedMsgs = new Set();
 
-//	Update item description based on regex pattern and replacement logic. 
-//	@param {string} description - The original item description. 
-//	@param {RegExp} regexPattern - The regex pattern to match.
-//	@param {Function} replacementFn - A function that takes a match and returns a replacement string.
-//	@returns {string} - The updated item description.
+// run a regex replacement over an item description
 function updateDescription(description, regexPattern, replacementFn) {
 	const updatedDescription = description.replace(regexPattern, replacementFn);
 	return updatedDescription;
@@ -53,7 +49,7 @@ Hooks.on("ready", () => {
 		}
 		
 		// Make sure selected token is an alchemist or has archetype
-		const alchemistCheck = isAlchemist(actor);
+		const alchemistCheck = qualifiesForQA(actor);
 		if (alchemistCheck.qualifies) {
 			debugLog("AlchemistFeats.js | Actor's Class DC:", alchemistCheck.dc);
 			if (!alchemistCheck.dc) {
@@ -65,10 +61,7 @@ Hooks.on("ready", () => {
 			return;
 		}
 		
-		/* EFFECT LINK ================================================================
-			Check if description has an effect link in it and inject note before
-			the link to state "Apply before use" 
-		============================================================================ */
+		// inject an "Apply before use" note ahead of any effect link in the description
 		await annotateEffectLinkBeforeUse(item);
 
 		if(item.system.traits.value.includes("healing")) {
@@ -82,10 +75,7 @@ Hooks.on("ready", () => {
 		  return;
 		}
 		
-		/* POWERFUL ALCHEMY ===========================================================
-			Check if the actor has Powerful Alchemy -
-			if not enabled, skip processing
-		============================================================================ */
+		// Powerful Alchemy: rewrite the item's save DC to the alchemist class DC
 		const paEnabled = getSetting("enablePowerfulAlchemy");
 		if (paEnabled) {
 			debugLog("AlchemistFeats.js | PowerfulAlchemy enabled.");
@@ -112,7 +102,7 @@ Hooks.on("ready", () => {
 
 		if (!item?.system?.ductTaped) return;
 
-		const alchemistCheck = isAlchemist(actor);
+		const alchemistCheck = qualifiesForQA(actor);
 		if (!alchemistCheck.qualifies || !alchemistCheck.dc) return;
 
 		if (item.system.traits.value.includes("healing")) return;
@@ -145,7 +135,7 @@ Hooks.on("ready", () => {
 			if (!item?.system?.ductTaped) continue;
 			if (!hasFeat(actor, "powerful-alchemy")) continue;
 
-			const alchemistCheck = isAlchemist(actor);
+			const alchemistCheck = qualifiesForQA(actor);
 			if (!alchemistCheck.qualifies || !alchemistCheck.dc) continue;
 
 			const currentDC = parseInt(checkEl.getAttribute("data-pf2-dc"));
@@ -271,31 +261,26 @@ async function applyPowerfulAlchemy(item,actor,alchemistDC){
 		// so we resolve it first, apply the DC replacement, then store the resolved text back.
 		// Use _source (raw stored data) and deepClone to ensure plain objects, not proxies.
 		const rawRules = foundry.utils.deepClone(item._source?.system?.rules ?? []);
-		debugLog(`AlchemistFeats.js | Note rule check: ${rawRules.length} rules on ${item.name}`);
-		let rulesChanged = false;
+		const updatedNoteRules = [];
 		for (let i = 0; i < rawRules.length; i++) {
 			const rule = rawRules[i];
 			if (rule?.key !== "Note") continue;
 			if (typeof rule.selector !== "string" || !rule.selector.includes("{item|_id}-damage")) continue;
 			const rawText = typeof rule.text === "string" ? rule.text : "";
-			if (!rawText) { debugLog(`AlchemistFeats.js | Note rule[${i}] has no text, skipping`); continue; }
+			if (!rawText) continue;
 			const resolvedText = game.i18n.localize(rawText);
-			debugLog(`AlchemistFeats.js | Note rule[${i}] rawText="${rawText}" | resolvedText="${resolvedText.substring(0, 120)}"`);
 			let updatedText = resolvedText;
 			for (const { pattern, replaceFn } of replacements) {
 				updatedText = updatedText.replace(pattern, replaceFn);
 			}
 			if (updatedText !== resolvedText) {
 				rawRules[i] = { ...rule, text: updatedText };
-				rulesChanged = true;
-				debugLog(`AlchemistFeats.js | Note rule[${i}] DC updated to ${alchemistDC}`);
-			} else {
-				debugLog(`AlchemistFeats.js | Note rule[${i}] - no DC pattern matched in resolved text`);
+				updatedNoteRules.push(i);
 			}
 		}
-		if (rulesChanged) {
+		if (updatedNoteRules.length) {
 			await item.updateSource({ "system.rules": rawRules });
-			debugLog(`AlchemistFeats.js | updateSource applied for rules on ${item.name}`);
+			debugLog(`AlchemistFeats.js | Note rule DC set to ${alchemistDC} on ${item.name}`, { updatedNoteRules, totalRules: rawRules.length });
 		}
 	} catch (err) {
 		debugLog(`AlchemistFeats.js | Error in applyPowerfulAlchemy: ${err.message}`);

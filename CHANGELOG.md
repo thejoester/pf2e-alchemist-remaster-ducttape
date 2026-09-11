@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.1.2] - 2026-09-10
+### Fixed
+- **Quick Alchemy (Munitions Machinist):** Fixed characters with the [Munitions Machinist](https://2e.aonprd.com/Feats.aspx?ID=3172) feat being rejected as "not an Alchemist" when running Quick Alchemy. 
+- **Quick Alchemy (Firework Technician):** Fixed characters with the [Firework Technician](https://2e.aonprd.com/Archetypes.aspx?ID=119) dedication being rejected as "not an Alchemist". Their Quick Alchemy crafts fireworks consumables (fireworks, black powder, sparkler), so they get the Consumable option only, not the Weapon (bomb) or Quick Vial options.
+  - Automatically converts their versatile vials to fire damage and changes acid trait to fire. 
+- **Quick Alchemy:** End-of-turn cleanup no longer lists an item as "removed" in chat if its deletion actually failed.
+
 ## [14.1.1] - 2026-08-12
 ### Fixed
 - **[#87](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/87) Quick Alchemy (Wandering Chef):** Fixed the "Select a food to craft" dropdown showing empty. Alchemical foods are identified by the `alchemical-food` otherTag, which was not stored in the alchemical index, so the food lookup never matched. The index now stores `otherTags`, and the food check reads it from both index entries and full documents. The index schema was bumped so existing worlds rebuild automatically on next load. 
