@@ -1,7 +1,7 @@
 {
   "name": "clear-index",
   "type": "script",
-  "command": "// Macro: Clear Alchemical Index (GM only)\nif (!game.user.isGM) {\n\tui.notifications.warn(game.i18n.localize(\"ardt.gmOnly\"));\n\treturn;\n}\nif (!window.PF2E_ARDT_INDEX?.clearIndexWithPrompt) {\n\tui.notifications.error(\"PF2E_ARDT_INDEX.clearIndexWithPrompt not found — is the module enabled and loaded?\");\n\treturn;\n}\nawait window.PF2E_ARDT_INDEX.clearIndexWithPrompt();",
+  "command": "// Macro: Clear Alchemical Index (GM only)\nif (!game.user.isGM) {\n\tui.notifications.warn(game.i18n.localize(\"ardt.gmOnly\"));\n\treturn;\n}\nif (!window.PF2E_ARDT_INDEX?.clearIndexWithPrompt) {\n\tui.notifications.error(\"PF2E_ARDT_INDEX.clearIndexWithPrompt not found; is the module enabled and loaded?\");\n\treturn;\n}\nawait window.PF2E_ARDT_INDEX.clearIndexWithPrompt();",
   "img": "icons/magic/symbols/cog-glowing-green.webp",
   "author": "EpqDCtSCbVNM4wPj",
   "scope": "global",

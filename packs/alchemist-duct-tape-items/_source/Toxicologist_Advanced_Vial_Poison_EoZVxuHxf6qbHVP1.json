@@ -39,13 +39,12 @@
         "diceNumber": "ternary(gte(@actor.level,18),4,ternary(gte(@actor.level,12),3,ternary(gte(@actor.level,4),2,1)))"
       },
       {
-        "key": "DamageDice",
+        "key": "FlatModifier",
         "selector": "{item|flags.pf2e.rulesSelections.injuryPoisonWeapon}-damage",
         "label": "Field Vial Injury Poison (Persistent)",
         "damageType": "poison",
-        "category": "persistent",
-        "dieSize": "d6",
-        "diceNumber": "ternary(gte(@actor.level,18),4,ternary(gte(@actor.level,12),3,ternary(gte(@actor.level,4),2,1)))"
+        "damageCategory": "persistent",
+        "value": "ternary(gte(@actor.level,18),4,ternary(gte(@actor.level,12),3,ternary(gte(@actor.level,4),2,1)))"
       }
     ],
     "slug": "effect-advanced-vial-poison",
