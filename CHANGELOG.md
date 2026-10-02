@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [14.1.3] - 2026-10-01
+## [14.1.3-test1] - 2026-10-01
 ### Fixed
 - **[#90](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/issues/90) Toxicologist Advanced Vials:** The persistent poison damage from Advanced Vials was rolling the vial's full damage dice instead of a flat amount equal to the vial's splash damage. It now deals the correct flat persistent damage (1 / 2 / 3 / 4 by level), matching the splash value.
 
