@@ -2345,12 +2345,15 @@ async function displayCraftingDialog(actor, itemType) {
 							r.prompt = game.i18n.localize(r.prompt);
 						}
 					}
-					if (r?.key === "DamageDice") {
-						r.damageType = damageType; // swap poison → acid if needed
+					// DamageDice = vial damage; FlatModifier w/ damageCategory persistent = Advanced Vials splash-value persistent
+					if (r?.key === "DamageDice" || r?.key === "FlatModifier") {
+						r.damageType = damageType; // swap poison -> acid if needed
+
+						const isPersistent = r.category === "persistent" || r.damageCategory === "persistent";
 
 						// Localize rule labels for chat clarity
 						if (typeof r.label === "string") {
-							if (useAdvanced && r.category === "persistent") {
+							if (useAdvanced && isPersistent) {
 								r.label = ADV_PERSIST_LABEL;
 							} else {
 								r.label = useAdvanced ? ADV_LABEL : FIELD_LABEL;
