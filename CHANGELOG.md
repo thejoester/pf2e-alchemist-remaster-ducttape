@@ -5,10 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [14.1.4] - 2026-11-05
+## [14.1.5-test1] - 2026-11-05
 ### Fixed
 - **[#95](https://github.com/thejoester/pf2e-alchemist-remaster-ducttape/pull/95) Foundry v14.370 compatibility:** Items in the module's compendiums would not open in Foundry v14.370 (they threw an error instead). They now open correctly. Thanks to [MartinChaves](https://github.com/martinchaves)!
 - **Foundry v14 chat compatibility:** Updated chat message handling to Foundry's current API so Quick Alchemy roll/use buttons, Healing Bomb buttons, and collapsible chat cards keep working in current and future Foundry versions.
+
+## [14.1.4] - 2026-10-02
+### Changed
+- **Localization:** Updated Chinese (cn) localization. Thanks [AlphaStarguide](https://github.com/AlphaStarguide)!
 
 ## [14.1.3] - 2026-10-01
 ### Fixed
