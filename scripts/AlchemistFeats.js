@@ -116,7 +116,7 @@ Hooks.on("ready", () => {
 
 	// PF2e re-fetches Note rule text from its own localization at damage-roll render time,
 	// ignoring any stored rule.text changes. Patch data-pf2-dc in the rendered DOM instead.
-	Hooks.on("renderChatMessage", (message, html) => {
+	Hooks.on("renderChatMessageHTML", (message, html) => {
 		if (!message.isDamageRoll) return;
 		if (!getSetting("enablePowerfulAlchemy")) return;
 

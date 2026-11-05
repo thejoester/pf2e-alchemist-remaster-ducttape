@@ -906,7 +906,7 @@ Hooks.once("ready", async () => {
 			const pack = game.packs.get(id);
 			if (!pack) { missing.push(id); continue; }
 			// request fields so players get slug in the index
-			await pack.getIndex({ fields: ["slug", "system.slug", "name", , "system.traits.value"], reload: true });
+			await pack.getIndex({ fields: ["slug", "system.slug", "name", "system.traits.value"], reload: true });
 			reindexed.push(id);
 		}
 		debugLog(`settings.js: Reindexed compendiums`, { reindexed, missing });

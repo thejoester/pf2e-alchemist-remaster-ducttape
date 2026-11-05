@@ -150,9 +150,10 @@ Hooks.on("deleteCombat", async (combat) => {
 	}
 });
 
-//	renderChatMessage Hook for .roll-attack and .use-consumable buttons
-Hooks.on("renderChatMessage", (message, html) => {
-	
+//	renderChatMessageHTML Hook for .roll-attack and .use-consumable buttons
+Hooks.on("renderChatMessageHTML", (message, html) => {
+	html = $(html); // wrap HTMLElement (v13+ hook arg) for jQuery body
+
 	// Handle "Roll Attack" button functionality
 	html.find(".roll-attack").on("click", async (event) => {
 		const itemUuid = event.currentTarget.dataset.uuid;
@@ -222,8 +223,9 @@ Hooks.on("renderChatMessage", (message, html) => {
 	});
 });
 
-//	renderChatMessage Hook for collapsable messages
-Hooks.on("renderChatMessage", (message, html) => {
+//	renderChatMessageHTML Hook for collapsable messages
+Hooks.on("renderChatMessageHTML", (message, html) => {
+	html = $(html); // wrap HTMLElement (v13+ hook arg) for jQuery body
 	let messageHook = `Hook called for message from ${message.speaker?.alias || message.flavor || "Unknown"}`;
 
 	// Process only messages with the alias "Quick Alchemy"
@@ -289,8 +291,9 @@ Hooks.on("renderChatMessage", (message, html) => {
 });
 
 //	Hook for item use chat messages with coagulant trait
-Hooks.on("renderChatMessage", async (message, html, data) => {
-	debugLog("renderChatMessage hook triggered", message);
+Hooks.on("renderChatMessageHTML", async (message, html, data) => {
+	html = $(html); // wrap HTMLElement (v13+ hook arg) for jQuery body
+	debugLog("renderChatMessageHTML hook triggered", message);
 	html.find('.use-consumable').on('click', async (event) => {
 		// Only act on item use messages
 		const item = await fromUuid(message?.flags?.pf2e?.origin?.uuid ?? "");
