@@ -1,12 +1,13 @@
-import { debugLog, getSetting, hasFeat, qualifiesForQA } from './settings.js';
+import { debugLog, getSetting, hasFeat, qualifiesForQA, ardtItemsPackId, ardtItemUuid } from './settings.js';
 import { throwHealingBomb } from './HealingBomb.js';
 import { getAlchIndex, qaGetIndexEntry } from "./AlchIndex.js";
 import { displayUnstableConcoctionDialog } from "./AlchemistFeats.js";
 import { LT } from "./localization.js";
 
 let QA_TEXT_EDITOR;	// v13 Text editor
-const acidVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.9NXufURxsBROfbz1";
-const poisonVialId = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.LqZyfGxtRGXEpzZq";
+// Lazy so the active system (and its items pack) is resolved at call time, not import time
+const acidVialId = () => ardtItemUuid("9NXufURxsBROfbz1");
+const poisonVialId = () => ardtItemUuid("LqZyfGxtRGXEpzZq");
 
 Hooks.once("init", () => {
 	// v13 text editor
@@ -310,7 +311,7 @@ Hooks.on("renderChatMessageHTML", async (message, html, data) => {
 		// Inject our link under the item title
 		const flavor = document.createElement("div");
 		flavor.classList.add("card-flavor");
-		flavor.innerHTML = `If the target has <strong><a data-uuid="Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.coagulant-immunity-id">Coagulant Immunity</a></strong>, this healing has no effect.`;
+		flavor.innerHTML = `If the target has <strong><a data-uuid="Compendium.${ardtItemsPackId()}.coagulant-immunity-id">Coagulant Immunity</a></strong>, this healing has no effect.`;
 
 		html.find(".card-header").append(flavor);
 	});
@@ -549,7 +550,7 @@ export async function sendConsumableUseMessage(itemUuid) {
 	let coagulantLink = "";
 	if (showCoagulantNote) {
 		const enrichedLink = await TextEditor.enrichHTML(
-			"This applies @UUID[Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.htVOAKfVmVYafFrQ]{Coagulant Immunity} for 10 minutes. " +
+			`This applies @UUID[${ardtItemUuid("htVOAKfVmVYafFrQ")}]{Coagulant Immunity} for 10 minutes. ` +
 			"If the target is already under the effect of <strong>Coagulant Immunity</strong>, this healing has no effect.",
 			{ async: true }
 		);
@@ -940,7 +941,7 @@ async function craftHealingVial(selectedItem, selectedActor) {
 		return;
 	} else {
 		// Item does not exist, retrieve from compendium
-		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
+		const compendium = game.packs.get(ardtItemsPackId());
 		if (!compendium) {
 			debugLog(3, "craftHealingVial() | Compendium not found.");
 			return;
@@ -1825,7 +1826,7 @@ async function craftHealingBomb(actor, elixirUuid) {
 	debugLog(`craftHealingBomb() | elixirStrength: ${elixirStrength}`);
 
 	// Get base item from compendium
-	const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
+	const compendium = game.packs.get(ardtItemsPackId());
 	if (!compendium) {
 		debugLog(3, "craftHealingBomb() | Compendium not found.");
 		return;
@@ -2209,7 +2210,7 @@ async function displayCraftingDialog(actor, itemType) {
 		</style>`;
 		
 	// Get uuid of vial dependant on if actor is toxicologist
-	let uuid = hasFeat(actor, "toxicologist") ? poisonVialId || acidVialId : acidVialId;
+	let uuid = hasFeat(actor, "toxicologist") ? poisonVialId() || acidVialId() : acidVialId();
 
 	// Check type of item 
 	if (itemType === 'vial') {
@@ -2223,7 +2224,7 @@ async function displayCraftingDialog(actor, itemType) {
 		}
 
 		// Make sure module compendium is available 
-		const compendium = game.packs.get("pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items");
+		const compendium = game.packs.get(ardtItemsPackId());
 		if (!compendium) {
 			debugLog(3, "displayCraftingDialog() | Compendium not found.");
 			return;
@@ -2283,8 +2284,8 @@ async function displayCraftingDialog(actor, itemType) {
 				if (!actor) return;
 
 				// effect UUIDs
-				const UUID_FIELD = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.BaklfPmQqwS0wOca"; // effect-field-vial-poison
-				const UUID_ADV   = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.EoZVxuHxf6qbHVP1"; // effect-advanced-vial-poison
+				const UUID_FIELD = ardtItemUuid("BaklfPmQqwS0wOca"); // effect-field-vial-poison
+				const UUID_ADV   = ardtItemUuid("EoZVxuHxf6qbHVP1"); // effect-advanced-vial-poison
 
 				// Pick which effect to apply
 				const useAdvanced = hasFeat(actor, "advanced-vials-toxicologist");
@@ -2486,7 +2487,7 @@ async function displayCraftingDialog(actor, itemType) {
 
 			// See if we are changing damage type 
 			selectedType = await getBestDamageType(target); // Default to poison
-			uuid = selectedType === "poison" ? poisonVialId : selectedType === "acid" ? acidVialId : poisonVialId;
+			uuid = selectedType === "poison" ? poisonVialId() : selectedType === "acid" ? acidVialId() : poisonVialId();
 
 			debugLog(`displayCraftingDialog() | selectedType: ${selectedType} | uuid: ${uuid}`);
 
@@ -2503,7 +2504,7 @@ async function displayCraftingDialog(actor, itemType) {
 			debugLog(`displayCraftingDialog() | Advanced Vials Mutagenist feat detected!`);
 			async function applyEffectFromCompendium(actor) {
 				// Define the exact effect UUID
-				const effectUUID = "Compendium.pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items.Item.0Zpa9OfNcTUlNc2t";
+				const effectUUID = ardtItemUuid("0Zpa9OfNcTUlNc2t");
 
 				// Get the effect document from the compendium
 				const effect = await fromUuid(effectUUID);

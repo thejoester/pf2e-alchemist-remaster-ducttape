@@ -1,0 +1,143 @@
+{
+  "name": "Healing Bomb",
+  "type": "weapon",
+  "effects": [],
+  "system": {
+    "description": {
+      "gm": "",
+      "value": "<p><span style=\"font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif\">You can add a foamy catalyst to an @UUID[Compendium.pf2e.equipment-srd.Item.hDLbR56Id2OtU318]{Elixir of Life} to turn it into a topical projectile. You can throw the elixir as though it were an alchemical bomb</span>, with the following results.<span style=\"font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif\"><br style=\"color:rgb(255, 255, 255);font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif;font-size:15px;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:normal;orphans:2;text-align:start;text-indent:0px;text-transform:none;widows:2;word-spacing:0px;-webkit-text-stroke-width:0px;white-space:normal;background-color:rgb(15, 15, 15);text-decoration-thickness:initial;text-decoration-style:initial;text-decoration-color:initial\" /><br style=\"color:rgb(255, 255, 255);font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif;font-size:15px;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:normal;orphans:2;text-align:start;text-indent:0px;text-transform:none;widows:2;word-spacing:0px;-webkit-text-stroke-width:0px;white-space:normal;background-color:rgb(15, 15, 15);text-decoration-thickness:initial;text-decoration-style:initial;text-decoration-color:initial\" /><strong>Success</strong>: </span>The target is affected as though it drank the elixir, and each living creature adjacent to it regains HP from the bomb equal to the elixir's number of damage dice. The target also gains @UUID[Compendium.pf2e.equipment-effects.Item.lPRuIRbu0rHBkoKY]{Effect: Elixir of Life} per the elixir level used.</p><p><span style=\"font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif\"><strong>Failure</strong>: </span>The target regains HP equal to the elixir's number of damage dice.<span style=\"font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif\"><br style=\"color:rgb(255, 255, 255);font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif;font-size:15px;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:normal;orphans:2;text-align:start;text-indent:0px;text-transform:none;widows:2;word-spacing:0px;-webkit-text-stroke-width:0px;white-space:normal;background-color:rgb(15, 15, 15);text-decoration-thickness:initial;text-decoration-style:initial;text-decoration-color:initial\" /><strong>Critical Failure</strong>: </span>The healing bomb has no effect.</p>"
+    },
+    "rules": [],
+    "slug": "healing-bomb-ardt",
+    "_migration": {
+      "version": 0.935,
+      "lastMigration": null
+    },
+    "traits": {
+      "otherTags": [],
+      "value": [
+        "alchemical",
+        "bomb",
+        "consumable",
+        "healing",
+        "splash"
+      ],
+      "rarity": "common"
+    },
+    "publication": {
+      "title": "PF2e Alchemist Remaster Duct Tape module",
+      "authors": "PF2e Alchemist Remaster Duct Tape module",
+      "license": "OGL",
+      "remaster": true
+    },
+    "level": {
+      "value": 1
+    },
+    "quantity": 1,
+    "baseItem": "alchemical-bomb",
+    "bulk": {
+      "value": 0.1
+    },
+    "hp": {
+      "value": 0,
+      "max": 0
+    },
+    "hardness": 0,
+    "price": {
+      "value": {}
+    },
+    "equipped": {
+      "carryType": "worn",
+      "invested": null,
+      "handsHeld": 0
+    },
+    "containerId": null,
+    "size": "med",
+    "material": {
+      "type": null,
+      "grade": null
+    },
+    "identification": {
+      "status": "identified",
+      "unidentified": {
+        "name": "Unusual Weapon",
+        "img": "systems/pf2e/icons/unidentified_item_icons/weapon.webp",
+        "data": {
+          "description": {
+            "value": ""
+          }
+        }
+      },
+      "misidentified": {}
+    },
+    "usage": {
+      "value": "held-in-one-hand",
+      "canBeAmmo": false
+    },
+    "category": "martial",
+    "group": "bomb",
+    "bonus": {
+      "value": 0
+    },
+    "damage": {
+      "dice": 1,
+      "die": "d6",
+      "damageType": "untyped",
+      "persistent": null
+    },
+    "splashDamage": {
+      "value": 1
+    },
+    "range": 20,
+    "expend": null,
+    "reload": {
+      "value": "-"
+    },
+    "grade": null,
+    "runes": {
+      "potency": 0,
+      "striking": 0,
+      "property": []
+    },
+    "specific": null,
+    "subitems": [],
+    "bonusDamage": {
+      "value": 6
+    },
+    "property1": {
+      "value": "",
+      "dice": 0,
+      "die": "",
+      "damageType": "",
+      "critDice": 0,
+      "critDie": "",
+      "critDamage": "",
+      "critDamageType": "",
+      "strikeConditionType": "",
+      "strikeConditionValue": null,
+      "criticalConditionType": "",
+      "criticalConditionValue": null
+    }
+  },
+  "img": "icons/consumables/potions/potion-tube-corked-glowing-red.webp",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "r67QIRAhUsRxVR5r": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.12.1",
+    "createdTime": 1744408945497,
+    "modifiedTime": 1756540791733,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
+    "exportSource": null
+  },
+  "_id": "2yyr8yA9JRmOskab",
+  "sort": 300000,
+  "_key": "!items!2yyr8yA9JRmOskab"
+}

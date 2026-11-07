@@ -1,0 +1,172 @@
+{
+  "img": "icons/consumables/potions/potion-tube-corked-green.webp",
+  "name": "Quick Vial",
+  "system": {
+    "description": {
+      "gm": "",
+      "value": "<p>This tiny glass flask contains volatile chemicals that can be used offensively in a pinch. The bomb deals acid damage and acid splash damage.</p>"
+    },
+    "rules": [
+      {
+        "hideIfDisabled": true,
+        "key": "FlatModifier",
+        "selector": "{item|id}-attack",
+        "type": "item",
+        "value": "ternary(gte(@item.level,18),3,ternary(gte(@item.level,12),2,ternary(gte(@item.level,4),1,0)))"
+      },
+      {
+        "key": "DamageAlteration",
+        "mode": "upgrade",
+        "predicate": [
+          "dice:slug:base"
+        ],
+        "property": "dice-number",
+        "selectors": [
+          "{item|id}-damage"
+        ],
+        "value": "ternary(gte(@item.level,18),4,ternary(gte(@item.level,12),3,ternary(gte(@item.level,4),2,1)))"
+      },
+      {
+        "key": "AdjustModifier",
+        "mode": "upgrade",
+        "selector": "{item|id}-damage",
+        "slug": "splash",
+        "value": "ternary(gte(@item.level,18),4,ternary(gte(@item.level,12),3,ternary(gte(@item.level,4),2,1)))"
+      }
+    ],
+    "slug": "quick-vial-acid-temp",
+    "_migration": {
+      "version": 0.935,
+      "lastMigration": null,
+      "previous": null
+    },
+    "traits": {
+      "otherTags": [],
+      "value": [
+        "acid",
+        "alchemical",
+        "bomb",
+        "consumable",
+        "infused",
+        "splash"
+      ],
+      "rarity": "common"
+    },
+    "publication": {
+      "title": "PF2e Alchemist Remaster Duct Tape module",
+      "authors": "TheJoester",
+      "license": "ORC",
+      "remaster": true
+    },
+    "level": {
+      "value": 1
+    },
+    "quantity": 1,
+    "baseItem": "alchemical-bomb",
+    "bulk": {
+      "value": 0
+    },
+    "hp": {
+      "value": 0,
+      "max": 0
+    },
+    "hardness": 0,
+    "price": {
+      "value": {}
+    },
+    "equipped": {
+      "carryType": "worn",
+      "invested": null,
+      "handsHeld": 0
+    },
+    "containerId": null,
+    "size": "med",
+    "material": {
+      "type": null,
+      "grade": null
+    },
+    "identification": {
+      "status": "identified",
+      "unidentified": {
+        "name": "Unusual Alchemical Bomb",
+        "img": "systems/pf2e/icons/unidentified_item_icons/alchemical_bomb.webp",
+        "data": {
+          "description": {
+            "value": ""
+          }
+        }
+      },
+      "misidentified": {}
+    },
+    "usage": {
+      "value": "held-in-one-hand",
+      "canBeAmmo": false
+    },
+    "category": "simple",
+    "group": "bomb",
+    "bonus": {
+      "value": 0
+    },
+    "damage": {
+      "dice": 1,
+      "die": "d6",
+      "damageType": "acid",
+      "persistent": null
+    },
+    "splashDamage": {
+      "value": 1
+    },
+    "range": 20,
+    "expend": null,
+    "reload": {
+      "value": "-"
+    },
+    "grade": null,
+    "runes": {
+      "potency": 0,
+      "striking": 0,
+      "property": []
+    },
+    "specific": null,
+    "subitems": [],
+    "bonusDamage": {
+      "value": 0
+    },
+    "property1": {
+      "value": "",
+      "dice": 0,
+      "die": "",
+      "damageType": "",
+      "critDice": 0,
+      "critDie": "",
+      "critDamage": "",
+      "critDamageType": "",
+      "strikeConditionType": "",
+      "strikeConditionValue": null,
+      "criticalConditionType": "",
+      "criticalConditionValue": null
+    }
+  },
+  "type": "weapon",
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.9.0",
+    "createdTime": 1738906276097,
+    "modifiedTime": 1756540791733,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
+    "exportSource": null
+  },
+  "effects": [],
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "flags": {},
+  "_id": "9NXufURxsBROfbz1",
+  "sort": 500000,
+  "_key": "!items!9NXufURxsBROfbz1"
+}
