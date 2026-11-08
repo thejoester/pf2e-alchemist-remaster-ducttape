@@ -1,0 +1,108 @@
+{
+  "name": "Quick vial injury poison (*Temporary)",
+  "type": "consumable",
+  "effects": [],
+  "system": {
+    "description": {
+      "gm": "",
+      "value": "<p>Applied as an injury poison. Adds damage to the first successful Strike.</p>"
+    },
+    "rules": [],
+    "slug": "quick-vial-injury-poison",
+    "_migration": {
+      "version": 0.935,
+      "lastMigration": null
+    },
+    "traits": {
+      "otherTags": [],
+      "value": [
+        "consumable",
+        "infused",
+        "injury",
+        "poison"
+      ],
+      "rarity": "common"
+    },
+    "publication": {
+      "title": "PF2e Alchemist Remaster Duct Tape Module",
+      "authors": "TheJoester",
+      "license": "ORC",
+      "remaster": true
+    },
+    "level": {
+      "value": 1
+    },
+    "quantity": 1,
+    "baseItem": null,
+    "bulk": {
+      "value": 0.1
+    },
+    "hp": {
+      "value": 0,
+      "max": 0
+    },
+    "hardness": 0,
+    "price": {
+      "value": {}
+    },
+    "equipped": {
+      "carryType": "worn"
+    },
+    "containerId": null,
+    "size": "med",
+    "material": {
+      "type": null,
+      "grade": null
+    },
+    "identification": {
+      "status": "identified",
+      "unidentified": {
+        "name": "Unusual Object",
+        "img": "systems/pf2e/icons/unidentified_item_icons/other-consumables.webp",
+        "data": {
+          "description": {
+            "value": ""
+          }
+        }
+      },
+      "misidentified": {}
+    },
+    "category": "poison",
+    "uses": {
+      "value": 1,
+      "max": 1,
+      "autoDestroy": true
+    },
+    "damage": {
+      "formula": "1",
+      "type": "poison",
+      "kind": "damage"
+    },
+    "usage": {
+      "value": "held-in-one-hand"
+    },
+    "stackGroup": null,
+    "spell": null
+  },
+  "img": "icons/consumables/potions/potion-jug-corked-skull-poison-brown-green.webp",
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "CLMiGpsYVSTK4VM8": 3
+  },
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "coreVersion": "13.346",
+    "systemId": "pf2e",
+    "systemVersion": "6.9.0",
+    "createdTime": 1737380279715,
+    "modifiedTime": 1756540791733,
+    "lastModifiedBy": "EpqDCtSCbVNM4wPj",
+    "exportSource": null
+  },
+  "_id": "gZlazH0QYF7mK94t",
+  "sort": 800000,
+  "_key": "!items!gZlazH0QYF7mK94t"
+}

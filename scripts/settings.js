@@ -8,13 +8,26 @@ console.log("%cPF2e Alchemist Remaster Duct Tape | settings.js loaded","color: a
 // Compendium folder migration
 const ARDT_MODULE_ID = "pf2e-alchemist-remaster-ducttape";
 const ARDT_COMP_FOLDER_NAME = "PF2e Alchemist Duct Tape";
-// Keep this in sync with module.json "packs"[].name
+// Keep this in sync with module.json "packs"[].name; both items packs are listed so folder
+// migration handles whichever system's pack is actually registered in the world
 const ARDT_PACK_NAMES = [
 	"alchemist-duct-tape-macros",
 	"alchemist-duct-tape-items",
+	"alchemist-duct-tape-items-sf2e",
 	"alchemist-duct-tape-journal"
 ];
 const ARDT_FLAGS_SETTING = "ardtFlags";	// single object: { folderMigration: true, ... }
+
+// Items pack collection id for the active system; sf2e ships a duplicate pack (same item ids)
+export function ardtItemsPackId() {
+	const suffix = game.system?.id === "sf2e" ? "-sf2e" : "";
+	return `${ARDT_MODULE_ID}.alchemist-duct-tape-items${suffix}`;
+}
+
+// Full compendium Item UUID in the active system's items pack
+export function ardtItemUuid(itemId) {
+	return `Compendium.${ardtItemsPackId()}.Item.${itemId}`;
+}
 
 /* ==========================================================================
 	Exported functions
@@ -897,7 +910,7 @@ Hooks.once("ready", async () => {
 	//	Index module item Compendiums
 	try {
 		const compendiumIds = [
-			"pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items",
+			ardtItemsPackId(),
 			...(game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") || [])
 		];
 

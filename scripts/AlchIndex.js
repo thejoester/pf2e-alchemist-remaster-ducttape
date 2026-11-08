@@ -1,4 +1,4 @@
-import { debugLog, getSetting } from './settings.js';
+import { debugLog, getSetting, ardtItemsPackId } from './settings.js';
 import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | AlchIndex.js loaded","color: aqua; font-weight: bold;");
 
@@ -153,7 +153,8 @@ const ALCH_INDEX_SCHEMA = 2;
 		// Packs to scan
 		const userPacks = (game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") ?? [])
 			.filter(Boolean);
-		const packs = ["pf2e.equipment-srd", "pf2e-alchemist-remaster-ducttape.alchemist-duct-tape-items", ...userPacks];
+		// Both system equipment packs are listed; game.packs.get() skips whichever is not registered in this world
+		const packs = ["pf2e.equipment-srd", "sf2e.equipment-srd", ardtItemsPackId(), ...userPacks];
 
 		// Load existing index (or start fresh)
 		const prev = game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndex") ?? { meta: {}, items: {} };
