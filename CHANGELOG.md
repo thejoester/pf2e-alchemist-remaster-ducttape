@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [14.2.2-test1] - 2026-11-15
+## [14.2.2-test2] - 2026-11-15
 ### Fixed
 - **Toxicologist Poison Quick Vial:** The vial's item bonus to attack rolls was applying from 1st level instead of starting at 4th. It now scales correctly (+1 at 4th, +2 at 12th, +3 at 18th), matching the standard Quick Vial.
 - **Starfinder 2e formula index:** On Starfinder 2e games the alchemical formula index came up empty, which also left level-up formula learning with nothing to draw from. It now reads the alchemical items from the PF2e Anachronism module (where the Starfinder 2e Alchemist's gear lives), so the index and level-up formulas populate as they do on Pathfinder 2e.
