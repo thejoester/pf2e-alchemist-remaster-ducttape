@@ -258,6 +258,10 @@
 		"indexClearPromptBody": "This will remove the cached alchemical item index for this world.\n\nYou'll be prompted to rebuild it next time the world loads or when you run the rebuild.\n\nContinue?",
 		"indexClearDone": "Alchemical index cleared.",
 		"indexClearAborted": "Clear cancelled.",
-		"indexClearFailed": "Failed to clear the alchemical index."
+		"indexClearFailed": "Failed to clear the alchemical index.",
+		"sf2eAnachronismMissingTitle": "PF2e Anachronism Required",
+		"sf2eAnachronismMissingBody": "This is a Starfinder 2e world, where the Alchemist and its items come from the Pathfinder Anachronism module.\n\n{reason}\n\nWithout it, the <strong>PF2e Alchemist Remaster Duct Tape</strong> Module will not function properly. Install and enable Pathfinder Anachronism, then reload the world.",
+		"sf2eAnachronismReasonDisabled": "That module is not installed or not enabled in this world.",
+		"sf2eAnachronismReasonNoPack": "That module is enabled, but its equipment compendium could not be found."
 	}
 }

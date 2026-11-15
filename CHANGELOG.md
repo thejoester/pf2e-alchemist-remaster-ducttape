@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [14.2.1] - 2026-11-08
+## [14.2.2] - 2026-11-15
+### Fixed
+- **Toxicologist Poison Quick Vial:** The vial's item bonus to attack rolls was applying from 1st level instead of starting at 4th. It now scales correctly (+1 at 4th, +2 at 12th, +3 at 18th), matching the standard Quick Vial.
+- **Starfinder 2e formula index:** On Starfinder 2e games the alchemical formula index came up empty, which also left level-up formula learning with nothing to draw from. It now reads the alchemical items from the PF2e Anachronism module (where the Starfinder 2e Alchemist's gear lives), so the index and level-up formulas populate as they do on Pathfinder 2e.
+
+### Added
+- **Starfinder 2e setup check:** On a Starfinder 2e world, the GM is now warned at load if the PF2e Anachronism module (which supplies the Alchemist and its items) is missing or disabled, so it's clear why the formula list would otherwise be empty.
+
+### Changed
+- **Automatic index refresh after updates:** The alchemical formula index now rebuilds itself the first time a world loads after the module is updated, so fixes to what gets indexed apply without anyone clearing or rebuilding it by hand.
+
+## [14.2.1] - 2026-11-07
 ### Fixed
 - **SF2e Support:** The module's compendiums now work in Starfinder 2e games. The items compendium ships a Starfinder 2e copy so Quick Alchemy, Healing Bomb, and the other features can find their items, and the macros and journal compendiums are now available in both Pathfinder 2e and Starfinder 2e.
 

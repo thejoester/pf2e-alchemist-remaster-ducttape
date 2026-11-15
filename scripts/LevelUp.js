@@ -1,4 +1,4 @@
-import { debugLog, getSetting, qualifiesForQA, hasActiveOwners  } from './settings.js';
+import { debugLog, getSetting, qualifiesForQA, hasActiveOwners, alchemicalEquipmentPackId  } from './settings.js';
 import { qaGetIndexEntry, qaGetSlugFromUuid, getAlchIndex } from "./AlchIndex.js";
 import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | LevelUp.js loaded","color: aqua; font-weight: bold;");
@@ -521,7 +521,7 @@ async function grantFormulasFull(actor, newLevel, mode = addFormulasSetting, pre
 	debugLog(`Previous Level for ${actor.name}: ${previousLevel}.`);
 	updateLoadingProgress(15);
 	
-    const systemCompendium = 'pf2e.equipment-srd';
+    const systemCompendium = alchemicalEquipmentPackId();
     const userDefinedCompendiums = game.settings.get('pf2e-alchemist-remaster-ducttape', 'compendiums') || [];
 	updateLoadingProgress(20);
 	
