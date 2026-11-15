@@ -1,4 +1,4 @@
-import { debugLog, getSetting, ardtItemsPackId } from './settings.js';
+import { debugLog, getSetting, ardtItemsPackId, alchemicalEquipmentPackId, getArdtFlag, setArdtFlag } from './settings.js';
 import { LT } from "./localization.js";
 console.log("%cPF2e Alchemist Remaster Duct Tape | AlchIndex.js loaded","color: aqua; font-weight: bold;");
 
@@ -50,6 +50,7 @@ const ALCH_INDEX_SCHEMA = 2;
 			const NS = "pf2e-alchemist-remaster-ducttape";
 			const systemVersion = game.system?.version ?? "0.0.0";
 			const locale = game.i18n?.lang ?? "en";
+			const moduleVersion = game.modules.get(NS)?.version ?? "0.0.0";
 
 			//	Only rebuild if index is empty OR lastBuilt is more than 3 days ago
 			const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -66,8 +67,14 @@ const ALCH_INDEX_SCHEMA = 2;
 			const storedSchema = Number(currentIndex?.meta?.schema ?? 0) || 0;
 			const schemaStale = storedSchema < ALCH_INDEX_SCHEMA;
 
-			//	If we have items AND lastBuilt is set AND it's newer than 3 days AND schema is current, skip rebuild
-			if (hasItems && lastBuilt > 0 && !schemaStale) {
+			//	Force a rebuild when the module was updated since the last build, so a new
+			//	version's pack/filter changes (e.g. the sf2e source pack fix) take effect
+			const builtVersion = getArdtFlag("indexBuildVersion");
+			const versionChanged = builtVersion !== moduleVersion;
+
+			//	If we have items AND lastBuilt is set AND it's newer than 3 days AND schema is
+			//	current AND the module hasn't changed version, skip rebuild
+			if (hasItems && lastBuilt > 0 && !schemaStale && !versionChanged) {
 				const ageMs = now - lastBuilt;
 				if (ageMs <= THREE_DAYS_MS) {
 					debugLog(`AlchIndex.js: qaForceRebuildAlchIndex skipped; index age (ms)=${ageMs}`);
@@ -95,6 +102,9 @@ const ALCH_INDEX_SCHEMA = 2;
 				lastBuilt: now,
 				itemCount
 			});
+
+			//	Stamp the module version so the next load only rebuilds after another update
+			await setArdtFlag("indexBuildVersion", moduleVersion);
 
 			if (!silent) {
 				debugLog(LT.indexDoneBody({ count: itemCount }));
@@ -153,8 +163,8 @@ const ALCH_INDEX_SCHEMA = 2;
 		// Packs to scan
 		const userPacks = (game.settings.get("pf2e-alchemist-remaster-ducttape", "compendiums") ?? [])
 			.filter(Boolean);
-		// Both system equipment packs are listed; game.packs.get() skips whichever is not registered in this world
-		const packs = ["pf2e.equipment-srd", "sf2e.equipment-srd", ardtItemsPackId(), ...userPacks];
+		// Base alchemical items pack for the active system (sf2e uses PF2e Anachronism), plus module items
+		const packs = [alchemicalEquipmentPackId(), ardtItemsPackId(), ...userPacks];
 
 		// Load existing index (or start fresh)
 		const prev = game.settings.get("pf2e-alchemist-remaster-ducttape", "alchIndex") ?? { meta: {}, items: {} };
@@ -250,6 +260,25 @@ Hooks.once("ready", async () => {
 	try {
 		debugLog("AlchIndex.js: ready hook hit");
 		if (!game.user.isGM) return;
+
+		// On sf2e the alchemical items come from PF2e Anachronism; warn the GM if it's missing
+		if (game.system?.id === "sf2e") {
+			const mod = game.modules.get("pf2e-anachronism");
+			const hasPack = !!game.packs.get(alchemicalEquipmentPackId());
+			if (!mod?.active || !hasPack) {
+				const reason = !mod?.active
+					? LT.sf2eAnachronismReasonDisabled()
+					: LT.sf2eAnachronismReasonNoPack();
+				debugLog(2, `AlchIndex.js: sf2e world missing PF2e Anachronism (active=${!!mod?.active}, pack=${hasPack})`);
+				try {
+					await foundry.applications.api.DialogV2.prompt({
+						window: { title: LT.sf2eAnachronismMissingTitle() },
+						content: `<p style="white-space:pre-wrap">${LT.sf2eAnachronismMissingBody({ reason })}</p>`,
+						rejectClose: false
+					});
+				} catch (e) { /* dialog dismissed */ }
+			}
+		}
 
 		const start = performance.now();
 		debugLog("AlchIndex.js: Auto rebuild triggered at startup");

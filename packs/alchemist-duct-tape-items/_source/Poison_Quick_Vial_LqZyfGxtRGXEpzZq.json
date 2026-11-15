@@ -12,7 +12,7 @@
         "key": "FlatModifier",
         "label": "Poison Quick Vial",
         "selector": "{item|id}-attack",
-        "value": "ternary(gte(@item.level,18),3,ternary(gte(@item.level,12),2,1))",
+        "value": "ternary(gte(@item.level,18),3,ternary(gte(@item.level,12),2,ternary(gte(@item.level,4),1,0)))",
         "type": "item",
         "hideIfDisabled": true
       },

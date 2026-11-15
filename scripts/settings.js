@@ -29,6 +29,26 @@ export function ardtItemUuid(itemId) {
 	return `Compendium.${ardtItemsPackId()}.Item.${itemId}`;
 }
 
+// Equipment pack holding the base alchemical items for the active system. On sf2e the
+// Alchemist comes from the PF2e Anachronism module, which carries the items; pf2e uses its own.
+export function alchemicalEquipmentPackId() {
+	return game.system?.id === "sf2e" ? "pf2e-anachronism.equipment" : "pf2e.equipment-srd";
+}
+
+// Read one value from the ARDT flags bag (ardtFlags world setting); undefined if unset.
+export function getArdtFlag(key) {
+	const obj = game.settings.get(ARDT_MODULE_ID, ARDT_FLAGS_SETTING);
+	return (obj && typeof obj === "object") ? obj[key] : undefined;
+}
+
+// Merge one value into the ARDT flags bag without clobbering other keys.
+export async function setArdtFlag(key, value) {
+	const obj = game.settings.get(ARDT_MODULE_ID, ARDT_FLAGS_SETTING);
+	const current = (obj && typeof obj === "object") ? { ...obj } : {};
+	current[key] = value;
+	await game.settings.set(ARDT_MODULE_ID, ARDT_FLAGS_SETTING, current);
+}
+
 /* ==========================================================================
 	Exported functions
 ========================================================================== */
