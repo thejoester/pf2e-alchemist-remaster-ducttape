@@ -831,6 +831,17 @@ export async function setArdtFlag(key, value) {
 			requiresReload: true
 		});
 		
+	//	Searchable Quick Alchemy craft list
+		game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableQuickAlchemy", {
+			name: LT.settingSearchableQuickAlchemy(),
+			hint: LT.settingSearchableQuickAlchemyHint(),
+			scope: "client",
+			config: true,
+			type: Boolean,
+			default: true,
+			requiresReload: false
+		});
+
 	//	Collapse Item Description in chat
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
 			name: LT.settingCollapseItemDescChat(),

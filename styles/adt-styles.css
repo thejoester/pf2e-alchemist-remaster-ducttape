@@ -79,3 +79,37 @@
 	padding-bottom: 0.25em;
 }
 
+
+/* Quick Alchemy craft-list combobox */
+.quick-alchemy-dialog .qa-combobox {
+	position: relative;
+	width: 100%;
+}
+.quick-alchemy-dialog #qa-item-list {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 100%;
+	z-index: 1000;
+	margin: 2px 0 0;
+	padding: 0;
+	list-style: none;
+	max-height: 220px;
+	overflow: auto;
+	background: #1b1b1b;
+	color: #e8e6e3;
+	border: 1px solid var(--color-border-light-primary, #666);
+	border-radius: 4px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+.theme-light .quick-alchemy-dialog #qa-item-list {
+	background: #ede9e0;
+	color: #191813;
+}
+.quick-alchemy-dialog #qa-item-list li[data-uuid] {
+	padding: 4px 8px;
+	cursor: pointer;
+}
+.quick-alchemy-dialog #qa-item-list li[data-uuid]:hover {
+	background: rgba(127, 127, 127, 0.25);
+}
