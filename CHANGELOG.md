@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.3.0] - 2026-11-20
+### Added
+- **Healthcheck button:** The module settings now have a "Run Healthcheck" button that opens a quick report: your game system, whether the required alchemical content is present (including PF2e Anachronism on Starfinder 2e), the state of the formula index, and a rundown of each Quick Alchemy character (class or archetype, class DC, versatile vials on hand, and feats like Improbable Elixirs), plus a few key setting values. Handy for spotting a missing module or an empty index before it causes trouble at the table. The report window also has **Copy Markdown to Clipboard** and **Copy Text to Clipboard** buttons so you can paste it into a GitHub issue or a Discord message when asking for help.
+- **Improbable Elixirs:** An alchemist with the Improbable Elixirs feat can already see their known potions (level 9 or lower) in the Quick Alchemy list. Now when one is crafted it comes out as a proper infused alchemical elixir, so it gains the elixir and alchemical traits, loses the magical trait, and works with Powerful Alchemy and the rest of the alchemical-item features.
+
+### Changed
+- **Starfinder 2e setup check:** The missing-PF2e-Anachronism warning now has a "Don't show this warning again" checkbox, so a GM who knows the setup can dismiss it for good in that world.
+
 ## [14.2.2] - 2026-11-15
 ### Fixed
 - **Toxicologist Poison Quick Vial:** The vial's item bonus to attack rolls was applying from 1st level instead of starting at 4th. It now scales correctly (+1 at 4th, +2 at 12th, +3 at 18th), matching the standard Quick Vial.

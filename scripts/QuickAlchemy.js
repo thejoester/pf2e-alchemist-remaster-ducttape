@@ -1166,8 +1166,26 @@ async function craftItem(selectedItem, selectedActor, count = 1) {
 		modifiedItem.system.publication.license = "ORC";
 		modifiedItem.system.publication.title = "PF2e Alchemist Remaster Duct Tape module";
 		modifiedItem.system.publication.remaster = true;
-		// Add Infused trait
-		modifiedItem.system.traits.value.push("infused");
+		// Improbable Elixirs: a known level-<=9 potion crafted via Quick Alchemy
+		// becomes an infused alchemical elixir (drops magical, gains alchemical/elixir/infused)
+		const traitsValue = modifiedItem.system.traits?.value ?? [];
+		const isImprobableElixirPotion =
+			hasFeat(selectedActor, "improbable-elixirs") &&
+			traitsValue.includes("potion") &&
+			!traitsValue.includes("alchemical") &&
+			(modifiedItem.system.level?.value ?? 99) <= 9;
+
+		if (isImprobableElixirPotion) {
+			const traitSet = new Set(traitsValue);
+			traitSet.delete("magical");
+			traitSet.add("alchemical");
+			traitSet.add("elixir");
+			traitSet.add("infused");
+			modifiedItem.system.traits.value = [...traitSet];
+		} else {
+			// Add Infused trait
+			modifiedItem.system.traits.value.push("infused");
+		}
 		// Append "(*Temporary)" to the name for visual identification
 		if (!modifiedItem.name.endsWith("(*Temporary)")) {
 			modifiedItem.name += " (*Temporary)";

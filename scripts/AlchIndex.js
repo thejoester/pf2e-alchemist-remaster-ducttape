@@ -262,7 +262,7 @@ Hooks.once("ready", async () => {
 		if (!game.user.isGM) return;
 
 		// On sf2e the alchemical items come from PF2e Anachronism; warn the GM if it's missing
-		if (game.system?.id === "sf2e") {
+		if (game.system?.id === "sf2e" && !getSetting("suppressAnachronismWarning", false)) {
 			const mod = game.modules.get("pf2e-anachronism");
 			const hasPack = !!game.packs.get(alchemicalEquipmentPackId());
 			if (!mod?.active || !hasPack) {
@@ -271,11 +271,19 @@ Hooks.once("ready", async () => {
 					: LT.sf2eAnachronismReasonNoPack();
 				debugLog(2, `AlchIndex.js: sf2e world missing PF2e Anachronism (active=${!!mod?.active}, pack=${hasPack})`);
 				try {
-					await foundry.applications.api.DialogV2.prompt({
+					const dontShowAgain = await foundry.applications.api.DialogV2.prompt({
 						window: { title: LT.sf2eAnachronismMissingTitle() },
-						content: `<p style="white-space:pre-wrap">${LT.sf2eAnachronismMissingBody({ reason })}</p>`,
-						rejectClose: false
+						content: `<p style="white-space:pre-wrap">${LT.sf2eAnachronismMissingBody({ reason })}</p>`
+							+ `<p><label><input type="checkbox" name="dontShowAgain"> ${LT.sf2eAnachronismDontShowAgain()}</label></p>`,
+						rejectClose: false,
+						ok: {
+							callback: (event, button, dialog) =>
+								dialog.element.querySelector('input[name="dontShowAgain"]')?.checked === true
+						}
 					});
+					if (dontShowAgain) {
+						await game.settings.set("pf2e-alchemist-remaster-ducttape", "suppressAnachronismWarning", true);
+					}
 				} catch (e) { /* dialog dismissed */ }
 			}
 		}
