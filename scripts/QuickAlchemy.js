@@ -1166,8 +1166,26 @@ async function craftItem(selectedItem, selectedActor, count = 1) {
 		modifiedItem.system.publication.license = "ORC";
 		modifiedItem.system.publication.title = "PF2e Alchemist Remaster Duct Tape module";
 		modifiedItem.system.publication.remaster = true;
-		// Add Infused trait
-		modifiedItem.system.traits.value.push("infused");
+		// Improbable Elixirs: a known level-<=9 potion crafted via Quick Alchemy
+		// becomes an infused alchemical elixir (drops magical, gains alchemical/elixir/infused)
+		const traitsValue = modifiedItem.system.traits?.value ?? [];
+		const isImprobableElixirPotion =
+			hasFeat(selectedActor, "improbable-elixirs") &&
+			traitsValue.includes("potion") &&
+			!traitsValue.includes("alchemical") &&
+			(modifiedItem.system.level?.value ?? 99) <= 9;
+
+		if (isImprobableElixirPotion) {
+			const traitSet = new Set(traitsValue);
+			traitSet.delete("magical");
+			traitSet.add("alchemical");
+			traitSet.add("elixir");
+			traitSet.add("infused");
+			modifiedItem.system.traits.value = [...traitSet];
+		} else {
+			// Add Infused trait
+			modifiedItem.system.traits.value.push("infused");
+		}
 		// Append "(*Temporary)" to the name for visual identification
 		if (!modifiedItem.name.endsWith("(*Temporary)")) {
 			modifiedItem.name += " (*Temporary)";
@@ -2774,6 +2792,20 @@ async function displayCraftingDialog(actor, itemType) {
 			.map(e => `<option value="${e.uuid}">${e.name}</option>`)
 			.join("");
 
+		// Search filter: show the box only when enabled and the list is long enough.
+		// Match data is name + traits, lowercased, for substring filtering.
+		const qaSearchEnabled = getSetting("searchableQuickAlchemy", true) && filteredEntries.length > 5;
+		const searchData = filteredEntries.map(e => {
+			const tr =
+				e?.system?.traits?.value ??
+				e?.traits?.value ??
+				e?.traits ??
+				e?._source?.system?.traits?.value ??
+				[];
+			const traits = Array.isArray(tr) ? tr : [];
+			return { uuid: e.uuid, name: e.name, match: `${e.name} ${traits.join(" ")}`.toLowerCase() };
+		});
+
 		// Initial title + description (prefer the entry's baked text)
 		let initialTitle = "";
 		let initialDesc = "";
@@ -2814,9 +2846,13 @@ async function displayCraftingDialog(actor, itemType) {
 				${descStyle}
 				<div class="qa-wrapper">
 					<h3>${LT.quickAlchemySelectItemType({ itemtype: itemType })}:</h3>
-					<select id="item-selection" name="item-selection" style="display:inline-block;margin-top:5px;overflow-y:auto;width:100%;">
+					${qaSearchEnabled ? `<div class="qa-combobox" style="position:relative;width:100%;margin-top:5px;">
+							<input type="text" id="qa-item-search" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off" placeholder="${LT.quickAlchemySearchPlaceholder()}" value="${foundry.utils.escapeHTML(filteredEntries[0]?.name ?? "")}" style="width:100%;box-sizing:border-box;" />
+							<input type="hidden" id="item-selection" name="item-selection" value="${filteredEntries[0]?.uuid ?? "none"}" />
+							<ul id="qa-item-list" role="listbox" style="display:none;"></ul>
+						</div>` : `<select id="item-selection" name="item-selection" style="display:inline-block;margin-top:5px;overflow-y:auto;width:100%;">
 						${options}
-					</select>
+					</select>`}
 					<br/><br/>
 					${showDesc ? `
 						<hr/>
@@ -2955,6 +2991,72 @@ async function displayCraftingDialog(actor, itemType) {
 						if (t && t.id === "item-selection") renderDesc(t.value);
 					};
 					host.addEventListener("change", host._qaDelegatedChange, { passive: true });
+
+					// Combobox: type-to-filter dropdown that writes the chosen uuid to #item-selection
+					if (qaSearchEnabled) {
+						const input = root.querySelector("#qa-item-search") || host.querySelector("#qa-item-search");
+						const hidden = root.querySelector("#item-selection") || host.querySelector("#item-selection");
+						const listUl = root.querySelector("#qa-item-list") || host.querySelector("#qa-item-list");
+						let current = [];		// currently shown subset
+						let activeIndex = -1;	// highlighted row
+
+						const closeList = () => { if (listUl) listUl.style.display = "none"; input?.setAttribute("aria-expanded", "false"); activeIndex = -1; };
+						const highlight = (idx) => {
+							const rows = listUl ? [...listUl.querySelectorAll("li[data-uuid]")] : [];
+							if (!rows.length) return;
+							activeIndex = (idx + rows.length) % rows.length;
+							rows.forEach((li, i) => li.style.background = i === activeIndex ? "var(--color-hover-bg, rgba(127,127,127,.25))" : "");
+							rows[activeIndex].scrollIntoView({ block: "nearest" });
+						};
+						const renderRows = (subset) => {
+							current = subset;
+							activeIndex = -1;
+							if (!listUl) return;
+							if (!subset.length) {
+								listUl.innerHTML = `<li style="padding:4px 8px;opacity:.7;">${foundry.utils.escapeHTML(LT.quickAlchemyNoMatches())}</li>`;
+								listUl.style.display = "block";
+								return;
+							}
+							listUl.innerHTML = subset
+								.map(d => `<li data-uuid="${d.uuid}" role="option" style="padding:4px 8px;cursor:pointer;">${foundry.utils.escapeHTML(d.name)}</li>`)
+								.join("");
+							listUl.style.display = "block";
+							input?.setAttribute("aria-expanded", "true");
+						};
+						const filter = (query) => {
+							const q = (query || "").trim().toLowerCase();
+							renderRows(q ? searchData.filter(d => d.match.includes(q)) : searchData);
+						};
+						const choose = (d) => {
+							if (!d || !hidden || !input) return;
+							hidden.value = d.uuid;
+							input.value = d.name;
+							closeList();
+							renderDesc(d.uuid);
+						};
+
+						if (input) {
+							input.addEventListener("focus", () => { input.select(); filter(""); });
+							input.addEventListener("input", (ev) => filter(ev.target.value));
+							input.addEventListener("keydown", (ev) => {
+								if (ev.key === "ArrowDown") { ev.preventDefault(); if (listUl?.style.display === "none") filter(input.value); highlight(activeIndex + 1); }
+								else if (ev.key === "ArrowUp") { ev.preventDefault(); highlight(activeIndex - 1); }
+								else if (ev.key === "Enter") { ev.preventDefault(); choose(current[activeIndex] ?? current[0]); }
+								else if (ev.key === "Escape") { ev.preventDefault(); closeList(); }
+							});
+							input.addEventListener("blur", () => setTimeout(closeList, 120));
+						}
+						if (listUl) {
+							// mousedown fires before the input's blur, so the click still registers
+							listUl.addEventListener("mousedown", (ev) => {
+								const li = ev.target.closest("li[data-uuid]");
+								if (!li) return;
+								ev.preventDefault();
+								choose(searchData.find(d => d.uuid === li.dataset.uuid));
+							});
+						}
+						requestAnimationFrame(() => input?.focus());
+					}
 
 					// button sizing
 					const craftBtn  = root.querySelector('button[data-action="craft"]');

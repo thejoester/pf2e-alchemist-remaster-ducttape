@@ -483,6 +483,14 @@ export async function setArdtFlag(key, value) {
 			default: { systemVersion: "", locale: "", lastBuilt: 0, itemCount: 0 },
 		});
 
+		// Suppresses the SF2e "PF2e Anachronism missing" warning once the GM dismisses it
+		game.settings.register("pf2e-alchemist-remaster-ducttape", "suppressAnachronismWarning", {
+			scope: "world",
+			config: false,
+			type: Boolean,
+			default: false,
+		});
+
 		// Tracks the last processed time for exploration mode
 		game.settings.register('pf2e-alchemist-remaster-ducttape', 'explorationTime', {
 			name: 'Last Processed Time',
@@ -694,6 +702,18 @@ export async function setArdtFlag(key, value) {
 			default: []
 		});
 
+		// Healthcheck menu (registered first so it sits at the top of the module's settings)
+		if (globalThis.PF2E_ARDT_HealthcheckApp) {
+			game.settings.registerMenu('pf2e-alchemist-remaster-ducttape', 'healthcheckMenu', {
+				name: LT.healthcheckButton(),
+				label: LT.healthcheckButton(),
+				hint: LT.healthcheckHint(),
+				icon: 'fas fa-stethoscope',
+				type: globalThis.PF2E_ARDT_HealthcheckApp,
+				restricted: true
+			});
+		}
+
 		game.settings.registerMenu('pf2e-alchemist-remaster-ducttape', 'addCompendiumsMenu', {
 			name: LT.settingAddCompendium(),
 			label: LT.settingAddCompendiumLabel(), // This will be the button text
@@ -811,6 +831,17 @@ export async function setArdtFlag(key, value) {
 			requiresReload: true
 		});
 		
+	//	Searchable Quick Alchemy craft list
+		game.settings.register("pf2e-alchemist-remaster-ducttape", "searchableQuickAlchemy", {
+			name: LT.settingSearchableQuickAlchemy(),
+			hint: LT.settingSearchableQuickAlchemyHint(),
+			scope: "client",
+			config: true,
+			type: Boolean,
+			default: true,
+			requiresReload: false
+		});
+
 	//	Collapse Item Description in chat
 		game.settings.register("pf2e-alchemist-remaster-ducttape", "collapseChatDesc", {
 			name: LT.settingCollapseItemDescChat(),
