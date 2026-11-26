@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.3.1] - 2026-11-25
+### Fixed
+- **Localization:** fixed missing localization keys.
+
 ## [14.3.0] - 2026-11-20
 ### Added
 - **Healthcheck button:** The module settings now have a "Run Healthcheck" button that opens a quick report: your game system, whether the required alchemical content is present (including PF2e Anachronism on Starfinder 2e), the state of the formula index, and a rundown of each Quick Alchemy character (class or archetype, class DC, versatile vials on hand, and feats like Improbable Elixirs), plus a few key setting values. Handy for spotting a missing module or an empty index before it causes trouble at the table. The report window also has **Copy Markdown to Clipboard** and **Copy Text to Clipboard** buttons so you can paste it into a GitHub issue or a Discord message when asking for help.
